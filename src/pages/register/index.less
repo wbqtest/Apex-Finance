@@ -1,0 +1,208 @@
+.register-container {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 60px 40px;
+  box-sizing: border-box;
+
+  .register-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 50px 40px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+    max-width: 640px;
+    margin: 0 auto;
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 40px;
+
+      .logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        margin: 0 auto 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .logo-text {
+          font-size: 40px;
+          color: #fff;
+          font-weight: bold;
+        }
+      }
+
+      .title {
+        display: block;
+        font-size: 36px;
+        font-weight: bold;
+        color: #1e293b;
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        display: block;
+        font-size: 26px;
+        color: #64748b;
+      }
+    }
+
+    .register-form {
+      .form-item {
+        margin-bottom: 24px;
+
+        .label {
+          display: block;
+          font-size: 26px;
+          color: #475569;
+          margin-bottom: 10px;
+          font-weight: 500;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0 24px;
+            height: 84px;
+
+            .input-icon {
+              font-size: 30px;
+              margin-right: 16px;
+              flex-shrink: 0;
+            }
+
+            .register-input {
+              flex: 1;
+              height: 100%;
+              background: transparent;
+              font-size: 28px;
+              color: #1e293b;
+            }
+
+            .input {
+              flex: 1;
+              background: transparent;
+              border: none;
+              font-size: 28px;
+              color: #1e293b;
+              box-sizing: border-box;
+              text-align: center;
+              line-height: 42px;
+
+              &::placeholder {
+                color: #94a3b8;
+              }
+            }
+
+          .toggle-password {
+            width: 36px;
+            height: 36px;
+            margin-left: 12px;
+            flex-shrink: 0;
+            cursor: pointer;
+            opacity: 0.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &:active {
+              opacity: 1;
+            }
+
+            .eye-icon {
+              width: 24px;
+              height: 24px;
+              border: 2px solid #64748b;
+              border-radius: 50%;
+              position: relative;
+              display: flex;
+              align-items: center;
+
+              &.eye-open {
+                .eye-line:first-child {
+                  width: 8px;
+                  height: 2px;
+                  background: #64748b;
+                  position: absolute;
+                  left: 50%;
+                  top: 50%;
+                  transform: translate(-50%, -50%);
+                }
+                .eye-line:last-child {
+                  display: none;
+                }
+              }
+
+              .eye-line {
+                width: 16px;
+                height: 2px;
+                background: #64748b;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+              }
+            }
+          }
+
+          :deep(.weui-input) {
+            height: auto;
+            line-height: 42px;
+          }
+        }
+      }
+
+      .register-btn {
+        width: 100%;
+        height: 88px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 14px;
+        color: #fff;
+        font-size: 32px;
+        font-weight: bold;
+        margin-top: 12px;
+
+        &::after {
+          border: none;
+        }
+
+        &:active {
+          opacity: 0.9;
+        }
+
+        &[disabled] {
+          opacity: 0.6;
+        }
+      }
+
+      .login-link {
+        text-align: center;
+        margin-top: 32px;
+        padding-top: 32px;
+        border-top: 1px solid #f1f5f9;
+        font-size: 28px;
+        color: #64748b;
+
+        .link {
+          color: #667eea;
+          font-weight: 500;
+          margin-left: 8px;
+        }
+      }
+    }
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+
+    .copyright {
+      font-size: 24px;
+      color: #94a3b8;
+    }
+  }
+}

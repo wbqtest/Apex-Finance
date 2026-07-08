@@ -1,0 +1,76 @@
+@import './styles/theme.less';
+
+page {
+  background-color: @bg-page;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --brand-primary: #1A3A5C;
+  --brand-primary-dark: #0F2A44;
+  --brand-primary-light: #E8EEF4;
+  --brand-primary-pale: #F5F8FA;
+  --brand-accent: #1A3A5C;
+  --brand-accent-light: #E8EEF4;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B7280;
+  --text-on-primary: #FFFFFF;
+  --border-color: #DCE3EB;
+  --border-focus: #1A3A5C;
+  --tab-active: #1A3A5C;
+  --tab-inactive: #9CA3AF;
+  --color-positive: #059669;
+  --color-negative: #DC2626;
+
+  --nutui-color-primary: var(--brand-primary);
+  --nutui-color-primary-stop-1: var(--brand-primary);
+  --nutui-color-primary-stop-2: var(--brand-primary-dark);
+  --nutui-color-primary-disabled-special: var(--brand-primary-muted, #CBD5E1);
+  --nutui-button-primary-color: var(--text-on-primary);
+  --nutui-button-primary-border-color: var(--brand-primary);
+  --nutui-button-primary-disabled: var(--brand-primary-muted, #CBD5E1);
+}
+
+view,
+text {
+  box-sizing: border-box;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+
+  &::after {
+    border: none;
+  }
+}
+
+:deep(.nut-button-primary-solid) {
+  background: linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%) !important;
+  color: var(--text-on-primary) !important;
+  border-color: transparent !important;
+
+  &:active {
+    background: var(--brand-primary-dark) !important;
+  }
+}
+
+:deep(.nut-button-primary) {
+  color: var(--text-on-primary) !important;
+
+  &:active {
+    background-color: var(--brand-primary-dark) !important;
+    border-color: var(--brand-primary-dark) !important;
+  }
+}
+
+:deep(.nut-button-primary-disabled),
+:deep(.nut-button-primary-solid-disabled) {
+  background: var(--brand-primary-muted, #CBD5E1) !important;
+  border-color: var(--brand-primary-muted, #CBD5E1) !important;
+  color: #A0916B !important;
+}

@@ -1,0 +1,204 @@
+@import '../../styles/theme.less';
+
+.login-container {
+  min-height: 100vh;
+  background: @bg-page;
+  position: relative;
+  overflow: hidden;
+  padding: 60px 32px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-gradient {
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(212, 160, 23, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 560px;
+  background: @bg-card;
+  border-radius: @radius-card;
+  padding: 56px 40px;
+  box-shadow: @shadow-lg;
+  position: relative;
+  z-index: 10;
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.logo {
+  width: 96px;
+  height: 96px;
+  background: @brand-primary;
+  border-radius: 24px;
+  margin: 0 auto 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: @shadow-primary;
+}
+
+.logo-icon {
+  font-size: 44px;
+  color: @text-on-primary;
+  font-weight: 700;
+}
+
+.title {
+  display: block;
+  font-size: 38px;
+  font-weight: 700;
+  color: @text-primary;
+  margin-bottom: 10px;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  display: block;
+  font-size: 26px;
+  color: @text-secondary;
+}
+
+.login-form {
+  .form-group {
+    margin-bottom: 24px;
+  }
+
+  .input-wrapper {
+    display: flex;
+    align-items: center;
+    background: @bg-input;
+    border: 2px solid @border-color;
+    border-radius: @radius-input;
+    padding: 0 24px;
+    height: 88px;
+    transition: border-color 0.2s;
+
+    &:focus-within {
+      border-color: @border-focus;
+    }
+  }
+
+  .input-icon {
+    font-size: 32px;
+    margin-right: 16px;
+  }
+
+  .login-input {
+    flex: 1;
+    height: 100%;
+    font-size: 30px;
+    color: @text-primary;
+    background: transparent;
+  }
+
+  .toggle-password {
+    font-size: 28px;
+    cursor: pointer;
+    margin-left: 16px;
+    color: @text-placeholder;
+  }
+
+  .login-btn {
+    width: 100%;
+    height: 96px;
+    font-size: 32px;
+    font-weight: 600;
+    margin-top: 8px;
+    background: @brand-primary;
+    color: @text-on-primary;
+    border-radius: @radius-button;
+    border: none;
+
+    &:active {
+      background: @brand-primary-dark;
+    }
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: @border-color;
+}
+
+.divider-text {
+  padding: 0 24px;
+  font-size: 24px;
+  color: @text-placeholder;
+}
+
+.social-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+.social-btn {
+  width: 80px;
+  height: 80px;
+  background: @bg-card;
+  border: 2px solid @border-color;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.92);
+    border-color: @brand-primary;
+  }
+}
+
+.social-icon {
+  font-size: 36px;
+}
+
+.register-area {
+  text-align: center;
+}
+
+.register-text {
+  font-size: 26px;
+  color: @text-secondary;
+}
+
+.register-link {
+  font-size: 28px;
+  color: @text-link;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.footer {
+  margin-top: 40px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+}
+
+.copyright {
+  font-size: 24px;
+  color: @text-placeholder;
+}
