@@ -8,7 +8,11 @@ export default defineAppConfig({
     'pages/profile',
     'pages/calculator',
     'pages/result',
-    'pages/agreement'
+    'pages/agreement',
+    'pages/templates',
+    'pages/compare',
+    'pages/history',
+    'pages/report'
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -1,3 +1,5 @@
+import Taro from '@tarojs/taro'
+
 export type ThemeName = 'finance-blue' | 'dark-green' | 'deep-space' | 'vibrant-orange' | 'vibrant-purple' | 'coral-pink' | 'cyan'
 
 export interface ThemeConfig {
@@ -162,6 +164,14 @@ export const applyTheme = (themeName: ThemeName): void => {
   root.style.setProperty('--tab-inactive', theme.tabInactive)
   root.style.setProperty('--color-positive', theme.colorPositive)
   root.style.setProperty('--color-negative', theme.colorNegative)
+
+  root.style.setProperty('--nutui-color-primary', theme.brandPrimary)
+  root.style.setProperty('--nutui-color-primary-stop-1', theme.brandPrimary)
+  root.style.setProperty('--nutui-color-primary-stop-2', theme.brandPrimaryDark)
+  root.style.setProperty('--nutui-color-primary-disabled-special', theme.brandPrimary)
+  root.style.setProperty('--nutui-button-primary-color', theme.textOnPrimary)
+  root.style.setProperty('--nutui-button-primary-border-color', theme.brandPrimary)
+  root.style.setProperty('--nutui-button-primary-disabled', theme.brandPrimary)
 }
 
 export const saveTheme = (themeName: ThemeName): void => {
@@ -181,7 +191,7 @@ export const getTheme = (): ThemeName => {
   } catch (error) {
     console.error('获取主题失败:', error)
   }
-  return 'finance-blue'
+  return 'coral-pink'
 }
 
 export const initTheme = (): void => {

@@ -1,5 +1,6 @@
 // 存储工具类 - 封装常用的存储操作
 import Taro from '@tarojs/taro'
+import { CalculationParams, CalculationResult } from './finance'
 
 export interface UserInfo {
   id: number;
@@ -210,4 +211,56 @@ export const clearHistory = (): void => {
   } catch (error) {
     console.error('清空历史记录失败:', error)
   }
+}
+
+// 贷款对比相关存储
+export interface CompareItem {
+  id: string;
+  timestamp: number;
+  params: CalculationParams;
+  result: CalculationResult;
+  platformName?: string;
+}
+
+const COMPARE_KEY = 'wangdai_compare'
+
+export const getCompareList = (): CompareItem[] => {
+  try {
+    const d = Taro.getStorageSync(COMPARE_KEY)
+    return d ? (typeof d === 'string' ? JSON.parse(d) : d) : []
+  } catch { return [] }
+}
+
+export const saveCompareList = (list: CompareItem[]) => {
+  try { Taro.setStorageSync(COMPARE_KEY, JSON.stringify(list)) } catch { /* silent */ }
+}
+
+export const addToCompare = (r: CompareItem): CompareItem[] => {
+  try {
+    const list = getCompareList()
+    const exists = list.find(l => l.id === r.id)
+    if (!exists) {
+      list.unshift({ ...r, platformName: r.platformName || ('贷款' + (list.length + 1)) })
+      if (list.length > 20) list.length = 20
+      saveCompareList(list)
+    }
+    return list
+  } catch { return getCompareList() }
+}
+
+export const removeFromCompare = (id: string): CompareItem[] => {
+  try {
+    const list = getCompareList().filter(l => l.id !== id)
+    saveCompareList(list)
+    return list
+  } catch { return getCompareList() }
+}
+
+export const updateComparePlatformName = (id: string, name: string): CompareItem[] => {
+  try {
+    const list = getCompareList()
+    const item = list.find(l => l.id === id)
+    if (item) { item.platformName = name; saveCompareList(list) }
+    return list
+  } catch { return getCompareList() }
 }

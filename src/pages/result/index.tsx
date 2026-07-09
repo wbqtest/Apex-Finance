@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Taro from '@tarojs/taro';
 import { Cell, CellGroup, Button } from '@nutui/nutui-react-taro';
 import { CalculationResult, formatCurrency, formatRate } from '../../utils/finance';
+import { CompareItem, addToCompare } from '../../utils/storage';
 import './index.less';
 
 export default function ResultPage() {
@@ -12,7 +13,7 @@ export default function ResultPage() {
     const pages = Taro.getCurrentPages();
     const currentPage = pages[pages.length - 1];
     const options = (currentPage as any).options || {};
-    
+
     if (options.result) {
       try {
         setResult(JSON.parse(decodeURIComponent(options.result)));
@@ -46,11 +47,33 @@ export default function ResultPage() {
   };
 
   const handleBack = () => {
-    Taro.navigateBack();
+    Taro.navigateBack({ fail: () => Taro.switchTab({ url: '/pages/index' }) });
   };
 
   const handleRecalculate = () => {
-    Taro.navigateBack();
+    Taro.navigateBack({ fail: () => Taro.switchTab({ url: '/pages/index' }) });
+  };
+
+  const handleReport = () => {
+    if (!result) return;
+    Taro.setStorageSync('reportParams', JSON.stringify({}));
+    Taro.setStorageSync('reportResult', JSON.stringify(result));
+    Taro.setStorageSync('reportTimestamp', Date.now());
+    Taro.navigateTo({ url: '/pages/report' });
+  };
+
+  const handleCompare = () => {
+    if (!result) return;
+    const item: CompareItem = {
+      id: `result_${Date.now()}`,
+      timestamp: Date.now(),
+      params: {},
+      result: { ...result },
+      platformName: '当前计算',
+    };
+    addToCompare(item);
+    Taro.showToast({ title: '已添加至对比列表', icon: 'none', duration: 2000 });
+    Taro.navigateTo({ url: '/pages/compare' });
   };
 
   if (!result) {
@@ -58,7 +81,7 @@ export default function ResultPage() {
       <View className="result-container">
         <View className="result-header">
           <View className="header-left" onClick={handleBack}>
-            <Text className="back-icon">←</Text>
+            <Text className="back-icon">‹</Text>
           </View>
           <Text className="header-title">计算结果</Text>
           <View className="header-right" onClick={handleCopy}>
@@ -166,7 +189,15 @@ export default function ResultPage() {
       </View>
 
       <View className="result-footer">
-        <Button type="default" size="large" onClick={handleRecalculate} className="footer-btn">
+        <View className="footer-actions">
+          <Button type="default" size="large" onClick={handleCompare} className="footer-btn secondary">
+            🔄 加入对比
+          </Button>
+          <Button type="default" size="large" onClick={handleReport} className="footer-btn secondary">
+            📋 生成报告
+          </Button>
+        </View>
+        <Button type="primary" size="large" onClick={handleRecalculate} className="footer-btn">
           🔄 重新计算
         </Button>
       </View>

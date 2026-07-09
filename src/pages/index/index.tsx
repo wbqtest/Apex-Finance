@@ -97,6 +97,127 @@ const FEE_TEMPLATES = [
   },
 ];
 
+const CALCULATION_TEMPLATES = [
+  {
+    id: 1,
+    name: '简易模式-案例1',
+    type: 'simple',
+    data: {
+      principal: 50000,
+      monthlyPayment: 4238.54,
+      months: 12,
+    },
+  },
+  {
+    id: 2,
+    name: '简易模式-案例2',
+    type: 'simple',
+    data: {
+      principal: 100000,
+      monthlyPayment: 4345.82,
+      months: 24,
+    },
+  },
+  {
+    id: 3,
+    name: '简易模式-案例3',
+    type: 'simple',
+    data: {
+      principal: 10000,
+      monthlyPayment: 872.84,
+      months: 12,
+    },
+  },
+  {
+    id: 4,
+    name: '简易模式-案例4',
+    type: 'simple',
+    data: {
+      principal: 10000,
+      monthlyPayment: 900,
+      months: 12,
+    },
+  },
+  {
+    id: 5,
+    name: '简易模式-案例5',
+    type: 'simple',
+    data: {
+      principal: 8000,
+      monthlyPayment: 748.18,
+      months: 12,
+    },
+  },
+  {
+    id: 6,
+    name: '逐期录入-案例1',
+    type: 'periodic',
+    data: {
+      principal: 3000,
+      payments: [554.19, 554.19, 554.19, 554.19, 554.19, 554.19],
+    },
+  },
+  {
+    id: 7,
+    name: '逐期录入-案例2',
+    type: 'periodic',
+    data: {
+      principal: 6000,
+      payments: [1046.32, 1046.32, 1046.32, 557.52, 557.52, 557.52, 557.52, 557.52, 557.52, 557.52, 557.52, 557.52],
+    },
+  },
+  {
+    id: 8,
+    name: '逐期录入-案例3',
+    type: 'periodic',
+    data: {
+      principal: 1400,
+      payments: [2008.22],
+    },
+  },
+  {
+    id: 9,
+    name: '费用拆分-案例1',
+    type: 'fee',
+    data: {
+      principal: 34400,
+      periods: 12,
+      fees: [
+        { name: '利息', amount: 1508.80, chargeType: 'monthly' as const },
+        { name: '担保费', amount: 2330.76, chargeType: 'monthly' as const },
+      ],
+    },
+  },
+  {
+    id: 10,
+    name: '费用拆分-案例2',
+    type: 'fee',
+    data: {
+      principal: 5000,
+      periods: 12,
+      fees: [
+        { name: '利息', amount: 673.48, chargeType: 'monthly' as const },
+        { name: '担保费', amount: 1118.88, chargeType: 'monthly' as const },
+      ],
+    },
+  },
+  {
+    id: 11,
+    name: '费用拆分-案例3',
+    type: 'fee',
+    data: {
+      principal: 20000,
+      periods: 12,
+      fees: [
+        { name: '利息', amount: 800.00, chargeType: 'monthly' as const },
+        { name: '服务费', amount: 600.00, chargeType: 'monthly' as const },
+        { name: '担保费', amount: 400.00, chargeType: 'monthly' as const },
+        { name: '其他费用', amount: 200.00, chargeType: 'monthly' as const },
+      ],
+    },
+  },
+];
+
 const checkSuspectedInterest = (name: string): boolean => {
   return SUSPECTED_INTEREST_KEYWORDS.some(keyword => name.includes(keyword));
 };
@@ -176,6 +297,42 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
+    try {
+      const appliedTemplate = Taro.getStorageSync('appliedTemplate');
+      if (appliedTemplate) {
+        if (appliedTemplate.type === 'simple') {
+          setActiveTab(0);
+          updateParams({
+            principal: appliedTemplate.data.principal,
+            fixedPayment: appliedTemplate.data.monthlyPayment,
+            periods: appliedTemplate.data.months,
+          });
+        } else if (appliedTemplate.type === 'periodic') {
+          setActiveTab(1);
+          updateParams({
+            principal: appliedTemplate.data.principal,
+            customPayments: appliedTemplate.data.payments,
+          });
+        } else if (appliedTemplate.type === 'fee') {
+          setActiveTab(2);
+          updateParams({
+            principal: appliedTemplate.data.principal,
+            periods: appliedTemplate.data.periods,
+          });
+          const feesWithSuspected = appliedTemplate.data.fees.map(f => ({
+            ...f,
+            isSuspectedInterest: checkSuspectedInterest(f.name),
+          }));
+          setFees(feesWithSuspected);
+        }
+        Taro.removeStorageSync('appliedTemplate');
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       if (params.principal > 0) {
         saveDraft(params, fees);
@@ -219,6 +376,47 @@ export default function Index() {
     } else {
       updateParams({ mode, fixedPayment: undefined, customPayments: undefined, periods: undefined });
     }
+  };
+
+  const applyRandomTemplate = () => {
+    const templates = CALCULATION_TEMPLATES.filter(t => {
+      if (activeTab === 0) return t.type === 'simple';
+      if (activeTab === 1) return t.type === 'periodic';
+      if (activeTab === 2) return t.type === 'fee';
+      return false;
+    });
+
+    if (templates.length === 0) {
+      Taro.showToast({ title: '当前模式暂无模板', icon: 'none' });
+      return;
+    }
+
+    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+
+    if (activeTab === 0) {
+      updateParams({
+        principal: randomTemplate.data.principal,
+        fixedPayment: randomTemplate.data.monthlyPayment,
+        periods: randomTemplate.data.months,
+      });
+    } else if (activeTab === 1) {
+      updateParams({
+        principal: randomTemplate.data.principal,
+        customPayments: randomTemplate.data.payments,
+      });
+    } else if (activeTab === 2) {
+      updateParams({
+        principal: randomTemplate.data.principal,
+        periods: randomTemplate.data.periods,
+      });
+      const feesWithSuspected = randomTemplate.data.fees.map(f => ({
+        ...f,
+        isSuspectedInterest: checkSuspectedInterest(f.name),
+      }));
+      setFees(feesWithSuspected);
+    }
+
+    Taro.showToast({ title: `已填入「${randomTemplate.name}」`, icon: 'none' });
   };
 
   const updatePayment = (index: number, value: string) => {
@@ -499,26 +697,36 @@ export default function Index() {
               <Text className="lpr-date">{lpr.date}</Text>
             </View>
           </View>
-          <Text className="data-source">
-            数据来源：全国银行间同业拆借中心
-          </Text>
+          <View className="help-entry" onClick={() => setShowHelpDialog(true)}>
+            <Text className="help-entry-icon">💡</Text>
+            <Text className="help-entry-text">点击查看使用说明和模式详情</Text>
+          </View>
         </View>
 
-        <Tabs value={activeTab} onChange={handleTabChange} className="mode-tabs">
-          <TabPane title="📋 简易模式" subTitle="固定月供 · 快速估算" />
+        <Tabs defaultActiveKey={activeTab} onChange={handleTabChange}>
+          <TabPane title="📝 简易模式" subTitle="一键测算 · 快速上手" />
           <TabPane title="📊 逐期录入" subTitle="逐期还款 · 精确计算" />
           <TabPane title="💰 费用拆分" subTitle="费用明细 · v2.0" />
         </Tabs>
 
-        <View className="help-entry-card" onClick={() => setShowHelpDialog(true)}>
-          <Text className="help-entry-icon">💡</Text>
-          <Text className="help-entry-text">点击查看使用说明和模式详情</Text>
-          <Text className="help-entry-arrow">›</Text>
+        <View className="template-entry">
+          <View className="template-fill-btn" onClick={applyRandomTemplate}>
+            <Text>⚡ 一键填入</Text>
+          </View>
+          <View className="template-list-btn" onClick={() => Taro.navigateTo({ url: '/pages/templates' })}>
+            <Text>📋 查看模板</Text>
+          </View>
         </View>
 
-        <View className="local-calc-badge">
-          <Text className="local-calc-icon">🔒</Text>
-          <Text className="local-calc-text">所有计算均在本地完成，数据安全无忧</Text>
+        <View className="feature-entry">
+          <View className="feature-item" onClick={() => Taro.navigateTo({ url: '/pages/compare' })}>
+            <Text className="feature-icon">🔄</Text>
+            <Text className="feature-label">贷款对比</Text>
+          </View>
+          <View className="feature-item" onClick={() => Taro.navigateTo({ url: '/pages/history' })}>
+            <Text className="feature-icon">📝</Text>
+            <Text className="feature-label">计算历史</Text>
+          </View>
         </View>
 
         <View className="main-card">
@@ -771,7 +979,7 @@ export default function Index() {
         </View>
 
         <Button
-          type="primary"
+          type="danger"
           size="large"
           disabled={!canCalculate() || loading}
           onClick={handleCalculate}
@@ -1108,58 +1316,64 @@ export default function Index() {
         确定要退出登录吗？
       </Dialog>
 
-      <Dialog
+      <Popup
         visible={showHelpDialog}
-        title="💡 使用说明"
-        confirmText="知道了"
-        onConfirm={() => setShowHelpDialog(false)}
+        position="bottom"
         onClose={() => setShowHelpDialog(false)}
-        style={{ width: '80%' }}
+        zIndex={1001}
       >
-        <View className="help-dialog-content">
-          <Text className="help-section-title">📋 简易模式</Text>
-          <Text className="help-section-desc">适合每月还款金额固定的贷款场景，只需输入本金、月供和期数，即可快速估算实际年化利率。</Text>
-          <View className="help-features">
-            <Text className="help-feature">• 一键输入本金、月供、期数</Text>
-            <Text className="help-feature">• 智能估算合理月供范围</Text>
-            <Text className="help-feature">• 快速判断利率是否合规</Text>
+        <View className="help-popup-content">
+          <View className="help-popup-header">
+            <Text className="help-popup-title">💡 使用说明</Text>
+            <Button className="help-popup-close" onClick={() => setShowHelpDialog(false)}>✕</Button>
           </View>
+          <ScrollView scrollY className="help-popup-body">
+            <View className="help-dialog-content">
+              <Text className="help-section-title">📋 简易模式</Text>
+              <Text className="help-section-desc">适合每月还款金额固定的贷款场景，只需输入本金、月供和期数，即可快速估算实际年化利率。</Text>
+              <View className="help-features">
+                <Text className="help-feature">• 一键输入本金、月供、期数</Text>
+                <Text className="help-feature">• 智能估算合理月供范围</Text>
+                <Text className="help-feature">• 快速判断利率是否合规</Text>
+              </View>
 
-          <Text className="help-section-divider" />
+              <Text className="help-section-divider" />
 
-          <Text className="help-section-title">📊 逐期录入</Text>
-          <Text className="help-section-desc">适合每月还款金额不同的贷款场景，支持逐期录入实际还款金额，也可通过批量填充或剪贴板粘贴快速导入数据。</Text>
-          <View className="help-features">
-            <Text className="help-feature">• 支持逐期录入不同还款金额</Text>
-            <Text className="help-feature">• 批量填充：等差/等比数列生成</Text>
-            <Text className="help-feature">• 剪贴板粘贴：智能识别多种格式</Text>
-            <Text className="help-feature">• 还款统计：平均/最高/最低月供</Text>
-          </View>
+              <Text className="help-section-title">📊 逐期录入</Text>
+              <Text className="help-section-desc">适合每月还款金额不同的贷款场景，支持逐期录入实际还款金额，也可通过批量填充或剪贴板粘贴快速导入数据。</Text>
+              <View className="help-features">
+                <Text className="help-feature">• 支持逐期录入不同还款金额</Text>
+                <Text className="help-feature">• 批量填充：等差/等比数列生成</Text>
+                <Text className="help-feature">• 剪贴板粘贴：智能识别多种格式</Text>
+                <Text className="help-feature">• 还款统计：平均/最高/最低月供</Text>
+              </View>
 
-          <Text className="help-section-divider" />
+              <Text className="help-section-divider" />
 
-          <Text className="help-section-title">💰 费用拆分</Text>
-          <Text className="help-section-desc">适合需要详细了解各项费用构成的贷款场景，支持自定义费用名称和金额，系统自动标记可疑利息费用。</Text>
-          <View className="help-features">
-            <Text className="help-feature">• 自定义添加多项费用明细</Text>
-            <Text className="help-feature">• 支持每月收取或一次性收取</Text>
-            <Text className="help-feature">• 自动识别可疑利息费用（⚠️标记）</Text>
-            <Text className="help-feature">• 费用占比可视化图表</Text>
-            <Text className="help-feature">• 去除可疑费用重新测算</Text>
-            <Text className="help-feature">• 内置常用费用模板快速选择</Text>
-          </View>
+              <Text className="help-section-title">💰 费用拆分</Text>
+              <Text className="help-section-desc">适合需要详细了解各项费用构成的贷款场景，支持自定义费用名称和金额，系统自动标记可疑利息费用。</Text>
+              <View className="help-features">
+                <Text className="help-feature">• 自定义添加多项费用明细</Text>
+                <Text className="help-feature">• 支持每月收取或一次性收取</Text>
+                <Text className="help-feature">• 自动识别可疑利息费用（⚠️标记）</Text>
+                <Text className="help-feature">• 费用占比可视化图表</Text>
+                <Text className="help-feature">• 去除可疑费用重新测算</Text>
+                <Text className="help-feature">• 内置常用费用模板快速选择</Text>
+              </View>
 
-          <Text className="help-section-divider" />
+              <Text className="help-section-divider" />
 
-          <Text className="help-section-title">📝 通用说明</Text>
-          <View className="help-features">
-            <Text className="help-feature">• 本金为实际到账金额，非合同金额</Text>
-            <Text className="help-feature">• 利息上限 = LPR × 4，超过部分可主张调整</Text>
-            <Text className="help-feature">• 输入贷款时间可匹配当时的利率标准</Text>
-            <Text className="help-feature">• 已还月份用于计算您已多支付的利息</Text>
-          </View>
+              <Text className="help-section-title">📝 通用说明</Text>
+              <View className="help-features">
+                <Text className="help-feature">• 本金为实际到账金额，非合同金额</Text>
+                <Text className="help-feature">• 利息上限 = LPR × 4，超过部分可主张调整</Text>
+                <Text className="help-feature">• 输入贷款时间可匹配当时的利率标准</Text>
+                <Text className="help-feature">• 已还月份用于计算您已多支付的利息</Text>
+              </View>
+            </View>
+          </ScrollView>
         </View>
-      </Dialog>
+      </Popup>
 
       <Popup
         visible={showTemplatePopup}

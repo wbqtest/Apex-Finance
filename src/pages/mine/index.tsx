@@ -33,7 +33,7 @@ export default function Mine() {
   const [editNickname, setEditNickname] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [showThemeDialog, setShowThemeDialog] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<ThemeName>('finance-blue');
+  const [currentTheme, setCurrentTheme] = useState<ThemeName>('coral-pink');
 
   useEffect(() => {
     const token = getToken();

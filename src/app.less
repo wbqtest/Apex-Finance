@@ -23,19 +23,26 @@ page {
   --tab-inactive: #9CA3AF;
   --color-positive: #059669;
   --color-negative: #DC2626;
+  --color-compliant: #10B981;
+  --color-warning: #F59E0B;
+  --color-excessive: #EF4444;
 
   --nutui-color-primary: var(--brand-primary);
   --nutui-color-primary-stop-1: var(--brand-primary);
   --nutui-color-primary-stop-2: var(--brand-primary-dark);
-  --nutui-color-primary-disabled-special: var(--brand-primary-muted, #CBD5E1);
+  --nutui-color-primary-disabled-special: var(--brand-primary);
   --nutui-button-primary-color: var(--text-on-primary);
   --nutui-button-primary-border-color: var(--brand-primary);
-  --nutui-button-primary-disabled: var(--brand-primary-muted, #CBD5E1);
+  --nutui-button-primary-disabled: var(--brand-primary);
 }
 
 view,
 text {
   box-sizing: border-box;
+}
+
+.taro-scroll-view-core {
+  width: auto !important;
 }
 
 button {
@@ -69,8 +76,17 @@ button {
 }
 
 :deep(.nut-button-primary-disabled),
-:deep(.nut-button-primary-solid-disabled) {
+:deep(.nut-button-primary-solid-disabled),
+:deep(.nut-button--disabled) {
   background: var(--brand-primary-muted, #CBD5E1) !important;
   border-color: var(--brand-primary-muted, #CBD5E1) !important;
   color: #A0916B !important;
+  pointer-events: none !important;
+
+  &:active,
+  &:focus {
+    background: var(--brand-primary-muted, #CBD5E1) !important;
+    border-color: var(--brand-primary-muted, #CBD5E1) !important;
+    color: #A0916B !important;
+  }
 }
