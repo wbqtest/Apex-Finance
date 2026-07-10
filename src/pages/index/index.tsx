@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect, useRef } from 'react';
-import Taro from '@tarojs/taro';
+import Taro, { useDidShow } from '@tarojs/taro';
 import {
   Input,
   Button,
@@ -100,120 +100,154 @@ const FEE_TEMPLATES = [
 const CALCULATION_TEMPLATES = [
   {
     id: 1,
-    name: '简易模式-案例1',
+    name: '简易模式-等额本息',
     type: 'simple',
     data: {
       principal: 50000,
-      monthlyPayment: 4238.54,
+      monthlyPayment: 4387.17,
       months: 12,
+      loanDate: '',
+      paidPeriods: 0,
     },
   },
   {
     id: 2,
-    name: '简易模式-案例2',
+    name: '简易模式-高利率',
     type: 'simple',
     data: {
       principal: 100000,
-      monthlyPayment: 4345.82,
+      monthlyPayment: 5500,
       months: 24,
+      loanDate: '',
+      paidPeriods: 0,
     },
   },
   {
     id: 3,
-    name: '简易模式-案例3',
-    type: 'simple',
-    data: {
-      principal: 10000,
-      monthlyPayment: 872.84,
-      months: 12,
-    },
-  },
-  {
-    id: 4,
-    name: '简易模式-案例4',
+    name: '简易模式-短期小额',
     type: 'simple',
     data: {
       principal: 10000,
       monthlyPayment: 900,
       months: 12,
+      loanDate: '',
+      paidPeriods: 0,
+    },
+  },
+  {
+    id: 4,
+    name: '简易模式-3年期',
+    type: 'simple',
+    data: {
+      principal: 150000,
+      monthlyPayment: 4800,
+      months: 36,
+      loanDate: '',
+      paidPeriods: 0,
     },
   },
   {
     id: 5,
-    name: '简易模式-案例5',
+    name: '简易模式-已还部分',
     type: 'simple',
     data: {
-      principal: 8000,
-      monthlyPayment: 748.18,
+      principal: 80000,
+      monthlyPayment: 7500,
       months: 12,
+      loanDate: '',
+      paidPeriods: 3,
     },
   },
   {
     id: 6,
-    name: '逐期录入-案例1',
+    name: '逐期录入-6期等额',
     type: 'periodic',
     data: {
       principal: 3000,
       payments: [554.19, 554.19, 554.19, 554.19, 554.19, 554.19],
+      loanDate: '',
+      paidPeriods: 0,
     },
   },
   {
     id: 7,
-    name: '逐期录入-案例2',
+    name: '逐期录入-12期不等额',
     type: 'periodic',
     data: {
       principal: 6000,
       payments: [1046.32, 1046.32, 1046.32, 557.52, 557.52, 557.52, 557.52, 557.52, 557.52, 557.52, 557.52, 557.52],
+      loanDate: '',
+      paidPeriods: 0,
     },
   },
   {
     id: 8,
-    name: '逐期录入-案例3',
+    name: '逐期录入-单期大额',
     type: 'periodic',
     data: {
       principal: 1400,
       payments: [2008.22],
+      loanDate: '',
+      paidPeriods: 0,
     },
   },
   {
     id: 9,
-    name: '费用拆分-案例1',
+    name: '逐期录入-24期',
+    type: 'periodic',
+    data: {
+      principal: 50000,
+      payments: [2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500],
+      loanDate: '',
+      paidPeriods: 0,
+    },
+  },
+  {
+    id: 10,
+    name: '费用拆分-砍头息型',
     type: 'fee',
     data: {
       principal: 34400,
       periods: 12,
       fees: [
         { name: '利息', amount: 1508.80, chargeType: 'monthly' as const },
-        { name: '担保费', amount: 2330.76, chargeType: 'monthly' as const },
+        { name: '砍头息', amount: 3000, chargeType: 'one-time' as const },
       ],
-    },
-  },
-  {
-    id: 10,
-    name: '费用拆分-案例2',
-    type: 'fee',
-    data: {
-      principal: 5000,
-      periods: 12,
-      fees: [
-        { name: '利息', amount: 673.48, chargeType: 'monthly' as const },
-        { name: '担保费', amount: 1118.88, chargeType: 'monthly' as const },
-      ],
+      loanDate: '',
+      paidPeriods: 0,
     },
   },
   {
     id: 11,
-    name: '费用拆分-案例3',
+    name: '费用拆分-多费用型',
+    type: 'fee',
+    data: {
+      principal: 50000,
+      periods: 12,
+      fees: [
+        { name: '利息', amount: 1800, chargeType: 'monthly' as const },
+        { name: '服务费', amount: 500, chargeType: 'monthly' as const },
+        { name: '保险费', amount: 300, chargeType: 'monthly' as const },
+        { name: '担保费', amount: 400, chargeType: 'monthly' as const },
+      ],
+      loanDate: '',
+      paidPeriods: 0,
+    },
+  },
+  {
+    id: 12,
+    name: '费用拆分-一次性费用',
     type: 'fee',
     data: {
       principal: 20000,
       periods: 12,
       fees: [
-        { name: '利息', amount: 800.00, chargeType: 'monthly' as const },
-        { name: '服务费', amount: 600.00, chargeType: 'monthly' as const },
-        { name: '担保费', amount: 400.00, chargeType: 'monthly' as const },
-        { name: '其他费用', amount: 200.00, chargeType: 'monthly' as const },
+        { name: '利息', amount: 1200, chargeType: 'monthly' as const },
+        { name: '手续费', amount: 1000, chargeType: 'one-time' as const },
+        { name: '咨询费', amount: 500, chargeType: 'one-time' as const },
       ],
+      loanDate: '',
+      paidPeriods: 0,
     },
   },
 ];
@@ -296,41 +330,62 @@ export default function Index() {
     }
   }, []);
 
-  useEffect(() => {
+  useDidShow(() => {
     try {
       const appliedTemplate = Taro.getStorageSync('appliedTemplate');
+      console.log('index useDidShow appliedTemplate:', appliedTemplate);
+      console.log('index useDidShow activeTab before:', activeTab);
       if (appliedTemplate) {
+        console.log('index useDidShow template type:', appliedTemplate.type);
         if (appliedTemplate.type === 'simple') {
           setActiveTab(0);
-          updateParams({
+          const templateParams = {
             principal: appliedTemplate.data.principal,
             fixedPayment: appliedTemplate.data.monthlyPayment,
             periods: appliedTemplate.data.months,
-          });
+            loanDate: appliedTemplate.data.loanDate || todayStr,
+            paidPeriods: appliedTemplate.data.paidPeriods || 0,
+          };
+          updateParams(templateParams);
+          setTimeout(() => {
+            handleCalculate();
+          }, 100);
         } else if (appliedTemplate.type === 'periodic') {
           setActiveTab(1);
-          updateParams({
+          const templateParams = {
             principal: appliedTemplate.data.principal,
             customPayments: appliedTemplate.data.payments,
-          });
+            loanDate: appliedTemplate.data.loanDate || todayStr,
+            paidPeriods: appliedTemplate.data.paidPeriods || 0,
+          };
+          updateParams(templateParams);
+          setTimeout(() => {
+            handleCalculate();
+          }, 100);
         } else if (appliedTemplate.type === 'fee') {
           setActiveTab(2);
-          updateParams({
+          const templateParams = {
             principal: appliedTemplate.data.principal,
             periods: appliedTemplate.data.periods,
-          });
+            loanDate: appliedTemplate.data.loanDate || todayStr,
+            paidPeriods: appliedTemplate.data.paidPeriods || 0,
+          };
+          updateParams(templateParams);
           const feesWithSuspected = appliedTemplate.data.fees.map(f => ({
             ...f,
             isSuspectedInterest: checkSuspectedInterest(f.name),
           }));
           setFees(feesWithSuspected);
+          setTimeout(() => {
+            handleCalculate();
+          }, 100);
         }
         Taro.removeStorageSync('appliedTemplate');
       }
     } catch (e) {
       // ignore
     }
-  }, []);
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -360,22 +415,33 @@ export default function Index() {
     setParams({ ...params, ...updates });
   };
 
-  const handleTabChange = (value: number) => {
-    setActiveTab(value);
+  const handleTabChange = (value: string | number) => {
+    const tabIndex = typeof value === 'string' ? parseInt(value, 10) : value;
+    setActiveTab(tabIndex);
     const modeMap: Record<number, 'fixed' | 'custom' | 'fee'> = {
       0: 'fixed',
       1: 'custom',
       2: 'fee',
     };
     const mode = modeMap[value];
+    setParams({
+      mode,
+      principal: 0,
+      loanDate: todayStr,
+      paidPeriods: 0,
+    });
     if (mode === 'custom') {
-      const defaultPayments = new Array(12).fill(0);
-      updateParams({ mode, customPayments: defaultPayments, fixedPayment: undefined, periods: undefined });
-    } else if (mode === 'fee') {
-      updateParams({ mode, customPayments: undefined, fixedPayment: undefined, periods: undefined });
-    } else {
-      updateParams({ mode, fixedPayment: undefined, customPayments: undefined, periods: undefined });
+      setParams(p => ({ ...p, customPayments: new Array(12).fill(0) }));
     }
+    if (mode === 'fee') {
+      setFees([
+        { name: '利息', amount: 0, chargeType: 'monthly' },
+        { name: '服务费', amount: 0, chargeType: 'monthly', isSuspectedInterest: true },
+        { name: '保险费', amount: 0, chargeType: 'monthly', isSuspectedInterest: true },
+        { name: '其他费用', amount: 0, chargeType: 'one-time' },
+      ]);
+    }
+    setRecalcResult(null);
   };
 
   const applyRandomTemplate = () => {
@@ -393,21 +459,39 @@ export default function Index() {
 
     const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
 
+    const modeMap: Record<number, 'fixed' | 'custom' | 'fee'> = {
+      0: 'fixed',
+      1: 'custom',
+      2: 'fee',
+    };
+
+    const templateLoanDate = randomTemplate.data.loanDate || todayStr;
+    const templatePaidPeriods = randomTemplate.data.paidPeriods || 0;
+
     if (activeTab === 0) {
-      updateParams({
+      setParams({
+        mode: 'fixed',
         principal: randomTemplate.data.principal,
         fixedPayment: randomTemplate.data.monthlyPayment,
         periods: randomTemplate.data.months,
+        loanDate: templateLoanDate,
+        paidPeriods: templatePaidPeriods,
       });
     } else if (activeTab === 1) {
-      updateParams({
+      setParams({
+        mode: 'custom',
         principal: randomTemplate.data.principal,
         customPayments: randomTemplate.data.payments,
+        loanDate: templateLoanDate,
+        paidPeriods: templatePaidPeriods,
       });
     } else if (activeTab === 2) {
-      updateParams({
+      setParams({
+        mode: 'fee',
         principal: randomTemplate.data.principal,
         periods: randomTemplate.data.periods,
+        loanDate: templateLoanDate,
+        paidPeriods: templatePaidPeriods,
       });
       const feesWithSuspected = randomTemplate.data.fees.map(f => ({
         ...f,
@@ -415,6 +499,8 @@ export default function Index() {
       }));
       setFees(feesWithSuspected);
     }
+
+    setRecalcResult(null);
 
     Taro.showToast({ title: `已填入「${randomTemplate.name}」`, icon: 'none' });
   };
@@ -703,7 +789,7 @@ export default function Index() {
           </View>
         </View>
 
-        <Tabs defaultActiveKey={activeTab} onChange={handleTabChange}>
+        <Tabs activeKey={String(activeTab)} onChange={handleTabChange}>
           <TabPane title="📝 简易模式" subTitle="一键测算 · 快速上手" />
           <TabPane title="📊 逐期录入" subTitle="逐期还款 · 精确计算" />
           <TabPane title="💰 费用拆分" subTitle="费用明细 · v2.0" />
@@ -713,19 +799,8 @@ export default function Index() {
           <View className="template-fill-btn" onClick={applyRandomTemplate}>
             <Text>⚡ 一键填入</Text>
           </View>
-          <View className="template-list-btn" onClick={() => Taro.navigateTo({ url: '/pages/templates' })}>
+          <View className="template-list-btn" onClick={() => Taro.navigateTo({ url: `/pages/templates?tab=${activeTab}` })}>
             <Text>📋 查看模板</Text>
-          </View>
-        </View>
-
-        <View className="feature-entry">
-          <View className="feature-item" onClick={() => Taro.navigateTo({ url: '/pages/compare' })}>
-            <Text className="feature-icon">🔄</Text>
-            <Text className="feature-label">贷款对比</Text>
-          </View>
-          <View className="feature-item" onClick={() => Taro.navigateTo({ url: '/pages/history' })}>
-            <Text className="feature-icon">📝</Text>
-            <Text className="feature-label">计算历史</Text>
           </View>
         </View>
 

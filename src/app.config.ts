@@ -32,8 +32,8 @@ export default defineAppConfig({
         text: '首页'
       },
       {
-        pagePath: 'pages/settings',
-        text: '设置'
+        pagePath: 'pages/compare',
+        text: '对比'
       },
       {
         pagePath: 'pages/mine',

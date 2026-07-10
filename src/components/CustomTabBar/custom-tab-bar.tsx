@@ -12,7 +12,7 @@ interface TabItem {
 
 const tabs: TabItem[] = [
   { key: 'home', path: '/pages/index', text: '首页', icon: '🏠' },
-  { key: 'settings', path: '/pages/settings', text: '设置', icon: '⚙️' },
+  { key: 'compare', path: '/pages/compare', text: '对比', icon: '📊' },
   { key: 'mine', path: '/pages/mine', text: '我的', icon: '👤' },
 ];
 

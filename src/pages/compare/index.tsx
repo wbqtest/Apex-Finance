@@ -5,6 +5,7 @@ import { Popup } from '@nutui/nutui-react-taro'
 import './index.less'
 import { CalculationParams, CalculationResult } from '../../utils/finance'
 import { getHistory, CalcHistoryItem, CompareItem, getCompareList, saveCompareList, addToCompare, removeFromCompare, updateComparePlatformName } from '../../utils/storage'
+import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar'
 
 const statusMap: Record<string, { label: string; color: string; bg: string }> = {
   compliant: { label: '合规', color: 'var(--color-compliant)', bg: '#ECFDF5' },
@@ -522,6 +523,8 @@ export default function ComparePage() {
           </Button>
         </View>
       </Popup>
+
+      <CustomTabBar />
     </View>
   )
 }
