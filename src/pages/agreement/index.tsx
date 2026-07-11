@@ -1,14 +1,10 @@
 import { View, Text } from '@tarojs/components';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
 import './index.less';
 
 export default function Agreement() {
   const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    setVisible(true);
-  }, []);
 
   useDidShow(() => {
     setVisible(true);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { View, Text, Button, ScrollView } from '@tarojs/components'
 import { Popup } from '@nutui/nutui-react-taro'
@@ -42,10 +42,6 @@ export default function HistoryPage() {
   const loadHistory = () => {
     setHistory(getHistory())
   }
-
-  useEffect(() => {
-    loadHistory()
-  }, [])
 
   useDidShow(() => {
     loadHistory()

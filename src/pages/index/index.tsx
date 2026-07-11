@@ -68,13 +68,9 @@ export default function Index() {
   const [isLogin, setIsLogin] = useState(false);
   const [userInfo, setUserInfoState] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(() => {
-    const hash = window.location.hash;
-    const match = hash.match(/[?&]tab=(\d+)/);
-    if (match && match[1]) {
-      const tabIndex = parseInt(match[1], 10);
-      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 2) {
-        return tabIndex;
-      }
+    const savedTab = Taro.getStorageSync('activeTab');
+    if (savedTab !== undefined && savedTab !== null && savedTab >= 0 && savedTab <= 2) {
+      return savedTab;
     }
     return 0;
   });
@@ -208,6 +204,7 @@ export default function Index() {
   const handleTabChange = (value: string | number) => {
     const tabIndex = typeof value === 'string' ? parseInt(value, 10) : value;
     setActiveTab(tabIndex);
+    Taro.setStorageSync('activeTab', tabIndex);
 
     if (!firstLoadComplete) {
       return;
@@ -589,17 +586,17 @@ export default function Index() {
           </View>
         </View>
 
-        <Tabs className="mode-tabs" activeKey={String(activeTab)} onChange={handleTabChange}>
-          <TabPane key="0" title="📝 简易模式" subTitle="一键测算 · 快速上手" />
-          <TabPane key="1" title="📊 逐期录入" subTitle="逐期还款 · 精确计算" />
-          <TabPane key="2" title="💰 费用拆分" subTitle="费用明细 · v2.0" />
+        <Tabs className="mode-tabs" value={String(activeTab)} onChange={handleTabChange}>
+          <TabPane key="0" title="📝 简易模式" />
+          <TabPane key="1" title="📊 逐期录入" />
+          <TabPane key="2" title="💰 费用拆分" />
         </Tabs>
 
         <View className="template-entry">
           <View className="template-fill-btn" onClick={applyRandomTemplate}>
             <Text>⚡ 一键填入</Text>
           </View>
-          <View className="template-list-btn" onClick={() => Taro.navigateTo({ url: `/pages/templates?tab=${activeTab}` })}>
+          <View className="template-list-btn" onClick={() => Taro.navigateTo({ url: '/pages/templates' })}>
             <Text>📋 查看模板</Text>
           </View>
         </View>

@@ -1,26 +1,21 @@
 import { useState, useEffect } from 'react';
 import { View, Text, Button, ScrollView } from '@tarojs/components';
-import Taro, { useReady } from '@tarojs/taro';
+import Taro from '@tarojs/taro';
 import { Popup, Tabs, TabPane } from '@nutui/nutui-react-taro';
 import { TEMPLATES_DATA, TemplateCase } from '../../data/templates';
 import './index.less';
 
 export default function TemplateList() {
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = Taro.getStorageSync('activeTab');
+    if (savedTab !== undefined && savedTab !== null && savedTab >= 0 && savedTab <= 2) {
+      return savedTab;
+    }
+    return 0;
+  });
   const [showDetail, setShowDetail] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateCase | null>(null);
   const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
-
-  useEffect(() => {
-    const hash = window.location.hash;
-    const match = hash.match(/[?&]tab=(\d+)/);
-    if (match && match[1]) {
-      const tabIndex = parseInt(match[1], 10);
-      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 2) {
-        setActiveTab(tabIndex);
-      }
-    }
-  }, []);
 
   const currentTemplates = activeTab === 0 ? TEMPLATES_DATA.simple : activeTab === 1 ? TEMPLATES_DATA.periodic : TEMPLATES_DATA.fee;
   const currentMode = activeTab === 0 ? 'simple' : activeTab === 1 ? 'periodic' : 'fee';
@@ -34,7 +29,7 @@ export default function TemplateList() {
     }
   };
 
-  const handleApply = (template: TemplateCase) => {
+  const handleApply = (template: any) => {
     try {
       setLoadingTemplate(template.id);
       const storageData: any = {
@@ -49,27 +44,28 @@ export default function TemplateList() {
       };
 
       if (template.type === 'simple') {
-        const input = template.input as TemplateInputSimple;
+        const input = template.input as any;
         storageData.data.principal = input.principal;
         storageData.data.monthlyPayment = input.monthlyPayment;
         storageData.data.months = input.periods;
       } else if (template.type === 'periodic') {
-        const input = template.input as TemplateInputPeriodic;
+        const input = template.input as any;
         storageData.data.principal = input.principal;
         storageData.data.payments = input.payments;
       } else if (template.type === 'fee') {
-        const input = template.input as TemplateInputFee;
+        const input = template.input as any;
         storageData.data.principal = input.principal;
         storageData.data.periods = input.periods;
         storageData.data.fees = input.fees;
       }
 
       Taro.setStorageSync('appliedTemplate', storageData);
+      const tabIndex = template.type === 'simple' ? 0 : template.type === 'periodic' ? 1 : 2;
+      Taro.setStorageSync('activeTab', tabIndex);
       Taro.showToast({ title: '⏳ 正在加载测算...', icon: 'loading', duration: 1500 });
       setTimeout(() => {
         setLoadingTemplate(null);
-        const tabIndex = template.type === 'simple' ? 0 : template.type === 'periodic' ? 1 : 2;
-        Taro.reLaunch({ url: `/pages/index?tab=${tabIndex}` });
+        Taro.reLaunch({ url: '/pages/index' });
       }, 800);
     } catch (e) {
       setLoadingTemplate(null);
@@ -77,14 +73,14 @@ export default function TemplateList() {
     }
   };
 
-  const handlePreview = (template: TemplateCase) => {
+  const handlePreview = (template: any) => {
     setSelectedTemplate(template);
     setShowDetail(true);
   };
 
-  const formatInputDisplay = (template: TemplateCase) => {
+  const formatInputDisplay = (template: any) => {
     if (template.type === 'simple') {
-      const input = template.input as TemplateInputSimple;
+      const input = template.input;
       return {
         items: [
           { label: '本金', value: `¥${input.principal.toLocaleString()}` },
@@ -93,7 +89,7 @@ export default function TemplateList() {
         ],
       };
     } else if (template.type === 'periodic') {
-      const input = template.input as TemplateInputPeriodic;
+      const input = template.input;
       const totalPayment = input.payments.reduce((a, b) => a + b, 0);
       return {
         items: [
@@ -103,7 +99,7 @@ export default function TemplateList() {
         ],
       };
     } else if (template.type === 'fee') {
-      const input = template.input as TemplateInputFee;
+      const input = template.input;
       const totalMonthlyFee = input.fees.filter(f => f.chargeType === 'monthly').reduce((sum, f) => sum + f.amount, 0);
       const totalOneTimeFee = input.fees.filter(f => f.chargeType === 'one-time').reduce((sum, f) => sum + f.amount, 0);
       return {
@@ -126,10 +122,14 @@ export default function TemplateList() {
         <Text className="template-title">参考模板</Text>
         <View className="template-header-placeholder" />
       </View>
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as number)} className="template-tabs">
-        <TabPane tab="📋 简易模式" key={0} />
-        <TabPane tab="📅 逐期录入" key={1} />
-        <TabPane tab="💰 费用拆分" key={2} />
+      <Tabs defaultValue={'0'} value={String(activeTab)} onChange={(key) => {
+        const tabIndex = typeof key === 'string' ? parseInt(key, 10) : key;
+        setActiveTab(tabIndex);
+        Taro.setStorageSync('activeTab', tabIndex);
+      }} className="template-tabs">
+        <TabPane key="0" title="📋 简易模式" />
+        <TabPane key="1" title="📅 逐期录入" />
+        <TabPane key="2" title="💰 费用拆分" />
       </Tabs>
       <ScrollView scrollY className="template-content">
         <View className="template-section">

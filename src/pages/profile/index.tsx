@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
 import { Input, Button, Cell, CellGroup, Dialog, Toast } from '@nutui/nutui-react-taro';
 import { getUserInfo, updateNickname, changePassword, logout, UserInfo } from '../../services/api';
@@ -40,10 +40,6 @@ export default function Profile() {
   useDidShow(() => {
     fetchUserInfo();
   });
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
 
   const handleBack = () => {
     const pages = Taro.getCurrentPages();
