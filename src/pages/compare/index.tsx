@@ -17,6 +17,15 @@ const checkLogin = (): boolean => {
   return true;
 };
 
+const handleBack = () => {
+  const pages = Taro.getCurrentPages();
+  if (pages.length > 1) {
+    Taro.navigateBack();
+  } else {
+    Taro.switchTab({ url: '/pages/index' });
+  }
+};
+
 const statusMap: Record<string, { label: string; color: string; bg: string }> = {
   compliant: { label: '合规', color: 'var(--color-compliant)', bg: '#ECFDF5' },
   warning: { label: '偏高', color: 'var(--color-warning)', bg: '#FFFBEB' },
@@ -338,7 +347,7 @@ export default function ComparePage() {
   return (
     <View className="compare-page">
       <View className="compare-header">
-        <Text className="back-btn" onClick={() => Taro.navigateBack({ fail: () => Taro.switchTab({ url: '/pages/index' }) })}>‹</Text>
+        <Text className="back-btn" onClick={handleBack}>‹</Text>
         <Text className="compare-title">贷款对比</Text>
         <Text className="compare-count">{compareList.length} 笔</Text>
       </View>

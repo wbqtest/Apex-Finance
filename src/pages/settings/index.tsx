@@ -16,6 +16,15 @@ const checkLogin = (): boolean => {
   return true;
 };
 
+const handleBack = () => {
+  const pages = Taro.getCurrentPages();
+  if (pages.length > 1) {
+    Taro.navigateBack();
+  } else {
+    Taro.switchTab({ url: '/pages/index' });
+  }
+};
+
 export default function Settings() {
   const [currentLPR, setCurrentLPR] = useState(getLatestLPR());
   const [customLPR, setCustomLPR] = useState('');
@@ -58,7 +67,7 @@ export default function Settings() {
   return (
     <View className="settings-container">
       <View className="settings-header">
-        <Text className="back-btn" onClick={() => Taro.navigateBack({ fail: () => Taro.switchTab({ url: '/pages/index' }) })}>‹</Text>
+        <Text className="back-btn" onClick={handleBack}>‹</Text>
         <Text className="settings-title">设置</Text>
         <View className="settings-header-placeholder" />
       </View>

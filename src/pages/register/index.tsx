@@ -53,25 +53,13 @@ export default function Register() {
     Taro.redirectTo({ url: '/pages/login' });
   };
 
-  const handleBack = () => {
-    Taro.navigateBack({
-      fail: () => {
-        Taro.switchTab({ url: '/pages/index' });
-      }
-    });
-  };
-
   return (
     <View className="register-container">
       <View className="register-card">
         <View className="card-header">
-          <Text className="back-btn" onClick={handleBack}>‹</Text>
           <View className="logo">
             <Text className="logo-text">T</Text>
           </View>
-          <View className="header-placeholder" />
-        </View>
-        <View className="card-title-section">
           <Text className="title">创建账号</Text>
           <Text className="subtitle">注册后即可使用全部功能</Text>
         </View>

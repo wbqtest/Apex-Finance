@@ -25,6 +25,15 @@ export default function TemplateList() {
   const currentTemplates = activeTab === 0 ? TEMPLATES_DATA.simple : activeTab === 1 ? TEMPLATES_DATA.periodic : TEMPLATES_DATA.fee;
   const currentMode = activeTab === 0 ? 'simple' : activeTab === 1 ? 'periodic' : 'fee';
 
+  const handleBack = () => {
+    const pages = Taro.getCurrentPages();
+    if (pages.length > 1) {
+      Taro.navigateBack();
+    } else {
+      Taro.switchTab({ url: '/pages/index' });
+    }
+  };
+
   const handleApply = (template: TemplateCase) => {
     try {
       setLoadingTemplate(template.id);
@@ -113,7 +122,7 @@ export default function TemplateList() {
   return (
     <View className="template-page">
       <View className="template-header">
-        <Text className="back-btn" onClick={() => Taro.navigateBack({ fail: () => Taro.switchTab({ url: '/pages/index' }) })}>‹</Text>
+        <Text className="back-btn" onClick={handleBack}>‹</Text>
         <Text className="template-title">参考模板</Text>
         <View className="template-header-placeholder" />
       </View>

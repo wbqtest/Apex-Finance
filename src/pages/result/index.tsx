@@ -47,11 +47,21 @@ export default function ResultPage() {
   };
 
   const handleBack = () => {
-    Taro.navigateBack({ fail: () => Taro.switchTab({ url: '/pages/index' }) });
+    const pages = Taro.getCurrentPages();
+    if (pages.length > 1) {
+      Taro.navigateBack();
+    } else {
+      Taro.switchTab({ url: '/pages/index' });
+    }
   };
 
   const handleRecalculate = () => {
-    Taro.navigateBack({ fail: () => Taro.switchTab({ url: '/pages/index' }) });
+    const pages = Taro.getCurrentPages();
+    if (pages.length > 1) {
+      Taro.navigateBack();
+    } else {
+      Taro.switchTab({ url: '/pages/index' });
+    }
   };
 
   const handleReport = () => {

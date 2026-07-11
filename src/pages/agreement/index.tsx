@@ -15,11 +15,12 @@ export default function Agreement() {
   });
 
   const handleBack = () => {
-    Taro.navigateBack({
-      fail: () => {
-        Taro.switchTab({ url: '/pages/index' });
-      }
-    });
+    const pages = Taro.getCurrentPages();
+    if (pages.length > 1) {
+      Taro.navigateBack();
+    } else {
+      Taro.switchTab({ url: '/pages/index' });
+    }
   };
 
   return (

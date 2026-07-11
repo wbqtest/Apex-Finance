@@ -46,12 +46,12 @@ export default function Profile() {
   }, []);
 
   const handleBack = () => {
-    Taro.navigateBack({
-      delta: 1,
-      fail: () => {
-        Taro.switchTab({ url: '/pages/index' });
-      }
-    });
+    const pages = Taro.getCurrentPages();
+    if (pages.length > 1) {
+      Taro.navigateBack();
+    } else {
+      Taro.switchTab({ url: '/pages/index' });
+    }
   };
 
   const handleEditNickname = async () => {
