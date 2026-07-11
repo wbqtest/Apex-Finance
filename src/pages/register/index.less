@@ -13,8 +13,23 @@
     margin: 0 auto;
 
     .card-header {
-      text-align: center;
-      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+
+      .back-btn {
+        font-size: 56rpx;
+        color: #1e293b;
+        width: 60rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .header-placeholder {
+        width: 60rpx;
+      }
 
       .logo {
         width: 80px;
@@ -48,6 +63,25 @@
       }
     }
 
+    .card-title-section {
+      text-align: center;
+      margin-bottom: 40px;
+
+      .title {
+        display: block;
+        font-size: 36px;
+        font-weight: bold;
+        color: #1e293b;
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        display: block;
+        font-size: 26px;
+        color: #64748b;
+      }
+    }
+
     .register-form {
       .form-item {
         margin-bottom: 24px;
@@ -61,41 +95,41 @@
         }
 
         .input-wrapper {
-            display: flex;
-            align-items: center;
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 0 24px;
-            height: 84px;
+          display: flex;
+          align-items: center;
+          background: #f8fafc;
+          border-radius: 12px;
+          padding: 0 24px;
+          height: 84px;
 
-            .input-icon {
-              font-size: 30px;
-              margin-right: 16px;
-              flex-shrink: 0;
+          .input-icon {
+            font-size: 30px;
+            margin-right: 16px;
+            flex-shrink: 0;
+          }
+
+          .register-input {
+            flex: 1;
+            height: 100%;
+            background: transparent;
+            font-size: 28px;
+            color: #1e293b;
+          }
+
+          .input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-size: 28px;
+            color: #1e293b;
+            box-sizing: border-box;
+            text-align: center;
+            line-height: 42px;
+
+            &::placeholder {
+              color: #94a3b8;
             }
-
-            .register-input {
-              flex: 1;
-              height: 100%;
-              background: transparent;
-              font-size: 28px;
-              color: #1e293b;
-            }
-
-            .input {
-              flex: 1;
-              background: transparent;
-              border: none;
-              font-size: 28px;
-              color: #1e293b;
-              box-sizing: border-box;
-              text-align: center;
-              line-height: 42px;
-
-              &::placeholder {
-                color: #94a3b8;
-              }
-            }
+          }
 
           .toggle-password {
             width: 36px;
@@ -131,6 +165,7 @@
                   top: 50%;
                   transform: translate(-50%, -50%);
                 }
+
                 .eye-line:last-child {
                   display: none;
                 }

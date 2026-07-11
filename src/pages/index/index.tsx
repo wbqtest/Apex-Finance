@@ -133,6 +133,7 @@ export default function Index() {
   }, []);
 
   useDidShow(() => {
+    checkLoginStatus();
     try {
       const appliedTemplate = Taro.getStorageSync('appliedTemplate');
       if (appliedTemplate) {
@@ -466,6 +467,12 @@ export default function Index() {
 
   const handleCalculate = async () => {
     if (!canCalculate()) return;
+
+    if (!isLogin) {
+      Taro.showToast({ title: '请先登录', icon: 'none' });
+      Taro.navigateTo({ url: '/pages/login' });
+      return;
+    }
 
     setLoading(true);
 

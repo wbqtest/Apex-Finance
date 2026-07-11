@@ -3,7 +3,17 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { View, Text, Button, ScrollView } from '@tarojs/components'
 import { Popup } from '@nutui/nutui-react-taro'
 import './index.less'
-import { getHistory, clearHistory, removeHistoryItem, CalcHistoryItem, CompareItem, saveCompareList, addToCompare } from '../../utils/storage'
+import { getHistory, clearHistory, removeHistoryItem, CalcHistoryItem, CompareItem, saveCompareList, addToCompare, getToken } from '../../utils/storage'
+
+const checkLogin = (): boolean => {
+  const token = getToken();
+  if (!token) {
+    Taro.showToast({ title: '请先登录', icon: 'none' });
+    Taro.navigateTo({ url: '/pages/login' });
+    return false;
+  }
+  return true;
+};
 
 const statusMap = {
   compliant: { label: '合规', color: 'var(--color-compliant)', bg: '#ECFDF5' },
@@ -37,6 +47,7 @@ export default function HistoryPage() {
   }
 
   const handleDelete = (id: string) => {
+    if (!checkLogin()) return;
     Taro.showModal({
       title: '确认删除',
       content: '确定要删除这条记录吗？',
@@ -52,6 +63,7 @@ export default function HistoryPage() {
   }
 
   const handleRestore = (record: CalcHistoryItem) => {
+    if (!checkLogin()) return;
     Taro.setStorageSync('appliedTemplate', {
       type: record.params.mode === 'fixed' ? 'simple' : record.params.mode === 'custom' ? 'periodic' : 'fee',
       data: {
@@ -67,6 +79,7 @@ export default function HistoryPage() {
   }
 
   const handleQuickCompare = (record: CalcHistoryItem) => {
+    if (!checkLogin()) return;
     saveCompareList([])
     const item: CompareItem = {
       id: record.id + '_c',
@@ -82,6 +95,7 @@ export default function HistoryPage() {
   }
 
   const handleClearAll = () => {
+    if (!checkLogin()) return;
     Taro.showModal({
       title: '确认清空',
       content: '确定要清空所有历史记录吗？',

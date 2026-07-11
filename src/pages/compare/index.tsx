@@ -4,8 +4,18 @@ import { View, Text, Button, ScrollView } from '@tarojs/components'
 import { Popup } from '@nutui/nutui-react-taro'
 import './index.less'
 import { CalculationParams, CalculationResult } from '../../utils/finance'
-import { getHistory, CalcHistoryItem, CompareItem, getCompareList, saveCompareList, addToCompare, removeFromCompare, updateComparePlatformName } from '../../utils/storage'
+import { getHistory, CalcHistoryItem, CompareItem, getCompareList, saveCompareList, addToCompare, removeFromCompare, updateComparePlatformName, getToken } from '../../utils/storage'
 import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar'
+
+const checkLogin = (): boolean => {
+  const token = getToken();
+  if (!token) {
+    Taro.showToast({ title: '请先登录', icon: 'none' });
+    Taro.navigateTo({ url: '/pages/login' });
+    return false;
+  }
+  return true;
+};
 
 const statusMap: Record<string, { label: string; color: string; bg: string }> = {
   compliant: { label: '合规', color: 'var(--color-compliant)', bg: '#ECFDF5' },
@@ -58,6 +68,7 @@ export default function ComparePage() {
   }
 
   const openSelectModal = (fromHistoryOnly = false) => {
+    if (!checkLogin()) return;
     setSelectedIds([])
     setIncludeCurrent(!fromHistoryOnly && !!currentResult)
     setShowSelectModal(true)
@@ -83,6 +94,7 @@ export default function ComparePage() {
   }
 
   const confirmSelect = () => {
+    if (!checkLogin()) return;
     const total = (includeCurrent ? 1 : 0) + selectedIds.length
     if (total < 1) return
     if (total > 3) { showToast('最多选择 3 笔贷款'); return }
@@ -118,18 +130,21 @@ export default function ComparePage() {
   }
 
   const handleRemove = (id: string) => {
+    if (!checkLogin()) return;
     const newList = removeFromCompare(id)
     setCompareList(newList)
     showToast('已移除')
   }
 
   const handleClear = () => {
+    if (!checkLogin()) return;
     saveCompareList([])
     setCompareList([])
     showToast('已清空所有对比')
   }
 
   const handleEditName = (id: string) => {
+    if (!checkLogin()) return;
     const item = compareList.find(l => l.id === id)
     if (!item) return
     Taro.showModal({

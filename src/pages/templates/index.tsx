@@ -117,10 +117,14 @@ export default function TemplateList() {
         <Text className="template-title">参考模板</Text>
         <View className="template-header-placeholder" />
       </View>
+      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as number)} className="template-tabs">
+        <TabPane tab="📋 简易模式" key={0} />
+        <TabPane tab="📅 逐期录入" key={1} />
+        <TabPane tab="💰 费用拆分" key={2} />
+      </Tabs>
       <ScrollView scrollY className="template-content">
         <View className="template-section">
           <View className="template-section-header">
-            <Text className="template-section-title">📋 {currentMode === 'simple' ? '简易模式模板' : currentMode === 'periodic' ? '逐期录入模板' : '费用拆分模板'}</Text>
             <Text className="template-section-subtitle">选择模板快速测算，或直接查看报告</Text>
           </View>
           <View className="template-list">

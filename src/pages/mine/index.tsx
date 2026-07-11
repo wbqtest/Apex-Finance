@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components';
-import { useState, useEffect } from 'react';
-import Taro from '@tarojs/taro';
+import { useState } from 'react';
+import Taro, { useDidShow } from '@tarojs/taro';
 import { Cell, CellGroup, Button, Dialog, Input, Toast } from '@nutui/nutui-react-taro';
 import { getToken, getUserInfo as getStorageUserInfo, UserInfo, getHistory, removeHistoryItem, clearHistory, CalcHistoryItem, clearLoginInfo, setUserInfo } from '../../utils/storage';
 import { updateNickname } from '../../services/api';
@@ -24,15 +24,18 @@ export default function Mine() {
   const [showThemeDialog, setShowThemeDialog] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<ThemeName>('coral-pink');
 
-  useEffect(() => {
+  useDidShow(() => {
     const token = getToken();
     const info = getStorageUserInfo();
     if (token && info) {
       setIsLoggedIn(true);
       setUserInfo(info);
+    } else {
+      setIsLoggedIn(false);
+      setUserInfo(null);
     }
     setCurrentTheme(getTheme());
-  }, []);
+  });
 
   const loadHistory = () => {
     const history = getHistory();
@@ -76,16 +79,29 @@ export default function Mine() {
   };
 
   const handleMenuClick = (item: typeof MENU_ITEMS[0]) => {
-    if (item.action === 'history') {
-      loadHistory();
-      return;
-    }
     if (item.action === 'theme') {
       setShowThemeDialog(true);
       return;
     }
+    if (item.action === 'history') {
+      if (!isLoggedIn) {
+        Taro.showToast({ title: '请先登录', icon: 'none' });
+        Taro.navigateTo({ url: '/pages/login' });
+        return;
+      }
+      loadHistory();
+      return;
+    }
+    const noLoginRequired = ['查看模板', '联系客服', '关于我们', '隐私政策'];
+    if (!noLoginRequired.includes(item.title) && !isLoggedIn) {
+      Taro.showToast({ title: '请先登录', icon: 'none' });
+      Taro.navigateTo({ url: '/pages/login' });
+      return;
+    }
     if (!item.url) {
-      Toast.show('', { content: '功能开发中', duration: 2000 });
+      if (noLoginRequired.includes(item.title)) {
+        Toast.show('', { content: '功能开发中', duration: 2000 });
+      }
       return;
     }
     Taro.navigateTo({ url: item.url });

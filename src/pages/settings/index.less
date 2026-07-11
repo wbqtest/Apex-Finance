@@ -3,18 +3,41 @@
 .settings-container {
   min-height: 100vh;
   background: @bg-page;
-  padding: 0 32rpx 120rpx;
+  padding: 0 0rpx 120rpx;
 }
 
 .settings-header {
-  padding: 48rpx 0 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  background: @bg-card;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.content {
+  padding: 16rpx;
+}
+
+.back-btn {
+  font-size: 56rpx;
+  color: @text-primary;
+  width: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .settings-title {
-  display: block;
-  font-size: 40rpx;
-  font-weight: 700;
+  font-size: 34rpx;
+  font-weight: 600;
   color: @text-primary;
+}
+
+.settings-header-placeholder {
+  width: 60rpx;
 }
 
 .lpr-card {

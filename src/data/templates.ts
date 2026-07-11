@@ -408,7 +408,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { icon: '📜', title: '计算历史', url: '/pages/history' },
   { icon: '🎨', title: '主题切换', url: '', action: 'theme' },
   { icon: '📈', title: 'LPR设置', url: '/pages/settings' },
-  { icon: '🖼️', title: '新建图片信息', url: '' },
+  { icon: '📋', title: '查看模板', url: '/pages/templates' },
   { icon: '👤', title: '个人中心', url: '/pages/profile' },
   { icon: '💬', title: '联系客服', url: '' },
   { icon: 'ℹ️', title: '关于我们', url: '' },

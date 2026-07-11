@@ -27,7 +27,11 @@ export default function Login() {
       await login({ phone, password });
       Toast.show('', { content: '登录成功', duration: 2000 });
       setTimeout(() => {
-        Taro.redirectTo({ url: '/pages/index' });
+        Taro.navigateBack({
+          fail: () => {
+            Taro.switchTab({ url: '/pages/index' });
+          }
+        });
       }, 1500);
     } catch (error: any) {
       Toast.show('', { content: error.message || '登录失败', duration: 2000 });
@@ -40,15 +44,27 @@ export default function Login() {
     Taro.navigateTo({ url: '/pages/register' });
   };
 
+  const handleBack = () => {
+    Taro.navigateBack({
+      fail: () => {
+        Taro.switchTab({ url: '/pages/index' });
+      }
+    });
+  };
+
   return (
     <View className="login-container">
       <View className="bg-gradient" />
 
       <View className="login-card">
         <View className="card-header">
+          <Text className="back-btn" onClick={handleBack}>‹</Text>
           <View className="logo">
             <Text className="logo-icon">T</Text>
           </View>
+          <View className="header-placeholder" />
+        </View>
+        <View className="card-title-section">
           <Text className="title">欢迎回来</Text>
           <Text className="subtitle">登录您的账号</Text>
         </View>
