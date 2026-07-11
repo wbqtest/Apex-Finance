@@ -5,21 +5,9 @@ import { Cell, CellGroup, Button, Dialog, Input, Toast } from '@nutui/nutui-reac
 import { getToken, getUserInfo as getStorageUserInfo, UserInfo, getHistory, removeHistoryItem, clearHistory, CalcHistoryItem, clearLoginInfo, setUserInfo } from '../../utils/storage';
 import { updateNickname } from '../../services/api';
 import { ThemeName, themes, applyTheme, saveTheme, getTheme, themeDisplayNames } from '../../utils/theme';
+import { MENU_ITEMS } from '../../data/templates';
 import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar';
 import './index.less';
-
-const menuItems = [
-  { icon: '📊', title: '理财计算', url: '/pages/index' },
-  { icon: '📜', title: '计算历史', url: '/pages/history' },
-  { icon: '🎨', title: '主题切换', url: '', action: 'theme' },
-  { icon: '📈', title: 'LPR设置', url: '/pages/settings' },
-  { icon: '🖼️', title: '新建图片信息', url: '' },
-  { icon: '👤', title: '个人中心', url: '/pages/profile' },
-  { icon: '💬', title: '联系客服', url: '' },
-  { icon: 'ℹ️', title: '关于我们', url: '' },
-  { icon: '🔒', title: '隐私政策', url: '' },
-  { icon: '📝', title: '用户协议', url: '/pages/agreement' },
-];
 
 export default function Mine() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -87,7 +75,7 @@ export default function Mine() {
     Taro.navigateTo({ url: '/pages/login' });
   };
 
-  const handleMenuClick = (item: typeof menuItems[0]) => {
+  const handleMenuClick = (item: typeof MENU_ITEMS[0]) => {
     if (item.action === 'history') {
       loadHistory();
       return;
@@ -185,7 +173,7 @@ export default function Mine() {
 
       <View className="menu-card">
         <CellGroup border={false}>
-          {menuItems.map((item, index) => (
+          {MENU_ITEMS.map((item, index) => (
             <Cell
               key={index}
               title={

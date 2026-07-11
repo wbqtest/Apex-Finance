@@ -12,10 +12,9 @@ import {
   formatLPRDate,
   ComplianceStatus,
 } from '../../data/lpr';
+import { QUICK_PERIODS } from '../../data/templates';
 import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar';
 import './index.less';
-
-const QUICK_PERIODS = [6, 12, 24, 36];
 
 export default function Calculator() {
   const [principal, setPrincipal] = useState<string>('');

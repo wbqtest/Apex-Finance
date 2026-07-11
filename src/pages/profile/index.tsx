@@ -4,16 +4,8 @@ import Taro, { useDidShow } from '@tarojs/taro';
 import { Input, Button, Cell, CellGroup, Dialog, Toast } from '@nutui/nutui-react-taro';
 import { getUserInfo, updateNickname, changePassword, logout, UserInfo } from '../../services/api';
 import { getToken, getUserInfo as getStorageUserInfo, setUserInfo, clearLoginInfo } from '../../utils/storage';
+import { GRADIENTS } from '../../data/templates';
 import './index.less';
-
-const GRADIENTS = [
-  ['#FF6B6B', '#FFE66D'],
-  ['#4ECDC4', '#44A08D'],
-  ['#667EEA', '#764BA2'],
-  ['#F093FB', '#F5576C'],
-  ['#43E97B', '#38F9D7'],
-  ['#FA709A', '#FEE140']
-];
 
 const getGradientByNickname = (nickname: string): string => {
   let hash = 0;
