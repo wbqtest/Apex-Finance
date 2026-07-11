@@ -152,8 +152,7 @@ export default function Mine() {
       setUserInfo(updatedInfo);
       Taro.showToast({ title: '修改成功', icon: 'success', duration: 2000 });
       setShowEditDialog(false);
-    } catch (error: any) {
-      Taro.showToast({ title: error.message || '修改失败', icon: 'none', duration: 2000 });
+    } catch {
     }
   };
 

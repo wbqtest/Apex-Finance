@@ -5,6 +5,8 @@ export default defineAppConfig({
     'pages/settings',
     'pages/login',
     'pages/register',
+    'pages/forgot-password',
+    'pages/reset-password',
     'pages/profile',
     'pages/calculator',
     'pages/result',

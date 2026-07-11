@@ -496,8 +496,7 @@ export default function Index() {
       } else {
         Taro.showToast({ title: response?.message || '计算失败', icon: 'none' });
       }
-    } catch (error: any) {
-      Taro.showToast({ title: error.message || '计算失败', icon: 'none' });
+    } catch {
     } finally {
       setLoading(false);
     }

@@ -66,8 +66,7 @@ export default function Profile() {
       setShowEditNickname(false);
       setNewNickname('');
       Toast.show('', { content: '修改成功', duration: 2000 });
-    } catch (error: any) {
-      Toast.show('', { content: error.message || '修改失败', duration: 2000 });
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -94,8 +93,7 @@ export default function Profile() {
       setNewPassword('');
       setConfirmPassword('');
       Toast.show('', { content: '修改成功', duration: 2000 });
-    } catch (error: any) {
-      Toast.show('', { content: error.message || '修改失败', duration: 2000 });
+    } catch {
     } finally {
       setLoading(false);
     }

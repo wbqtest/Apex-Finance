@@ -75,6 +75,13 @@ const request = async <T = any>(
     return result
   } catch (error: any) {
     console.error('API请求错误:', error)
+    const errorMessage = error.message || '请求失败，请稍后重试'
+    Taro.showToast({
+      title: errorMessage,
+      icon: 'none',
+      duration: 2500,
+      mask: true
+    })
     throw error
   }
 }
@@ -99,9 +106,12 @@ export const login = async (data: {
 // 注册接口
 export const register = async (data: {
   phone?: string
+  email?: string
   username?: string
   password: string
   nickname?: string
+  securityQuestion?: string
+  securityAnswer?: string
 }): Promise<ApiResponse<UserInfo>> => {
   return request<UserInfo>('/api/user/register', 'POST', data, false)
 }
@@ -142,6 +152,49 @@ export const logout = async (): Promise<ApiResponse<null>> => {
   removeUserInfo()
 
   return response
+}
+
+// 发送重置密码验证码（通过邮箱）
+export const sendResetEmail = async (data: {
+  email: string
+}): Promise<ApiResponse<{ message: string }>> => {
+  return request<{ message: string }>('/api/user/reset/email', 'POST', data, false)
+}
+
+// 验证邮箱验证码
+export const verifyEmailCode = async (data: {
+  email: string
+  code: string
+}): Promise<ApiResponse<{ resetToken: string }>> => {
+  return request<{ resetToken: string }>('/api/user/reset/email/verify', 'POST', data, false)
+}
+
+// 通过手机号获取安全问题
+export const getSecurityQuestion = async (data: {
+  phone: string
+}): Promise<ApiResponse<{ securityQuestion: string }>> => {
+  return request<{ securityQuestion: string }>('/api/user/reset/question', 'POST', data, false)
+}
+
+// 验证安全问题答案
+export const verifySecurityAnswer = async (data: {
+  phone: string
+  answer: string
+}): Promise<ApiResponse<{ resetToken: string }>> => {
+  return request<{ resetToken: string }>('/api/user/reset/verify', 'POST', data, false)
+}
+
+// 验证重置令牌
+export const verifyResetToken = async (token: string): Promise<ApiResponse<{ userId: number }>> => {
+  return request<{ userId: number }>(`/api/user/reset/verify/${token}`, 'GET', undefined, false)
+}
+
+// 通过用户ID重置密码
+export const resetPassword = async (data: {
+  userId: number
+  newPassword: string
+}): Promise<ApiResponse<null>> => {
+  return request<null>('/api/user/reset/password', 'POST', data, false)
 }
 
 export interface FeeItem {

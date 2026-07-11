@@ -27,14 +27,9 @@ export default function Login() {
       await login({ phone, password });
       Toast.show('', { content: '登录成功', duration: 2000 });
       setTimeout(() => {
-        Taro.navigateBack({
-          fail: () => {
-            Taro.switchTab({ url: '/pages/index' });
-          }
-        });
+        Taro.switchTab({ url: '/pages/mine' });
       }, 1500);
-    } catch (error: any) {
-      Toast.show('', { content: error.message || '登录失败', duration: 2000 });
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -42,6 +37,10 @@ export default function Login() {
 
   const goToRegister = () => {
     Taro.navigateTo({ url: '/pages/register' });
+  };
+
+  const goToForgotPassword = () => {
+    Taro.navigateTo({ url: '/pages/forgot-password' });
   };
 
   return (
@@ -96,6 +95,10 @@ export default function Login() {
           >
             {loading ? '登录中...' : '登 录'}
           </Button>
+
+          <View className="forgot-password-link">
+            <Text className="forgot-link" onClick={goToForgotPassword}>忘记密码？</Text>
+          </View>
         </View>
 
         <View className="divider">
