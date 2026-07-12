@@ -14,6 +14,7 @@ import {
 } from '../../data/lpr';
 import { QUICK_PERIODS } from '../../data/templates';
 import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar';
+import NavBar from '../../components/NavBar';
 import './index.less';
 
 export default function Calculator() {
@@ -149,6 +150,7 @@ export default function Calculator() {
 
   return (
     <View className="calculator-container">
+      <NavBar title="利率测算" />
       <View className="calculator-header">
         <Text className="app-name">网贷利率测</Text>
         <View className="lpr-info">

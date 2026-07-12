@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import { Input, Button, Toast } from '@nutui/nutui-react-taro';
 import { register } from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './index.less';
 
 export default function Register() {
@@ -78,6 +79,7 @@ export default function Register() {
 
   return (
     <View className="register-container">
+      <NavBar title="注册" />
       <View className="register-card">
         <View className="card-header">
           <View className="logo">

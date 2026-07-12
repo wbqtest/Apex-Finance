@@ -30,7 +30,10 @@
 /* ===== 滚动区域 ===== */
 .cmp-body {
   flex: 1;
-  padding: 24rpx 24rpx 160rpx;
+  max-width: 750rpx;
+  margin: 0 auto;
+  padding: 24rpx 32rpx 160rpx;
+  box-sizing: border-box;
 }
 
 /* 图表卡片 */
@@ -61,6 +64,14 @@
 }
 
 /* 方案指标 */
+.cmp-cell-right {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24rpx;
+  width: 100%;
+}
+
 .cmp-metrics {
   display: flex;
   flex-wrap: wrap;
@@ -76,6 +87,7 @@
 }
 
 .cmp-del {
+  flex-shrink: 0;
   margin-top: 12rpx;
   font-size: 24rpx;
 }

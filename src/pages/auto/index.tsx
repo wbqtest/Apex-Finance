@@ -147,10 +147,13 @@ export default function AutoCalcPage() {
       mode: method,
       principal: loanAmount,
       totalPayment: res.totalPayment,
-      totalInterest: res.totalInterest + res.totalFee,
+      totalInterest: res.totalInterest,
+      totalFee: res.totalFee,
       periods: term,
       rate,
       irr: res.irrConverged ? res.irr : undefined,
+      monthlyPayment: res.monthlyPayment,
+      downPayment,
       inputSnapshot: {
         loanAmount, term, rate, downPayment, method,
         fees: fees.filter(f => f.amount > 0),
@@ -166,8 +169,9 @@ export default function AutoCalcPage() {
 
   const handleViewDetail = () => {
     if (!result) return;
+    Taro.setStorageSync('AUTO_RESULT_INPUT', input);
     Taro.navigateTo({
-      url: `/pages/auto-result?input=${encodeURIComponent(JSON.stringify(input))}`,
+      url: '/pages/auto-result',
     });
     setShowResult(false);
   };

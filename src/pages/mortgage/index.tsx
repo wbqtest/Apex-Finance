@@ -50,7 +50,7 @@ export default function MortgagePage() {
   const [loanTotal, setLoanTotal] = useState<number>(140);
   const [ratio, setRatio] = useState<number>(70);
   const [years, setYears] = useState<number>(20);
-  const [firstPayDate] = useState<string>('2026-07');
+  const [firstPayDate, setFirstPayDate] = useState<string>('2026-07');
   const [commercialRate, setCommercialRate] = useState<number>(BASE_RATE);
   const [rateType, setRateType] = useState<RateType>('base');
   const [fundRate, setFundRate] = useState<number>(3.25);
@@ -125,7 +125,58 @@ export default function MortgagePage() {
     }
   }, []);
 
+  useEffect(() => {
+    const restore = Taro.getStorageSync('MORTGAGE_HISTORY_RESTORE');
+    if (restore && typeof restore === 'string') {
+      try {
+        const d = JSON.parse(restore);
+        if (d.repayMethod) setRepayMethod(d.repayMethod);
+        if (d.loanType) setLoanType(d.loanType);
+        if (d.calcMode) setCalcMode(d.calcMode);
+        if (d.housePrice) setHousePrice(d.housePrice);
+        if (d.loanTotal) setLoanTotal(d.loanTotal);
+        if (d.ratio != null) setRatio(d.ratio);
+        if (d.years) setYears(d.years);
+        if (d.firstPayDate) setFirstPayDate(d.firstPayDate);
+        if (d.commercialRate) setCommercialRate(d.commercialRate);
+        if (d.fundRate) setFundRate(d.fundRate);
+        if (d.fundAmount) setFundAmount(d.fundAmount);
+
+        // 基于快照直接计算并展示结果
+        const restoredInput: MortgageInput = {
+          repayMethod: d.repayMethod || 'equalPrincipalInterest',
+          loanType: d.loanType || 'commercial',
+          calcMode: d.calcMode || 'byTotal',
+          housePrice: d.housePrice || 200,
+          loanTotal: d.loanTotal || 140,
+          ratio: d.ratio != null ? d.ratio : 70,
+          years: d.years || 20,
+          firstPayDate: d.firstPayDate || '2026-07',
+          commercialRate: d.commercialRate ?? BASE_RATE,
+          fundRate: d.fundRate ?? 3.25,
+          fundAmount: d.fundAmount ?? 50,
+        };
+        const res = calculateMortgage(restoredInput);
+        if (res) {
+          setResult(res);
+          setShowResult(true);
+        }
+
+        Taro.removeStorageSync('MORTGAGE_HISTORY_RESTORE');
+      } catch (e) { console.error('parse mortgage restore error:', e); }
+    }
+  }, []);
+
   useEffect(() => { saveCache(); }, [repayMethod, loanType, calcMode, housePrice, loanTotal, ratio, years, commercialRate, rateType, fundRate, fundAmount]);
+
+  /* ---- 跳转详情页 ---- */
+  const handleViewDetail = () => {
+    if (!result) return;
+    Taro.setStorageSync('MORTGAGE_RESULT_DATA', { input, result });
+    setShowResult(false);
+    setShowSchedule(false);
+    Taro.navigateTo({ url: '/pages/mortgage-result' });
+  };
 
   /* ---- 计算 ---- */
   const handleCalc = () => {
@@ -151,7 +202,12 @@ export default function MortgagePage() {
       totalPayment: res.totalPayment,
       totalInterest: res.totalInterest,
       periods: years * 12,
+      years,
       rate: commercialRate,
+      monthlyPayment: res.monthlyPayment,
+      firstMonthPayment: res.monthlyPayment,  // 等额本息时等于月供，等额本金时即首月
+      lastMonthPayment: res.schedule?.[res.schedule.length - 1]?.total ?? undefined,
+      downPaymentRatio: (input.ratio != null && input.ratio > 0) ? (100 - input.ratio) : undefined,
       inputSnapshot: { ...input, actualLoanTotal: loan },
     }).catch(() => {});
   };
@@ -290,6 +346,7 @@ export default function MortgagePage() {
                   value={firstPayDate}
                   start="2020-01"
                   end="2050-12"
+                  onChange={(e: any) => setFirstPayDate(e.detail.value)}
                 >
                   <View className="picker-value">
                     <Text>{firstPayDate}</Text>
@@ -448,8 +505,11 @@ export default function MortgagePage() {
               <Button className="result-btn-secondary" onClick={() => setShowResult(false)}>
                 关闭
               </Button>
-              <Button className="result-btn-primary" type="primary" onClick={() => { setShowResult(false); setShowSchedule(true); }}>
-                查看还款计划
+              <Button className="result-btn-secondary" onClick={() => { setShowResult(false); setShowSchedule(true); }}>
+                还款计划
+              </Button>
+              <Button className="result-btn-primary" type="primary" onClick={handleViewDetail}>
+                完整详情
               </Button>
             </View>
           </View>

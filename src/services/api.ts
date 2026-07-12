@@ -290,6 +290,60 @@ export const deleteHistoryRecord = async (id: number): Promise<ApiResponse<null>
   return request<null>(`/api/calculator/history/${id}`, 'DELETE', undefined, false)
 }
 
+// 房贷历史记录
+export interface MortgageHistoryItem {
+  id: number;
+  userId: number | null;
+  mode: string;
+  principal: number;
+  rate: number;
+  years: number;
+  periods: number;
+  monthlyPayment: number | null;
+  firstMonthPayment: number | null;
+  lastMonthPayment: number | null;
+  totalPayment: number;
+  totalInterest: number;
+  downPaymentRatio: number | null;
+  inputSnapshot?: any;
+  createdAt: string;
+}
+
+export const fetchMortgageHistory = async (limit: number = 50, offset: number = 0): Promise<ApiResponse<MortgageHistoryItem[]>> => {
+  return request<MortgageHistoryItem[]>(`/api/calculator/mortgage/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false)
+}
+
+export const deleteMortgageRecord = async (id: number): Promise<ApiResponse<null>> => {
+  return request<null>(`/api/calculator/mortgage/history/${id}`, 'DELETE', undefined, false)
+}
+
+// 车贷历史记录
+export interface AutoLoanHistoryItem {
+  id: number;
+  userId: number | null;
+  mode: string;
+  principal: number;
+  rate: number | null;
+  periods: number;
+  monthlyPayment: number | null;
+  totalPayment: number;
+  totalInterest: number;
+  totalFee: number;
+  irr: number | null;
+  downPayment: number | null;
+  inputSnapshot?: any;
+  fees: any[] | null;
+  createdAt: string;
+}
+
+export const fetchAutoLoanHistory = async (limit: number = 50, offset: number = 0): Promise<ApiResponse<AutoLoanHistoryItem[]>> => {
+  return request<AutoLoanHistoryItem[]>(`/api/calculator/auto/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false)
+}
+
+export const deleteAutoLoanRecord = async (id: number): Promise<ApiResponse<null>> => {
+  return request<null>(`/api/calculator/auto/history/${id}`, 'DELETE', undefined, false)
+}
+
 // 通用保存计算记录（支持房贷/车贷/利率测算）
 export interface SaveCalcRecordPayload {
   calculatorType: 'irr' | 'mortgage' | 'auto';
@@ -302,6 +356,15 @@ export interface SaveCalcRecordPayload {
   irr?: number;
   inputSnapshot?: any;
   fees?: any[];
+  // 房贷特有
+  years?: number;
+  monthlyPayment?: number;
+  firstMonthPayment?: number;
+  lastMonthPayment?: number;
+  downPaymentRatio?: number;
+  // 车贷特有
+  totalFee?: number;
+  downPayment?: number;
 }
 
 export const saveCalcRecord = async (payload: SaveCalcRecordPayload): Promise<ApiResponse<null>> => {

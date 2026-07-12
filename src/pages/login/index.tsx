@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import { Input, Button, Toast } from '@nutui/nutui-react-taro';
 import { login } from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './index.less';
 
 export default function Login() {
@@ -45,6 +46,7 @@ export default function Login() {
 
   return (
     <View className="login-container">
+      <NavBar title="登录" />
       <View className="bg-gradient" />
 
       <View className="login-card">

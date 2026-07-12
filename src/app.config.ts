@@ -17,9 +17,11 @@ export default defineAppConfig({
     'pages/report',
     'pages/auto',
     'pages/auto-result',
+    'pages/auto-schedule',
     'pages/auto-compare',
     'pages/prepay',
-    'pages/mortgage'
+    'pages/mortgage',
+    'pages/mortgage-result'
   ],
   window: {
     backgroundTextStyle: 'light',

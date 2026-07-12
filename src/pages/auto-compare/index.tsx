@@ -6,6 +6,7 @@ import CarChart from '../../components/CarChart';
 import { REPAYMENT_LABELS } from '../../utils/carFinance';
 import { formatCurrency, formatRate } from '../../utils/finance';
 import { getCarSchemes, removeCarScheme, CarScheme } from '../../utils/carCompare';
+import NavBar from '../../components/NavBar';
 import './index.less';
 
 export default function AutoComparePage() {
@@ -35,6 +36,7 @@ export default function AutoComparePage() {
 
   return (
     <View className="auto-compare">
+      <NavBar title="方案对比" />
       <View className="cmp-header">
         <Text className="cmp-title">方案对比</Text>
         <Text className="cmp-sub">按真实年化(IRR)升序，越低越划算</Text>
@@ -62,19 +64,21 @@ export default function AutoComparePage() {
                   }
                   description={`${REPAYMENT_LABELS[s.result.repaymentType]} · 贷款¥${formatCurrency(s.result.loanAmount)}`}
                 >
-                  <View className="cmp-metrics">
-                    <Text>月供 ¥{formatCurrency(s.result.monthlyPayment)}</Text>
-                    <Text>利息 ¥{formatCurrency(s.result.totalInterest)}</Text>
-                    <Text className="irr">IRR {s.result.irrConverged ? formatRate(s.result.irr) : '—'}</Text>
+                  <View className="cmp-cell-right">
+                    <View className="cmp-metrics">
+                      <Text>月供 ¥{formatCurrency(s.result.monthlyPayment)}</Text>
+                      <Text>利息 ¥{formatCurrency(s.result.totalInterest)}</Text>
+                      <Text className="irr">IRR {s.result.irrConverged ? formatRate(s.result.irr) : '—'}</Text>
+                    </View>
+                    <Button
+                      size="small"
+                      fill="outline"
+                      className="cmp-del"
+                      onClick={() => handleRemove(s.id)}
+                    >
+                      移除
+                    </Button>
                   </View>
-                  <Button
-                    size="small"
-                    fill="outline"
-                    className="cmp-del"
-                    onClick={() => handleRemove(s.id)}
-                  >
-                    移除
-                  </Button>
                 </Cell>
               ))}
             </CellGroup>

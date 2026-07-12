@@ -19,6 +19,7 @@ import {
 } from '../../utils/carFinance';
 import { formatCurrency, formatRate } from '../../utils/finance';
 import { addCarScheme } from '../../utils/carCompare';
+import NavBar from '../../components/NavBar';
 import './index.less';
 
 const PENALTY_OPTIONS: { key: PenaltyType; label: string }[] = [
@@ -26,6 +27,22 @@ const PENALTY_OPTIONS: { key: PenaltyType; label: string }[] = [
   { key: 'PERCENT', label: '百分比' },
   { key: 'FIXED', label: '固定金额' },
 ];
+
+const formatWan = (v: number): string => `${(v / 10000).toFixed(1)}`;
+
+
+/** 根据利息金额生成场景化扎心文案 */
+const interestSceneCopy = (interest: number): string => {
+  const wan = interest / 10000;
+  if (wan >= 25) return '这笔利息相当于一辆特斯拉 Model 3 的价格';
+  if (wan >= 18) return '这笔利息相当于一辆比亚迪汉 EV 的价格';
+  if (wan >= 12) return '这笔利息相当于一辆大众帕萨特的价格';
+  if (wan >= 8) return '这笔利息相当于一辆本田思域的价格';
+  if (wan >= 5) return '这笔利息相当于一台顶配 MacBook Pro 的价格';
+  if (wan >= 2) return '这笔利息相当于一次欧洲双人游的价格';
+  if (wan >= 1) return '这笔利息相当于一台 iPhone 16 Pro Max 的价格';
+  return '这笔利息也能省下一笔不小的开支，值得认真规划';
+};
 
 export default function AutoResultPage() {
   const [input, setInput] = useState<CarLoanInput | null>(null);
@@ -35,6 +52,22 @@ export default function AutoResultPage() {
   const [toast, setToast] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
 
   useEffect(() => {
+    try {
+      const stored = Taro.getStorageSync('AUTO_RESULT_INPUT');
+      if (stored) {
+        setInput(stored as CarLoanInput);
+        if (stored.prepaymentPeriod) setPayoffPeriod(stored.prepaymentPeriod);
+        if (stored.penaltyType && stored.penaltyType !== 'NONE') {
+          setPenaltyType(stored.penaltyType);
+          setPenaltyValue(stored.penaltyValue ?? 0);
+        }
+        Taro.removeStorageSync('AUTO_RESULT_INPUT');
+        return;
+      }
+    } catch (e) {
+      console.error('读取 storage input 失败', e);
+    }
+
     const pages = Taro.getCurrentPages();
     const cur = pages[pages.length - 1];
     const opt = (cur as any)?.options || {};
@@ -53,44 +86,59 @@ export default function AutoResultPage() {
     }
   }, []);
 
-  const result = useMemo(() => (input ? calculateCarLoan(input) : null), [input]);
+  const result = useMemo(() => {
+    if (!input) return null;
+    const r = calculateCarLoan(input);
+    console.log('🔍 [auto-result] input:', JSON.parse(JSON.stringify(input)));
+    console.log('🔍 [auto-result] result:', {
+      loanAmount: r.loanAmount,
+      totalInterest: r.totalInterest,
+      totalFee: r.totalFee,
+      monthlyPayment: r.monthlyPayment,
+      repaymentType: r.repaymentType,
+      loanTerm: r.loanTerm,
+      annualRate: r.annualRate,
+      planLength: r.repaymentPlan?.length,
+      planFirst: r.repaymentPlan?.[0],
+      planLast: r.repaymentPlan?.[r.repaymentPlan.length - 1],
+    });
+    return r;
+  }, [input]);
 
   const early = useMemo(() => {
     if (!result || !input) return null;
     return calculateEarlyRepayment(result, { payoffPeriod, penaltyType, penaltyValue });
   }, [result, input, payoffPeriod, penaltyType, penaltyValue]);
 
+  // ====== 所有 useMemo 必须在 early return 之前 ======
+
+  /* ---- 图1：本金 vs 利息 环形图 ---- */
+  const pieData = useMemo(
+    () => [
+      { name: '利息', value: result?.totalInterest || 0 },
+      { name: '本金', value: result?.loanAmount || 0 },
+      { name: '费用', value: result?.totalFee || 0 },
+    ],
+    [result?.totalInterest, result?.loanAmount, result?.totalFee],
+  );
+
+  const maxPeriod = useMemo(
+    () => (result ? result.loanTerm - 1 : 0),
+    [result],
+  );
+
   if (!input || !result) {
     return (
       <View className="auto-result">
+        <NavBar title="车贷详情" />
         <View className="loading">加载中…</View>
       </View>
     );
   }
 
-  const pieData = [
-    { name: '本金', value: result.loanAmount },
-    { name: '利息', value: result.totalInterest },
-    { name: '费用', value: result.totalFee },
-  ];
-  const lineData = result.repaymentPlan.map((r) => ({ x: r.period, y: r.remainingPrincipal }));
 
-  const maxPeriod = result.loanTerm - 1;
+
   const hasFee = result.totalFee > 0;
-
-  const handleCopy = () => {
-    const text = [
-      `【车贷精算师 - ${REPAYMENT_LABELS[result.repaymentType]}】`,
-      `贷款额：¥${formatCurrency(result.loanAmount)}`,
-      `期限：${result.loanTerm}期`,
-      `常规月供：¥${formatCurrency(result.monthlyPayment)}`,
-      `总利息：¥${formatCurrency(result.totalInterest)}`,
-      `费用合计：¥${formatCurrency(result.totalFee)}`,
-      `真实年化IRR：${result.irrConverged ? formatRate(result.irr) : '—'}`,
-      `总支出(本金+利息+费用)：¥${formatCurrency(result.totalPayment)}`,
-    ].join('\n');
-    Taro.setClipboardData({ data: text, success: () => setToast({ show: true, msg: '已复制' }) });
-  };
 
   const handleAddCompare = () => {
     const scheme = {
@@ -104,51 +152,65 @@ export default function AutoResultPage() {
     setToast({ show: true, msg: '已加入对比' });
   };
 
+  const handleViewSchedule = () => {
+    Taro.setStorageSync('AUTO_RESULT_INPUT', input);
+    Taro.navigateTo({ url: '/pages/auto-schedule' });
+  };
+
   return (
     <View className="auto-result">
+      <NavBar title="车贷详情" />
+
+      {/* ===== 顶部摘要（固定） ===== */}
       <View className="result-header">
-        <Text className="result-title">计算结果 · {REPAYMENT_LABELS[result.repaymentType]}</Text>
-        <Text className="result-sub">
-          贷款 ¥{formatCurrency(result.loanAmount)} / {result.loanTerm}期
-        </Text>
+        <Text className="result-title">车贷详情 · {REPAYMENT_LABELS[result.repaymentType]}</Text>
+        <Text className="result-monthly-label">常规月供</Text>
+        <Text className="result-monthly">¥{formatCurrency(result.monthlyPayment)}</Text>
+        <View className="result-summary-row">
+          <View className="result-summary-item">
+            <Text className="rsi-label">贷款总额</Text>
+            <Text className="rsi-value">¥{formatCurrency(result.loanAmount)}</Text>
+          </View>
+          <View className="result-summary-item">
+            <Text className="rsi-label">年利率</Text>
+            <Text className="rsi-value">{formatRate(result.annualRate)}</Text>
+          </View>
+          <View className="result-summary-item">
+            <Text className="rsi-label">期限</Text>
+            <Text className="rsi-value">{result.loanTerm}期</Text>
+          </View>
+        </View>
       </View>
 
       <ScrollView className="result-body" scrollY>
-        <View className="summary-grid">
-          <View className="summary-cell">
-            <Text className="cell-label">常规月供</Text>
-            <Text className="cell-value">¥{formatCurrency(result.monthlyPayment)}</Text>
+        {/* ===== 图1：本金 vs 利息 环形图 ===== */}
+        <View className="chart-card chart-card-featured">
+          <View className="chart-head">
+            <Text className="chart-title">银行到底赚了我多少钱？</Text>
+            <Text className="chart-subtitle">本金 vs 利息 构成</Text>
           </View>
-          <View className="summary-cell">
-            <Text className="cell-label">总利息</Text>
-            <Text className="cell-value">¥{formatCurrency(result.totalInterest)}</Text>
-          </View>
-          <View className="summary-cell">
-            <Text className="cell-label">真实年化IRR</Text>
-            <Text className="cell-value danger">{result.irrConverged ? formatRate(result.irr) : '—'}</Text>
-          </View>
-          <View className="summary-cell">
-            <Text className="cell-label">总支出</Text>
-            <Text className="cell-value">¥{formatCurrency(result.totalPayment)}</Text>
+          <CarChart
+            kind="ring"
+            data={pieData}
+            nameField="name"
+            valueField="value"
+            height={260}
+            centerTitle="总利息"
+            centerSubtitle={`${formatWan(result.totalInterest)}万`}
+          />
+          <View className="chart-copy">
+            <Text className="chart-copy-text">{interestSceneCopy(result.totalInterest)}</Text>
           </View>
         </View>
 
+        {/* ===== 气球款提示 ===== */}
         {result.balloonPayment > 0 && (
           <View className="balloon-tip">
             <Text>末期尾款(气球款)：¥{formatCurrency(result.balloonPayment)}</Text>
           </View>
         )}
 
-        <View className="chart-card">
-          <Text className="chart-title">还款构成（本金 / 利息 / 费用）</Text>
-          <CarChart kind="pie" data={pieData} nameField="name" valueField="value" />
-        </View>
-
-        <View className="chart-card">
-          <Text className="chart-title">剩余本金趋势</Text>
-          <CarChart kind="line" data={lineData} />
-        </View>
-
+        {/* ===== 提前还款分析 ===== */}
         <CellGroup title="提前还款分析">
           <Cell title={`提前结清期数（当前 ${payoffPeriod} 期）`}>
             <View className="ratio-row">
@@ -210,43 +272,28 @@ export default function AutoResultPage() {
           )}
         </CellGroup>
 
-        <CellGroup title="还款计划表">
-          <View className="schedule-table">
-            <View className="schedule-head">
-              <Text className="col">期</Text>
-              <Text className="col">还款</Text>
-              <Text className="col">本金</Text>
-              <Text className="col">利息</Text>
-              {hasFee && <Text className="col">费用</Text>}
-              <Text className="col">剩余</Text>
-            </View>
-            <ScrollView className="schedule-body" scrollY>
-              {result.repaymentPlan.map((r) => (
-                <View className="schedule-row" key={r.period}>
-                  <Text className="col">{r.period}</Text>
-                  <Text className="col">{formatCurrency(r.payment)}</Text>
-                  <Text className="col">{formatCurrency(r.principal)}</Text>
-                  <Text className="col">{formatCurrency(r.interest)}</Text>
-                  {hasFee && <Text className="col">{formatCurrency(r.feeAtPeriod)}</Text>}
-                  <Text className="col">{formatCurrency(r.remainingPrincipal)}</Text>
-                </View>
-              ))}
-            </ScrollView>
+        {/* ===== 查看完整还款计划 ===== */}
+        <View className="schedule-link-card" onClick={handleViewSchedule}>
+          <View className="schedule-link-main">
+            <Text className="schedule-link-title">查看完整还款计划表</Text>
+            <Text className="schedule-link-sub">共 {result.loanTerm} 期，纯列表更省流</Text>
           </View>
-        </CellGroup>
+          <Text className="schedule-link-arrow">›</Text>
+        </View>
 
+        {/* ===== 免责声明 ===== */}
         <View className="legal-notice">
           <Text className="notice-icon">ℹ️</Text>
           <Text className="notice-text">
             计算结果基于输入参数估算，IRR 已包含各项费用，仅供参考，不构成贷款建议。
           </Text>
         </View>
+
+        <View className="bottom-spacer" />
       </ScrollView>
 
+      {/* ===== 底部操作栏 ===== */}
       <View className="result-footer">
-        <Button className="foot-btn" onClick={handleCopy}>
-          复制
-        </Button>
         <Button className="foot-btn" onClick={handleAddCompare}>
           加入对比
         </Button>
