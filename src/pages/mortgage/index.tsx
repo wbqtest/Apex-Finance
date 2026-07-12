@@ -17,6 +17,7 @@ import {
   formatManYuan,
 } from '../../utils/mortgage';
 import { formatCurrency } from '../../utils/finance';
+import { saveCalcRecord } from '../../services/api';
 import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar';
 import './index.less';
 
@@ -140,6 +141,19 @@ export default function MortgagePage() {
     }
     setResult(res);
     setShowResult(true);
+
+    // 异步保存到后端历史记录
+    const loan = displayLoanTotal * 10000; // 万元 → 元
+    saveCalcRecord({
+      calculatorType: 'mortgage',
+      mode: repayMethod,
+      principal: loan,
+      totalPayment: res.totalPayment,
+      totalInterest: res.totalInterest,
+      periods: years * 12,
+      rate: commercialRate,
+      inputSnapshot: { ...input, actualLoanTotal: loan },
+    }).catch(() => {});
   };
 
   return (

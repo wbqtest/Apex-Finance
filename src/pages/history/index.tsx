@@ -1,47 +1,66 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { View, Text, Button, ScrollView } from '@tarojs/components'
 import { Popup } from '@nutui/nutui-react-taro'
 import './index.less'
-import { getHistory, clearHistory, removeHistoryItem, CalcHistoryItem, CompareItem, saveCompareList, addToCompare, getToken } from '../../utils/storage'
+import { fetchHistory, deleteHistoryRecord, HistoryItem } from '../../services/api'
+import { getToken } from '../../utils/storage'
 
 const checkLogin = (): boolean => {
-  const token = getToken();
+  const token = getToken()
   if (!token) {
-    Taro.showToast({ title: '请先登录', icon: 'none' });
-    Taro.navigateTo({ url: '/pages/login' });
-    return false;
+    Taro.showToast({ title: '请先登录', icon: 'none' })
+    Taro.navigateTo({ url: '/pages/login' })
+    return false
   }
-  return true;
-};
+  return true
+}
 
 const handleBack = () => {
-  const pages = Taro.getCurrentPages();
+  const pages = Taro.getCurrentPages()
   if (pages.length > 1) {
-    Taro.navigateBack();
+    Taro.navigateBack()
   } else {
-    Taro.switchTab({ url: '/pages/index' });
+    Taro.switchTab({ url: '/pages/index' })
   }
-};
+}
 
-const statusMap = {
+const statusMap: Record<string, { label: string; color: string; bg: string }> = {
   compliant: { label: '合规', color: 'var(--color-compliant)', bg: '#ECFDF5' },
   warning: { label: '偏高', color: 'var(--color-warning)', bg: '#FFFBEB' },
   excessive: { label: '超额', color: 'var(--color-excessive)', bg: '#FEF2F2' },
 }
 
-function formatDate(ts: number) {
-  const d = new Date(ts)
+function formatDate(isoStr: string) {
+  const d = new Date(isoStr)
+  if (isNaN(d.getTime())) return isoStr
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-export default function HistoryPage() {
-  const [history, setHistory] = useState<CalcHistoryItem[]>([])
-  const [detailRecord, setDetailRecord] = useState<CalcHistoryItem | null>(null)
+const modeLabelMap: Record<string, string> = {
+  fixed: '简易模式',
+  custom: '逐期录入',
+  fee: '费用拆分',
+}
 
-  const loadHistory = () => {
-    setHistory(getHistory())
-  }
+export default function HistoryPage() {
+  const [history, setHistory] = useState<HistoryItem[]>([])
+  const [detailRecord, setDetailRecord] = useState<HistoryItem | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const loadHistory = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetchHistory(100, 0)
+      if (res.data) {
+        setHistory(res.data)
+      }
+    } catch {
+      // api.ts 已 toast
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useDidShow(() => {
     loadHistory()
@@ -51,31 +70,35 @@ export default function HistoryPage() {
     Taro.showToast({ title: msg, icon: 'none', duration: 2000 })
   }
 
-  const handleDelete = (id: string) => {
-    if (!checkLogin()) return;
+  const handleDelete = async (id: number) => {
+    if (!checkLogin()) return
     Taro.showModal({
       title: '确认删除',
       content: '确定要删除这条记录吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          removeHistoryItem(id)
-          setDetailRecord(null)
-          loadHistory()
-          showToast('记录已删除')
+          try {
+            await deleteHistoryRecord(id)
+            setDetailRecord(null)
+            loadHistory()
+            showToast('记录已删除')
+          } catch {
+            // api.ts 已 toast
+          }
         }
       }
     })
   }
 
-  const handleRestore = (record: CalcHistoryItem) => {
-    if (!checkLogin()) return;
+  const handleRestore = (record: HistoryItem) => {
+    if (!checkLogin()) return
     Taro.setStorageSync('appliedTemplate', {
-      type: record.params.mode === 'fixed' ? 'simple' : record.params.mode === 'custom' ? 'periodic' : 'fee',
+      type: record.mode === 'fixed' ? 'simple' : record.mode === 'custom' ? 'periodic' : 'fee',
       data: {
-        principal: record.params.principal,
-        fixedPayment: record.params.fixedPayment,
-        customPayments: record.params.customPayments,
-        periods: record.params.periods,
+        principal: record.principal,
+        fixedPayment: record.fixedPayment,
+        customPayments: record.customPayments,
+        periods: record.periods,
       }
     })
     setDetailRecord(null)
@@ -83,14 +106,30 @@ export default function HistoryPage() {
     showToast('记录已恢复')
   }
 
-  const handleQuickCompare = (record: CalcHistoryItem) => {
-    if (!checkLogin()) return;
+  const handleQuickCompare = (record: HistoryItem) => {
+    if (!checkLogin()) return
+    const { saveCompareList, addToCompare } = require('../../utils/storage')
     saveCompareList([])
-    const item: CompareItem = {
-      id: record.id + '_c',
-      timestamp: record.timestamp,
-      params: { ...record.params },
-      result: { ...record.result },
+    const item: any = {
+      id: String(record.id) + '_c',
+      timestamp: new Date(record.createdAt).getTime(),
+      params: {
+        mode: record.mode,
+        principal: record.principal,
+        fixedPayment: record.fixedPayment,
+        customPayments: record.customPayments,
+        periods: record.periods,
+      },
+      result: {
+        irr: record.irr,
+        complianceStatus: record.complianceStatus,
+        complianceLimit: record.complianceLimit,
+        totalPayment: record.totalPayment,
+        totalInterest: record.totalInterest,
+        excessInterest: record.excessInterest,
+        nominalAPR: record.nominalAPR,
+        periods: record.periods,
+      },
       platformName: '贷款1',
     }
     addToCompare(item)
@@ -99,19 +138,43 @@ export default function HistoryPage() {
     showToast('已添加至对比')
   }
 
-  const handleClearAll = () => {
-    if (!checkLogin()) return;
+  const handleClearAll = async () => {
+    if (!checkLogin()) return
     Taro.showModal({
       title: '确认清空',
       content: '确定要清空所有历史记录吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          clearHistory()
-          loadHistory()
-          showToast('已清空所有记录')
+          Taro.showLoading({ title: '清空中...' })
+          try {
+            // 逐条删除所有记录
+            for (const item of history) {
+              await deleteHistoryRecord(item.id)
+            }
+            Taro.hideLoading()
+            loadHistory()
+            showToast('已清空所有记录')
+          } catch {
+            Taro.hideLoading()
+          }
         }
       }
     })
+  }
+
+  if (loading) {
+    return (
+      <View className="history-page">
+        <View className="history-header">
+          <Text className="back-btn" onClick={handleBack}>‹</Text>
+          <Text className="history-title">计算历史</Text>
+          <View className="history-clear-placeholder" />
+        </View>
+        <View className="empty-state">
+          <Text className="empty-text">加载中...</Text>
+        </View>
+      </View>
+    )
   }
 
   if (history.length === 0) {
@@ -138,22 +201,22 @@ export default function HistoryPage() {
     <View className="history-page">
       <View className="history-header">
         <Text className="back-btn" onClick={handleBack}>‹</Text>
-        <Text className="history-title">计算历史</Text>
+        <Text className="history-title">计算历史（{history.length}）</Text>
         <Text className="history-clear" onClick={handleClearAll}>清空</Text>
       </View>
 
       <ScrollView scrollY className="history-content">
         <View className="history-list">
           {history.map(record => {
-            const status = statusMap[record.result.complianceStatus]
-            const modeLabel = record.params.mode === 'fixed' ? '简易模式' : record.params.mode === 'custom' ? '逐期录入' : '费用拆分'
+            const status = statusMap[record.complianceStatus] || statusMap.compliant
+            const modeLabel = modeLabelMap[record.mode] || '简易模式'
 
             return (
               <View key={record.id} className="history-card" onClick={() => setDetailRecord(record)}>
                 <View className="history-card-header">
                   <View className="history-card-left">
-                    <Text className="history-card-date">{formatDate(record.timestamp)}</Text>
-                    <Text className="history-card-meta">{modeLabel} · {record.result.periods}期</Text>
+                    <Text className="history-card-date">{formatDate(record.createdAt)}</Text>
+                    <Text className="history-card-meta">{modeLabel} · {record.periods}期</Text>
                   </View>
                   <Text className="history-card-status" style={{ color: status.color, background: status.bg }}>
                     {status.label}
@@ -161,13 +224,13 @@ export default function HistoryPage() {
                 </View>
                 <View className="history-card-body">
                   <View className="history-card-irr">
-                    <Text className="irr-value">{record.result.irr.toFixed(2)}%</Text>
+                    <Text className="irr-value">{record.irr.toFixed(2)}%</Text>
                     <Text className="irr-label">IRR</Text>
                   </View>
                   <View className="history-card-right">
-                    <Text className="history-card-principal">本金 ¥{record.params.principal.toLocaleString()}</Text>
-                    {record.result.excessInterest > 0 && (
-                      <Text className="history-card-excess">超额利息 ¥{record.result.excessInterest.toLocaleString()}</Text>
+                    <Text className="history-card-principal">本金 ¥{record.principal.toLocaleString()}</Text>
+                    {record.excessInterest != null && record.excessInterest > 0 && (
+                      <Text className="history-card-excess">超额利息 ¥{record.excessInterest.toLocaleString()}</Text>
                     )}
                   </View>
                 </View>
@@ -190,32 +253,32 @@ export default function HistoryPage() {
 
             <View className="detail-section">
               <View className="detail-header">
-                <Text className="detail-date">{formatDate(detailRecord.timestamp)}</Text>
+                <Text className="detail-date">{formatDate(detailRecord.createdAt)}</Text>
                 <Text className="detail-status" style={{
-                  color: statusMap[detailRecord.result.complianceStatus].color,
-                  background: statusMap[detailRecord.result.complianceStatus].bg,
+                  color: (statusMap[detailRecord.complianceStatus] || statusMap.compliant).color,
+                  background: (statusMap[detailRecord.complianceStatus] || statusMap.compliant).bg,
                 }}>
-                  {statusMap[detailRecord.result.complianceStatus].label}
+                  {(statusMap[detailRecord.complianceStatus] || statusMap.compliant).label}
                 </Text>
               </View>
 
               <View className="detail-irr">
-                <Text className="detail-irr-value">{detailRecord.result.irr.toFixed(2)}%</Text>
+                <Text className="detail-irr-value">{detailRecord.irr.toFixed(2)}%</Text>
                 <Text className="detail-irr-label">IRR</Text>
               </View>
 
               <View className="detail-info">
-                <View className="detail-row"><Text className="detail-label">借款本金</Text><Text className="detail-value">¥{detailRecord.params.principal.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总还款额</Text><Text className="detail-value">¥{detailRecord.result.totalPayment.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总利息</Text><Text className="detail-value">¥{detailRecord.result.totalInterest.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总期数</Text><Text className="detail-value">{detailRecord.result.periods} 期</Text></View>
-                <View className="detail-row"><Text className="detail-label">名义APR</Text><Text className="detail-value">{detailRecord.result.nominalAPR.toFixed(2)}%</Text></View>
-                <View className="detail-row"><Text className="detail-label">法定上限</Text><Text className="detail-value">{detailRecord.result.complianceLimit}%</Text></View>
-                {detailRecord.result.excessInterest > 0 && (
+                <View className="detail-row"><Text className="detail-label">借款本金</Text><Text className="detail-value">¥{detailRecord.principal.toLocaleString()}</Text></View>
+                <View className="detail-row"><Text className="detail-label">总还款额</Text><Text className="detail-value">¥{detailRecord.totalPayment.toLocaleString()}</Text></View>
+                <View className="detail-row"><Text className="detail-label">总利息</Text><Text className="detail-value">¥{detailRecord.totalInterest.toLocaleString()}</Text></View>
+                <View className="detail-row"><Text className="detail-label">总期数</Text><Text className="detail-value">{detailRecord.periods} 期</Text></View>
+                <View className="detail-row"><Text className="detail-label">名义APR</Text><Text className="detail-value">{(detailRecord.nominalAPR ?? 0).toFixed(2)}%</Text></View>
+                <View className="detail-row"><Text className="detail-label">法定上限</Text><Text className="detail-value">{detailRecord.complianceLimit}%</Text></View>
+                {detailRecord.excessInterest != null && detailRecord.excessInterest > 0 && (
                   <View className="detail-row excess">
                     <Text className="detail-label">超额利息</Text>
                     <Text className="detail-value" style={{ color: 'var(--color-excessive)' }}>
-                      ¥{detailRecord.result.excessInterest.toLocaleString()}
+                      ¥{detailRecord.excessInterest.toLocaleString()}
                     </Text>
                   </View>
                 )}
@@ -223,16 +286,16 @@ export default function HistoryPage() {
             </View>
 
             <View className="detail-actions">
-              <Button className="detail-btn" onClick={() => handleRestore(detailRecord)}>
+              <View className="detail-btn" onClick={() => handleRestore(detailRecord)}>
                 📋 重新载入
-              </Button>
-              <Button className="detail-btn delete" onClick={() => handleDelete(detailRecord.id)}>
+              </View>
+              <View className="detail-btn detail-btn-delete" onClick={() => handleDelete(detailRecord.id)}>
                 🗑 删除
-              </Button>
+              </View>
             </View>
-            <Button className="detail-btn compare" onClick={() => handleQuickCompare(detailRecord)}>
+            <View className="detail-btn detail-btn-compare" onClick={() => handleQuickCompare(detailRecord)}>
               📊 加入对比
-            </Button>
+            </View>
           </View>
         )}
       </Popup>

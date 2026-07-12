@@ -18,6 +18,7 @@ import {
 } from '../../utils/carFinance';
 import { formatCurrency, formatRate } from '../../utils/finance';
 import { getCachedCarConfig, initCarConfig } from '../../services/carConfig';
+import { saveCalcRecord } from '../../services/api';
 import { CarConfigBundle, KnowledgeItem } from '../../data/carDefaults';
 import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar';
 import './index.less';
@@ -139,6 +140,28 @@ export default function AutoCalcPage() {
     const res = calculateCarLoan(input);
     setResult(res);
     setShowResult(true);
+
+    // 异步保存到后端历史记录
+    saveCalcRecord({
+      calculatorType: 'auto',
+      mode: method,
+      principal: loanAmount,
+      totalPayment: res.totalPayment,
+      totalInterest: res.totalInterest + res.totalFee,
+      periods: term,
+      rate,
+      irr: res.irrConverged ? res.irr : undefined,
+      inputSnapshot: {
+        loanAmount, term, rate, downPayment, method,
+        fees: fees.filter(f => f.amount > 0),
+        prepaymentPeriod: advancedOpen ? prepaymentPeriod : undefined,
+      },
+      fees: fees.filter(f => f.amount > 0).map(f => ({
+        name: f.label || '费用',
+        amount: f.amount,
+        cycle: f.cycle,
+      })),
+    }).catch(() => {});
   };
 
   const handleViewDetail = () => {

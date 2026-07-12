@@ -255,3 +255,55 @@ export interface LPRInfo {
 export const getLPR = async (): Promise<ApiResponse<{ latest: LPRInfo }>> => {
   return request<{ latest: LPRInfo }>('/api/calculator/lpr', 'GET', undefined, false)
 }
+
+// 历史记录相关类型
+export interface HistoryItem {
+  id: number;
+  userId: number | null;
+  calculatorType?: string;
+  mode: string;
+  principal: number;
+  fixedPayment: number | null;
+  customPayments: number[] | null;
+  periods: number;
+  loanDate: string | null;
+  paidPeriods: number;
+  irr: number;
+  irrCompound: number | null;
+  nominalAPR: number | null;
+  complianceStatus: 'compliant' | 'warning' | 'excessive';
+  complianceLimit: number;
+  totalPayment: number;
+  totalInterest: number;
+  excessInterest: number | null;
+  lprUsed: number;
+  fees: FeeItem[] | null;
+  inputSnapshot?: any;
+  createdAt: string;
+}
+
+export const fetchHistory = async (limit: number = 50, offset: number = 0): Promise<ApiResponse<HistoryItem[]>> => {
+  return request<HistoryItem[]>(`/api/calculator/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false)
+}
+
+export const deleteHistoryRecord = async (id: number): Promise<ApiResponse<null>> => {
+  return request<null>(`/api/calculator/history/${id}`, 'DELETE', undefined, false)
+}
+
+// 通用保存计算记录（支持房贷/车贷/利率测算）
+export interface SaveCalcRecordPayload {
+  calculatorType: 'irr' | 'mortgage' | 'auto';
+  mode: string;
+  principal: number;
+  totalPayment: number;
+  totalInterest: number;
+  periods: number;
+  rate?: number;
+  irr?: number;
+  inputSnapshot?: any;
+  fees?: any[];
+}
+
+export const saveCalcRecord = async (payload: SaveCalcRecordPayload): Promise<ApiResponse<null>> => {
+  return request<null>('/api/calculator/save-record', 'POST', payload, false)
+}
