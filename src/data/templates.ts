@@ -410,9 +410,5 @@ export const MENU_ITEMS: MenuItem[] = [
   { icon: '🎨', title: '主题切换', url: '', action: 'theme' },
   { icon: '📈', title: 'LPR设置', url: '/pages/settings' },
   { icon: '📋', title: '查看模板', url: '/pages/templates' },
-  { icon: '👤', title: '个人中心', url: '/pages/profile' },
-  { icon: '💬', title: '联系客服', url: '' },
-  { icon: 'ℹ️', title: '关于我们', url: '' },
-  { icon: '🔒', title: '隐私政策', url: '' },
   { icon: '📝', title: '用户协议', url: '/pages/agreement' },
 ];

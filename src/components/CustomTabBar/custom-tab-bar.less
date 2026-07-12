@@ -26,11 +26,6 @@
   transition: all 0.25s ease;
 
   &.active {
-    .tab-icon {
-      color: @tab-active;
-      transform: scale(1.1);
-    }
-
     .tab-text {
       color: @tab-active;
       font-weight: 600;
@@ -39,10 +34,23 @@
 }
 
 .tab-icon {
-  font-size: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24rpx;
+  height: 24rpx;
   margin-bottom: 8rpx;
-  color: @tab-inactive;
-  transition: color 0.25s ease, transform 0.25s ease;
+  transition: all 0.25s ease;
+
+  .tab-item.active & {
+    transform: scale(1.1);
+  }
+}
+
+.tab-icon-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tab-text {

@@ -42,7 +42,7 @@
 .header-badge {
   padding: 12rpx 24rpx;
   border: 1rpx solid @brand-primary-muted;
-  border-radius: 999px;
+  border-radius: 20rpx;
   background: rgba(26, 58, 92, 0.06);
   flex-shrink: 0;
 }
@@ -183,6 +183,26 @@
 
 .prefix {
   font-weight: 500;
+}
+
+/* ===== 表单输入框加大 ===== */
+.form-control {
+  .nut-inputnumber {
+    width: auto;
+    min-width: 220rpx;
+  }
+
+  .nut-inputnumber-minus,
+  .nut-inputnumber-add {
+    width: 52rpx;
+    height: 52rpx;
+  }
+
+  .nut-inputnumber-input {
+    width: 120rpx;
+    height: 52rpx;
+    font-size: 30rpx;
+  }
 }
 
 /* ===== 期限标签行 ===== */

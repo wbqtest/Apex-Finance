@@ -92,16 +92,14 @@ export default function Mine() {
       loadHistory();
       return;
     }
-    const noLoginRequired = ['查看模板', '联系客服', '关于我们', '隐私政策'];
+    const noLoginRequired = ['查看模板', '用户协议'];
     if (!noLoginRequired.includes(item.title) && !isLoggedIn) {
       Taro.showToast({ title: '请先登录', icon: 'none' });
       Taro.navigateTo({ url: '/pages/login' });
       return;
     }
     if (!item.url) {
-      if (noLoginRequired.includes(item.title)) {
-        Toast.show('', { content: '功能开发中', duration: 2000 });
-      }
+      Toast.show('功能开发中', { duration: 2000 });
       return;
     }
     Taro.navigateTo({ url: item.url });

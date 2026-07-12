@@ -238,12 +238,10 @@ export default function MortgagePage() {
                 </View>
               </View>
             ) : (
-              <View className="form-row form-row-vertical">
-                <View className="form-label-row">
-                  <Text className="form-label">按揭比例</Text>
-                  <Text className="form-value-hint">{ratio}%（贷款 {displayLoanTotal} 万）</Text>
-                </View>
+              <View className="form-row">
+                <Text className="form-label">按揭比例</Text>
                 <View className="form-control">
+                  <Text className="form-value-hint">{ratio}%（贷款 {displayLoanTotal} 万）</Text>
                   <InputNumber
                     value={ratio}
                     min={10} max={90} step={5} digits={0}
@@ -458,21 +456,21 @@ export default function MortgagePage() {
           </View>
           <View className="schedule-table-fixed">
             <View className="schedule-head">
-              <Text className="col">期数</Text>
+              <Text className="col col-period">期数</Text>
               <Text className="col">月供</Text>
               <Text className="col">本金</Text>
               <Text className="col">利息</Text>
-              <Text className="col">剩余本金</Text>
+              <Text className="col col-remain">剩余本金</Text>
             </View>
           </View>
           <ScrollView className="schedule-scroll" scrollY>
             {result?.schedule.map(r => (
               <View className="schedule-row" key={r.period}>
-                <Text className="col">{r.period}</Text>
-                <Text className="col">{formatCurrency(r.total * 10000)}</Text>
-                <Text className="col">{formatCurrency(r.principal * 10000)}</Text>
-                <Text className="col">{formatCurrency(r.interest * 10000)}</Text>
-                <Text className="col">{formatCurrency(r.remainingPrincipal * 10000)}</Text>
+                <Text className="col col-period">{r.period}</Text>
+                <Text className="col col-primary">{formatCurrency(r.total)}</Text>
+                <Text className="col">{formatCurrency(r.principal)}</Text>
+                <Text className="col col-primary">{formatCurrency(r.interest)}</Text>
+                <Text className="col col-remain">{formatCurrency(r.remainingPrincipal)}</Text>
               </View>
             ))}
           </ScrollView>

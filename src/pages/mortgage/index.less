@@ -197,10 +197,26 @@
   margin-bottom: 8rpx;
 }
 
+.form-label-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+}
+
 .form-value-hint {
   font-size: 24rpx;
   color: @brand-primary;
   font-weight: 600;
+  margin-right: 24rpx;
+}
+
+.form-value-hint-sm {
+  font-size: 22rpx;
+  color: @brand-primary;
+  font-weight: 600;
+  margin-top: 4rpx;
 }
 
 .form-label {
@@ -545,12 +561,11 @@
 
 .schedule-scroll {
   flex: 1;
-  padding: 0 16rpx;
 }
 
 .schedule-row {
   display: flex;
-  padding: 24rpx 0;
+  padding: 24rpx 16rpx;
   border-bottom: 1rpx solid @border-color;
   font-size: 24rpx;
   color: @text-secondary;
@@ -566,6 +581,46 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.col-period {
+  flex: 0 0 15%;
+}
+
+.col-remain {
+  flex: 0 0 25%;
+}
+
+.col-primary {
+  color: @brand-primary;
+  font-weight: 600;
+}
+
+.col-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.stack-label {
+  font-size: 22rpx;
+  color: @text-secondary;
+  line-height: 1.2;
+}
+
+.stack-value {
+  font-size: 24rpx;
+  color: @text-secondary;
+  line-height: 1.2;
+}
+
+.stack-value-primary {
+  font-size: 24rpx;
+  color: @brand-primary;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .schedule-drawer-close {

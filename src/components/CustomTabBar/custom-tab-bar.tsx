@@ -1,21 +1,23 @@
 import { View, Text } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import { useState } from 'react';
+import { getTheme, themes } from '../../utils/theme';
+import TabBarIcons from './TabBarIcons';
 import './custom-tab-bar.less';
 
 interface TabItem {
   key: string;
   path: string;
   text: string;
-  icon: string;
+  icon: 'index' | 'mortgage' | 'auto' | 'prepay' | 'mine';
 }
 
 const tabs: TabItem[] = [
-  { key: 'index', path: '/pages/index', text: '首页', icon: '📋' },
-  { key: 'mortgage', path: '/pages/mortgage', text: '房贷计算', icon: '🏠' },
-  { key: 'auto', path: '/pages/auto', text: '车贷计算', icon: '🚗' },
-  { key: 'prepay', path: '/pages/prepay', text: '提前还贷', icon: '💰' },
-  { key: 'mine', path: '/pages/mine', text: '我的', icon: '👤' },
+  { key: 'index', path: '/pages/index', text: '首页', icon: 'index' },
+  { key: 'mortgage', path: '/pages/mortgage', text: '房贷计算', icon: 'mortgage' },
+  { key: 'auto', path: '/pages/auto', text: '车贷计算', icon: 'auto' },
+  { key: 'prepay', path: '/pages/prepay', text: '提前还贷', icon: 'prepay' },
+  { key: 'mine', path: '/pages/mine', text: '我的', icon: 'mine' },
 ];
 
 const getActiveKey = (): string => {
@@ -43,6 +45,13 @@ const getActiveKey = (): string => {
   return tabs[0].key;
 };
 
+const getIconColor = (isActive: boolean): string => {
+  const themeName = getTheme();
+  const themeConfig = themes[themeName];
+  if (!themeConfig) return isActive ? '#E86272' : '#9CA3AF';
+  return isActive ? themeConfig.tabActive : themeConfig.tabInactive;
+};
+
 export default function CustomTabBar() {
   const [activeKey, setActiveKey] = useState<string>(tabs[0].key);
 
@@ -61,16 +70,21 @@ export default function CustomTabBar() {
 
   return (
     <View className="custom-tab-bar">
-      {tabs.map((tab) => (
-        <View
-          key={tab.key}
-          className={`tab-item ${tab.key === activeKey ? 'active' : ''}`}
-          onClick={() => handleTabClick(tab)}
-        >
-          <Text className="tab-icon">{tab.icon}</Text>
-          <Text className="tab-text">{tab.text}</Text>
-        </View>
-      ))}
+      {tabs.map((tab) => {
+        const isActive = tab.key === activeKey;
+        return (
+          <View
+            key={tab.key}
+            className={`tab-item ${isActive ? 'active' : ''}`}
+            onClick={() => handleTabClick(tab)}
+          >
+            <View className="tab-icon">
+              <TabBarIcons name={tab.icon} color={getIconColor(isActive)} />
+            </View>
+            <Text className="tab-text">{tab.text}</Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
