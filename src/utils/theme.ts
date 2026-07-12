@@ -7,6 +7,7 @@ export interface ThemeConfig {
   brandPrimaryDark: string
   brandPrimaryLight: string
   brandPrimaryPale: string
+  brandPrimaryMuted: string
   brandAccent?: string
   brandAccentLight?: string
   textPrimary: string
@@ -26,6 +27,7 @@ export const themes: Record<ThemeName, ThemeConfig> = {
     brandPrimaryDark: '#0F2A44',
     brandPrimaryLight: '#E8EEF4',
     brandPrimaryPale: '#F5F8FA',
+    brandPrimaryMuted: '#CBD5E1',
     textPrimary: '#1A1A1A',
     textSecondary: '#6B7280',
     textOnPrimary: '#FFFFFF',
@@ -41,6 +43,7 @@ export const themes: Record<ThemeName, ThemeConfig> = {
     brandPrimaryDark: '#004033',
     brandPrimaryLight: '#E8F0ED',
     brandPrimaryPale: '#F5F9F7',
+    brandPrimaryMuted: '#C4D5D0',
     textPrimary: '#1A1A1A',
     textSecondary: '#6B7280',
     textOnPrimary: '#FFFFFF',
@@ -56,6 +59,7 @@ export const themes: Record<ThemeName, ThemeConfig> = {
     brandPrimaryDark: '#111827',
     brandPrimaryLight: '#F3F4F6',
     brandPrimaryPale: '#FAFAFA',
+    brandPrimaryMuted: '#D1D5DB',
     brandAccent: '#D4A017',
     brandAccentLight: '#FDF6E3',
     textPrimary: '#111827',
@@ -73,6 +77,7 @@ export const themes: Record<ThemeName, ThemeConfig> = {
     brandPrimaryDark: '#CC4A2A',
     brandPrimaryLight: '#FDF0E8',
     brandPrimaryPale: '#FEF8F5',
+    brandPrimaryMuted: '#F0D5CA',
     textPrimary: '#1A1A1A',
     textSecondary: '#6B7280',
     textOnPrimary: '#FFFFFF',
@@ -88,6 +93,7 @@ export const themes: Record<ThemeName, ThemeConfig> = {
     brandPrimaryDark: '#552BC4',
     brandPrimaryLight: '#F0EBFF',
     brandPrimaryPale: '#F8F5FF',
+    brandPrimaryMuted: '#DED5F5',
     textPrimary: '#1A1A1A',
     textSecondary: '#6B7280',
     textOnPrimary: '#FFFFFF',
@@ -103,6 +109,7 @@ export const themes: Record<ThemeName, ThemeConfig> = {
     brandPrimaryDark: '#CC4A5A',
     brandPrimaryLight: '#FDF0F2',
     brandPrimaryPale: '#FEF8F9',
+    brandPrimaryMuted: '#F0D5D8',
     textPrimary: '#1A1A1A',
     textSecondary: '#6B7280',
     textOnPrimary: '#FFFFFF',
@@ -118,6 +125,7 @@ export const themes: Record<ThemeName, ThemeConfig> = {
     brandPrimaryDark: '#0A6E6E',
     brandPrimaryLight: '#E8F5F5',
     brandPrimaryPale: '#F5FAFA',
+    brandPrimaryMuted: '#C8DDDD',
     textPrimary: '#1A1A1A',
     textSecondary: '#6B7280',
     textOnPrimary: '#FFFFFF',
@@ -142,6 +150,7 @@ export const applyTheme = (themeName: ThemeName): void => {
   root.style.setProperty('--brand-primary-dark', theme.brandPrimaryDark)
   root.style.setProperty('--brand-primary-light', theme.brandPrimaryLight)
   root.style.setProperty('--brand-primary-pale', theme.brandPrimaryPale)
+  root.style.setProperty('--brand-primary-muted', theme.brandPrimaryMuted)
 
   if (theme.brandAccent) {
     root.style.setProperty('--brand-accent', theme.brandAccent)

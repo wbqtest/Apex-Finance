@@ -11,8 +11,10 @@ interface TabItem {
 }
 
 const tabs: TabItem[] = [
-  { key: 'home', path: '/pages/index', text: '首页', icon: '🏠' },
-  { key: 'compare', path: '/pages/compare', text: '对比', icon: '📊' },
+  { key: 'index', path: '/pages/index', text: '首页', icon: '📋' },
+  { key: 'mortgage', path: '/pages/mortgage', text: '房贷计算', icon: '🏠' },
+  { key: 'auto', path: '/pages/auto', text: '车贷计算', icon: '🚗' },
+  { key: 'prepay', path: '/pages/prepay', text: '提前还贷', icon: '💰' },
   { key: 'mine', path: '/pages/mine', text: '我的', icon: '👤' },
 ];
 

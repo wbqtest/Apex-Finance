@@ -191,7 +191,7 @@ export default function Agreement() {
             <Text className="text">如您对本协议有任何疑问或建议，可通过以下方式联系我们：</Text>
           </View>
           <View className="paragraph">
-            <Text className="text"><Text className="bold">电子邮箱</Text>：[填写联系邮箱]</Text>
+            <Text className="text"><Text className="bold">电子邮箱</Text>：554960436@qq.com</Text>
           </View>
           <View className="paragraph">
             <Text className="text"><Text className="bold">联系地址</Text>：[填写联系地址]</Text>

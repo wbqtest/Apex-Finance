@@ -14,7 +14,12 @@ export default defineAppConfig({
     'pages/templates',
     'pages/compare',
     'pages/history',
-    'pages/report'
+    'pages/report',
+    'pages/auto',
+    'pages/auto-result',
+    'pages/auto-compare',
+    'pages/prepay',
+    'pages/mortgage'
   ],
   window: {
     backgroundTextStyle: 'light',
@@ -34,8 +39,16 @@ export default defineAppConfig({
         text: '首页'
       },
       {
-        pagePath: 'pages/compare',
-        text: '对比'
+        pagePath: 'pages/mortgage',
+        text: '房贷计算'
+      },
+      {
+        pagePath: 'pages/auto',
+        text: '车贷计算'
+      },
+      {
+        pagePath: 'pages/prepay',
+        text: '提前还贷'
       },
       {
         pagePath: 'pages/mine',

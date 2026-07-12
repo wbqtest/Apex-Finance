@@ -407,11 +407,8 @@ export const calculateAllFromPayments = (
 };
 
 export const formatCurrency = (value: number): string => {
-  if (isNaN(value) || value < 0) return '0.00';
-  return value.toLocaleString('zh-CN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  if (isNaN(value) || value < 0) return '0';
+  return Math.round(value).toLocaleString('zh-CN');
 };
 
 export const formatRate = (value: number): string => {

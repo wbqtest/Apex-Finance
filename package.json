@@ -37,6 +37,7 @@
   ],
   "author": "",
   "dependencies": {
+    "@antv/f2": "^4.0.48",
     "@babel/runtime": "^7.24.4",
     "@nutui/nutui-react-taro": "^3.0.20",
     "@tarojs/components": "4.2.0",

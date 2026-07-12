@@ -1,0 +1,244 @@
+@import '../../styles/theme.less';
+
+.auto-result {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: @bg-page;
+}
+
+.loading {
+  padding: 120rpx 0;
+  text-align: center;
+  color: @text-secondary;
+  font-size: 28rpx;
+}
+
+/* ===== 顶部 ===== */
+.result-header {
+  padding: 24rpx 24rpx 24rpx;
+  background: @brand-primary;
+  color: @text-on-primary;
+}
+
+.result-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.result-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  opacity: 0.85;
+}
+
+/* ===== 滚动区域 ===== */
+.result-body {
+  flex: 1;
+  padding: 24rpx 24rpx 180rpx;
+}
+
+/* 摘要网格 */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: @spacing-sm;
+  margin-bottom: 24rpx;
+}
+
+.summary-cell {
+  background: @bg-card;
+  border-radius: @radius-card;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.cell-label {
+  font-size: 26rpx;
+  color: @text-secondary;
+}
+
+.cell-value {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: @text-primary;
+
+  &.danger {
+    color: @color-negative;
+  }
+}
+
+/* 气球款提示 */
+.balloon-tip {
+  margin-bottom: 24rpx;
+  padding: 16rpx 24rpx;
+  background: @brand-primary-light;
+  border-radius: @radius-input;
+  color: @brand-primary;
+  font-size: 26rpx;
+}
+
+/* 图表卡片 */
+.chart-card {
+  background: @bg-card;
+  border-radius: @radius-card;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: @shadow-md;
+}
+
+.chart-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+  color: @text-primary;
+}
+
+/* ===== 提前还款分析 ===== */
+.ratio-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.ratio-val {
+  margin-left: 16rpx;
+  min-width: 70rpx;
+  text-align: right;
+  color: @brand-primary;
+  font-weight: 600;
+  font-size: 26rpx;
+}
+
+.early-card {
+  padding: 16rpx 0;
+}
+
+.early-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10rpx 0;
+  font-size: 26rpx;
+  color: @text-secondary;
+  border-bottom: 1rpx solid @border-color;
+}
+
+.early-row .pos {
+  color: @color-positive;
+}
+
+.early-note {
+  margin-top: 12rpx;
+  padding: 16rpx;
+  border-radius: @radius-input;
+  font-size: 24rpx;
+
+  &.good {
+    background: rgba(5, 150, 105, 0.1);
+    color: @color-positive;
+  }
+
+  &.bad {
+    background: rgba(220, 38, 38, 0.1);
+    color: @color-negative;
+  }
+}
+
+/* ===== 还款计划表 ===== */
+.schedule-table {
+  width: 100%;
+}
+
+.schedule-head,
+.schedule-row {
+  display: flex;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid @border-color;
+  font-size: 24rpx;
+}
+
+.schedule-head {
+  font-weight: 700;
+  color: @text-secondary;
+}
+
+.schedule-body {
+  max-height: 520rpx;
+}
+
+.col {
+  flex: 1;
+  text-align: right;
+}
+
+.col:first-child {
+  text-align: left;
+  flex: 0 4 0.6;
+}
+
+/* ===== 免责声明 ===== */
+.legal-notice {
+  display: flex;
+  gap: 12rpx;
+  padding: 24rpx;
+  color: @text-secondary;
+  font-size: 24rpx;
+}
+
+/* ===== 分段控件 ===== */
+.seg {
+  display: flex;
+  border: 1rpx solid @border-color;
+  border-radius: @radius-input;
+  overflow: hidden;
+}
+
+.seg-item {
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  color: @text-secondary;
+  background: @bg-card;
+  border-right: 1rpx solid @border-color;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &.active {
+    background: @brand-primary;
+    color: @text-on-primary;
+  }
+}
+
+/* ===== 底部操作栏 ===== */
+.result-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: @spacing-sm;
+  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  background: @bg-card;
+  border-top: 1rpx solid @border-color;
+  z-index: 10;
+}
+
+.foot-btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  font-size: 28rpx;
+  border-radius: @radius-button;
+
+  &.primary {
+    background: @brand-primary !important;
+    border-color: @brand-primary !important;
+    color: @text-on-primary !important;
+  }
+}
