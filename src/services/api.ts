@@ -1,7 +1,7 @@
 // 真实API服务 - 调用后端接口
 import Taro from '@tarojs/taro'
 import { API_BASE_URL, REQUEST_TIMEOUT } from '../config/index'
-import { getToken, setToken, setUserInfo, removeToken, removeUserInfo } from '../utils/storage'
+import { getToken, setToken, setUserInfo, removeToken, removeUserInfo, getUserInfo as getStoredUserInfo } from '../utils/storage'
 
 // 响应类型定义
 interface ApiResponse<T = any> {
@@ -35,8 +35,9 @@ const request = async <T = any>(
   needAuth: boolean = false
 ): Promise<ApiResponse<T>> => {
   try {
-    // 获取token
+    // 获取token和用户信息
     const token = getToken()
+    const userInfo = getStoredUserInfo()
     console.log('[API] 请求URL:', `${API_BASE_URL}${url}`)
     console.log('[API] Token:', token ? '存在' : '不存在')
 
@@ -47,6 +48,11 @@ const request = async <T = any>(
 
     if (needAuth && token) {
       header.Authorization = `Bearer ${token}`
+    }
+
+    // 如果已登录，将用户ID放入header，作为cookie的后备方案
+    if (userInfo?.id) {
+      header['X-User-Id'] = String(userInfo.id)
     }
 
     // 发起请求
