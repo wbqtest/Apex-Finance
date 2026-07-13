@@ -1,14 +1,16 @@
 import { useState, useCallback } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { View, Text, Button, ScrollView } from '@tarojs/components'
-import { Popup } from '@nutui/nutui-react-taro'
 import './index.less'
 import {
-  fetchHistory, deleteHistoryRecord, HistoryItem,
-  fetchMortgageHistory, deleteMortgageRecord, MortgageHistoryItem,
-  fetchAutoLoanHistory, deleteAutoLoanRecord, AutoLoanHistoryItem,
+  fetchHistory, deleteHistoryRecord, deleteHistoryRecordsBatch, HistoryItem,
+  fetchMortgageHistory, deleteMortgageRecord, deleteMortgageRecordsBatch, MortgageHistoryItem,
+  fetchAutoLoanHistory, deleteAutoLoanRecord, deleteAutoLoanRecordsBatch, AutoLoanHistoryItem,
+  fetchPrepayHistory, deletePrepayRecord, deletePrepayRecordsBatch, PrepayHistoryItem,
 } from '../../services/api'
 import { getToken } from '../../utils/storage'
+import { calculateMortgage, MortgageInput } from '../../utils/mortgage'
+import { calculateCarLoan, CarLoanInput } from '../../utils/carFinance'
 
 // ---- 公共 ----
 const checkLogin = (): boolean => {
@@ -36,16 +38,22 @@ function formatDate(isoStr: string) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+const openHistoryDetail = (type: 'irr' | 'prepay', record: any) => {
+  Taro.setStorageSync('HISTORY_DETAIL_ITEM', { type, record })
+  Taro.navigateTo({ url: `/pages/history-detail?type=${type}` })
+}
+
 const showToast = (msg: string) => {
   Taro.showToast({ title: msg, icon: 'none', duration: 2000 })
 }
 
 // ---- 标签 ----
-type TabType = 'irr' | 'mortgage' | 'auto'
+type TabType = 'irr' | 'mortgage' | 'auto' | 'prepay'
 const TABS: { key: TabType; label: string }[] = [
-  { key: 'irr', label: '网贷记录' },
-  { key: 'mortgage', label: '房贷记录' },
-  { key: 'auto', label: '车贷记录' },
+  { key: 'irr', label: '网贷' },
+  { key: 'mortgage', label: '房贷' },
+  { key: 'auto', label: '车贷' },
+  { key: 'prepay', label: '提前还贷' },
 ]
 
 // ---- 网贷：模式和状态映射 ----
@@ -69,6 +77,16 @@ const autoModeLabelMap: Record<string, string> = {
   INTEREST_FIRST: '先息后本', BALLOON: '气球贷',
 }
 
+// ---- 提前还贷：还款方式 ----
+const prepayModeLabelMap: Record<string, string> = {
+  EQUAL_PI: '等额本息', EQUAL_P: '等额本金',
+}
+
+// ---- 提前还贷：类型 ----
+const prepayTypeLabelMap: Record<string, string> = {
+  FULL: '全部偿还', PARTIAL: '部分偿还',
+}
+
 // ==================== 组件 ====================
 export default function HistoryPage() {
   // ---- 公共状态 ----
@@ -77,36 +95,43 @@ export default function HistoryPage() {
 
   // ---- 网贷 ----
   const [irrList, setIrrList] = useState<HistoryItem[]>([])
-  const [irrDetail, setIrrDetail] = useState<HistoryItem | null>(null)
 
   // ---- 房贷 ----
   const [mortgageList, setMortgageList] = useState<MortgageHistoryItem[]>([])
-  const [mortgageDetail, setMortgageDetail] = useState<MortgageHistoryItem | null>(null)
 
   // ---- 车贷 ----
   const [autoList, setAutoList] = useState<AutoLoanHistoryItem[]>([])
-  const [autoDetail, setAutoDetail] = useState<AutoLoanHistoryItem | null>(null)
+
+  // ---- 提前还贷 ----
+  const [prepayList, setPrepayList] = useState<PrepayHistoryItem[]>([])
 
   // ---- 加载全部 ----
   const loadAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [irrRes, mortRes, autoRes] = await Promise.all([
-        fetchHistory(100, 0),
-        fetchMortgageHistory(100, 0),
-        fetchAutoLoanHistory(100, 0),
-      ])
-      if (irrRes.data) setIrrList(irrRes.data)
-      if (mortRes.data) setMortgageList(mortRes.data)
-      if (autoRes.data) setAutoList(autoRes.data)
-    } catch { /* api.ts 已 toast */ }
-    finally { setLoading(false) }
+      const fetchers = [
+        { fn: fetchHistory, setter: setIrrList },
+        { fn: fetchMortgageHistory, setter: setMortgageList },
+        { fn: fetchAutoLoanHistory, setter: setAutoList },
+        { fn: fetchPrepayHistory, setter: setPrepayList },
+      ]
+      await Promise.all(
+        fetchers.map(async ({ fn, setter }) => {
+          try {
+            const res = await fn(100, 0)
+            if (res.data) setter(res.data)
+          } catch (err) {
+            console.error('加载历史记录失败:', err)
+          }
+        })
+      )
+    } finally { setLoading(false) }
   }, [])
 
   useDidShow(() => { loadAll() })
 
   // ---- 当前列表 ----
-  const currentList = activeTab === 'irr' ? irrList : activeTab === 'mortgage' ? mortgageList : autoList
+  const currentList = activeTab === 'irr' ? irrList : activeTab === 'mortgage' ? mortgageList : activeTab === 'auto' ? autoList : prepayList
 
   // ---- 删除 ----
   const doDelete = async (id: number) => {
@@ -118,13 +143,12 @@ export default function HistoryPage() {
         try {
           if (activeTab === 'irr') {
             await deleteHistoryRecord(id)
-            setIrrDetail(null)
           } else if (activeTab === 'mortgage') {
             await deleteMortgageRecord(id)
-            setMortgageDetail(null)
-          } else {
+          } else if (activeTab === 'auto') {
             await deleteAutoLoanRecord(id)
-            setAutoDetail(null)
+          } else {
+            await deletePrepayRecord(id)
           }
           loadAll()
           showToast('记录已删除')
@@ -137,82 +161,108 @@ export default function HistoryPage() {
   const handleClearAll = async () => {
     if (!checkLogin()) return
     const label = TABS.find(t => t.key === activeTab)!.label
+    const ids =
+      activeTab === 'irr' ? irrList.map(item => item.id) :
+      activeTab === 'mortgage' ? mortgageList.map(item => item.id) :
+      activeTab === 'auto' ? autoList.map(item => item.id) :
+      prepayList.map(item => item.id)
+
+    if (ids.length === 0) {
+      showToast('当前没有可清空的记录')
+      return
+    }
+
     Taro.showModal({
-      title: '确认清空', content: `确定要清空所有${label}吗？`,
+      title: '确认清空',
+      content: `确定要清空所有${label}吗？共 ${ids.length} 条，清空后不可恢复。`,
+      confirmColor: '#ff4d4f',
       success: async (res) => {
         if (!res.confirm) return
         Taro.showLoading({ title: '清空中...' })
         try {
           if (activeTab === 'irr') {
-            for (const item of irrList) await deleteHistoryRecord(item.id)
-            setIrrDetail(null)
+            await deleteHistoryRecordsBatch(ids)
           } else if (activeTab === 'mortgage') {
-            for (const item of mortgageList) await deleteMortgageRecord(item.id)
-            setMortgageDetail(null)
+            await deleteMortgageRecordsBatch(ids)
+          } else if (activeTab === 'auto') {
+            await deleteAutoLoanRecordsBatch(ids)
           } else {
-            for (const item of autoList) await deleteAutoLoanRecord(item.id)
-            setAutoDetail(null)
+            await deletePrepayRecordsBatch(ids)
           }
           Taro.hideLoading()
           loadAll()
           showToast('已清空所有记录')
-        } catch { Taro.hideLoading() }
+        } catch {
+          Taro.hideLoading()
+        }
       }
     })
   }
 
-  // ---- 网贷：恢复 / 加入对比 ----
-  const handleRestoreIrr = (r: HistoryItem) => {
-    if (!checkLogin()) return
-    Taro.setStorageSync('appliedTemplate', {
-      type: r.mode === 'fixed' ? 'simple' : r.mode === 'custom' ? 'periodic' : 'fee',
-      data: {
-        principal: r.principal,
-        monthlyPayment: r.fixedPayment,  // 首页 simple 模式读取 monthlyPayment
-        months: r.periods,               // 首页 simple 模式读取 months
-        payments: r.customPayments,      // 首页 periodic 模式读取 payments
-        periods: r.periods,
-        fees: r.fees || [],
-        loanDate: r.loanDate,
-        paidPeriods: r.paidPeriods,
-      }
-    })
-    setIrrDetail(null)
-    Taro.switchTab({ url: '/pages/index' })
-    showToast('记录已恢复')
-  }
-
-  const handleCompareIrr = (r: HistoryItem) => {
-    if (!checkLogin()) return
-    const { saveCompareList, addToCompare } = require('../../utils/storage')
-    saveCompareList([])
-    const item: any = {
-      id: String(r.id) + '_c',
-      timestamp: new Date(r.createdAt).getTime(),
-      params: { mode: r.mode, principal: r.principal, fixedPayment: r.fixedPayment, customPayments: r.customPayments, periods: r.periods },
-      result: { irr: r.irr, complianceStatus: r.complianceStatus, complianceLimit: r.complianceLimit, totalPayment: r.totalPayment, totalInterest: r.totalInterest, excessInterest: r.excessInterest, nominalAPR: r.nominalAPR, periods: r.periods },
-      platformName: '贷款1',
-    }
-    addToCompare(item)
-    setIrrDetail(null)
-    Taro.navigateTo({ url: '/pages/compare' })
-    showToast('已添加至对比')
-  }
-
-  // ---- 房贷：查看详情 ----
+  // ---- 房贷：查看完整详情 ----
   const handleViewMortgageDetail = (r: MortgageHistoryItem) => {
-    if (r.inputSnapshot) {
-      Taro.setStorageSync('MORTGAGE_HISTORY_RESTORE', JSON.stringify(r.inputSnapshot))
+    if (!r.inputSnapshot) return
+    try {
+      const d = r.inputSnapshot
+      const input: MortgageInput = {
+        repayMethod: d.repayMethod || 'equalPrincipalInterest',
+        loanType: d.loanType || 'commercial',
+        calcMode: d.calcMode || 'byTotal',
+        housePrice: d.housePrice || 200,
+        loanTotal: d.loanTotal || 140,
+        ratio: d.ratio != null ? d.ratio : 70,
+        years: d.years || 20,
+        firstPayDate: d.firstPayDate || '2026-07',
+        commercialRate: d.commercialRate ?? 3.1,
+        fundRate: d.fundRate ?? 3.25,
+        fundAmount: d.fundAmount ?? 50,
+      }
+      const result = calculateMortgage(input)
+      if (!result) {
+        showToast('数据不完整，无法查看详情')
+        return
+      }
+      Taro.setStorageSync('MORTGAGE_RESULT_DATA', { input, result })
+      Taro.navigateTo({ url: '/pages/mortgage-result' })
+    } catch (e) {
+      console.error('parse mortgage snapshot error:', e)
+      showToast('数据解析失败')
     }
-    setMortgageDetail(null)
-    Taro.navigateTo({ url: '/pages/mortgage' })
+  }
+
+  // ---- 车贷：查看完整详情 ----
+  const handleViewAutoDetail = (r: AutoLoanHistoryItem) => {
+    if (!r.inputSnapshot) return
+    try {
+      const d = r.inputSnapshot
+      const input: CarLoanInput = {
+        loanAmount: d.loanAmount ?? r.principal ?? 0,
+        loanTerm: d.term ?? d.loanTerm ?? r.periods ?? 36,
+        repaymentType: d.method ?? d.repaymentType ?? 'EQUAL_PI',
+        annualRate: d.rate ?? d.annualRate ?? r.rate ?? 6,
+        downPayment: d.downPayment ?? r.downPayment ?? 0,
+        fees: d.fees ?? r.fees ?? [],
+        prepaymentPeriod: d.prepaymentPeriod,
+      }
+      const result = calculateCarLoan(input)
+      if (!result) {
+        showToast('数据不完整，无法查看详情')
+        return
+      }
+      Taro.setStorageSync('AUTO_RESULT_INPUT', input)
+      Taro.navigateTo({ url: '/pages/auto-result' })
+    } catch (e) {
+      console.error('parse auto snapshot error:', e)
+      showToast('数据解析失败')
+    }
   }
 
   // ============== 渲染 ==============
   const getTabCount = (tab: TabType) => {
     if (tab === 'irr') return irrList.length
     if (tab === 'mortgage') return mortgageList.length
-    return autoList.length
+    if (tab === 'auto') return autoList.length
+    return prepayList.length
   }
 
   return (
@@ -256,7 +306,7 @@ export default function HistoryPage() {
           <Text className="empty-icon">📋</Text>
           <Text className="empty-text">暂无记录</Text>
           <Button className="empty-btn" onClick={() => {
-            const urlMap: Record<TabType, string> = { irr: '/pages/index', mortgage: '/pages/mortgage', auto: '/pages/auto' }
+            const urlMap: Record<TabType, string> = { irr: '/pages/index', mortgage: '/pages/mortgage', auto: '/pages/auto', prepay: '/pages/prepay' }
             Taro.navigateTo({ url: urlMap[activeTab] })
           }}>去计算</Button>
         </View>
@@ -264,7 +314,7 @@ export default function HistoryPage() {
         <ScrollView scrollY className="history-content">
           <View className="history-list">
             {activeTab === 'irr' && irrList.map(r => (
-              <View key={r.id} className="history-card" onClick={() => setIrrDetail(r)}>
+              <View key={r.id} className="history-card" onClick={() => openHistoryDetail('irr', r)}>
                 <View className="history-card-header">
                   <View className="history-card-left">
                     <Text className="history-card-date">{formatDate(r.createdAt)}</Text>
@@ -280,9 +330,9 @@ export default function HistoryPage() {
                     <Text className="irr-label">IRR</Text>
                   </View>
                   <View className="history-card-right">
-                    <Text className="history-card-principal">本金 ¥{r.principal.toLocaleString()}</Text>
+                    <Text className="history-card-principal">本金 ¥{Math.round(r.principal).toLocaleString('zh-CN')}</Text>
                     {r.excessInterest != null && r.excessInterest > 0 && (
-                      <Text className="history-card-excess">超额利息 ¥{r.excessInterest.toLocaleString()}</Text>
+                      <Text className="history-card-excess">超额利息 ¥{Math.round(r.excessInterest).toLocaleString('zh-CN')}</Text>
                     )}
                   </View>
                 </View>
@@ -290,7 +340,7 @@ export default function HistoryPage() {
             ))}
 
             {activeTab === 'mortgage' && mortgageList.map(r => (
-              <View key={r.id} className="history-card" onClick={() => setMortgageDetail(r)}>
+              <View key={r.id} className="history-card" onClick={() => handleViewMortgageDetail(r)}>
                 <View className="history-card-header">
                   <View className="history-card-left">
                     <Text className="history-card-date">{formatDate(r.createdAt)}</Text>
@@ -302,13 +352,13 @@ export default function HistoryPage() {
                 </View>
                 <View className="history-card-body">
                   <View className="history-card-irr">
-                    <Text className="irr-value">{r.totalInterest.toLocaleString()}</Text>
+                    <Text className="irr-value">{Math.round(r.totalInterest).toLocaleString('zh-CN')}</Text>
                     <Text className="irr-label">总利息</Text>
                   </View>
                   <View className="history-card-right">
-                    <Text className="history-card-principal">本金 ¥{r.principal.toLocaleString()}</Text>
+                    <Text className="history-card-principal">本金 ¥{Math.round(r.principal).toLocaleString('zh-CN')}</Text>
                     {r.monthlyPayment && (
-                      <Text className="history-card-meta">月供 ¥{r.monthlyPayment.toLocaleString()}</Text>
+                      <Text className="history-card-meta">月供 ¥{Math.round(r.monthlyPayment).toLocaleString('zh-CN')}</Text>
                     )}
                   </View>
                 </View>
@@ -316,7 +366,7 @@ export default function HistoryPage() {
             ))}
 
             {activeTab === 'auto' && autoList.map(r => (
-              <View key={r.id} className="history-card" onClick={() => setAutoDetail(r)}>
+              <View key={r.id} className="history-card" onClick={() => handleViewAutoDetail(r)}>
                 <View className="history-card-header">
                   <View className="history-card-left">
                     <Text className="history-card-date">{formatDate(r.createdAt)}</Text>
@@ -330,14 +380,38 @@ export default function HistoryPage() {
                 </View>
                 <View className="history-card-body">
                   <View className="history-card-irr">
-                    <Text className="irr-value">{r.totalPayment.toLocaleString()}</Text>
+                    <Text className="irr-value">{Math.round(r.totalPayment).toLocaleString('zh-CN')}</Text>
                     <Text className="irr-label">总支出</Text>
                   </View>
                   <View className="history-card-right">
-                    <Text className="history-card-principal">本金 ¥{r.principal.toLocaleString()}</Text>
+                    <Text className="history-card-principal">本金 ¥{Math.round(r.principal).toLocaleString('zh-CN')}</Text>
                     {r.monthlyPayment && (
-                      <Text className="history-card-meta">月供 ¥{r.monthlyPayment.toLocaleString()}</Text>
+                      <Text className="history-card-meta">月供 ¥{Math.round(r.monthlyPayment).toLocaleString('zh-CN')}</Text>
                     )}
+                  </View>
+                </View>
+              </View>
+            ))}
+
+            {activeTab === 'prepay' && prepayList.map(r => (
+              <View key={r.id} className="history-card prepay-card" onClick={() => openHistoryDetail('prepay', r)}>
+                <View className="history-card-header">
+                  <View className="history-card-left">
+                    <Text className="history-card-date">{formatDate(r.createdAt)}</Text>
+                    <Text className="history-card-meta">
+                      {prepayModeLabelMap[r.mode] || r.mode} · {prepayTypeLabelMap[r.prepayType] || r.prepayType} · 第{r.paidMonths}期
+                    </Text>
+                  </View>
+                  <Text className="history-card-rate saved">省 ¥{Math.round(r.savedInterest).toLocaleString('zh-CN')}</Text>
+                </View>
+                <View className="history-card-body">
+                  <View className="history-card-irr">
+                    <Text className="irr-value saved">{Math.round(r.savedInterest).toLocaleString('zh-CN')}</Text>
+                    <Text className="irr-label">节省利息</Text>
+                  </View>
+                  <View className="history-card-right">
+                    <Text className="history-card-principal">本次需还 ¥{Math.round(r.totalPrepay).toLocaleString('zh-CN')}</Text>
+                    <Text className="history-card-meta">剩余本金 ¥{Math.round(r.remainingPrincipal).toLocaleString('zh-CN')}</Text>
                   </View>
                 </View>
               </View>
@@ -345,137 +419,6 @@ export default function HistoryPage() {
           </View>
         </ScrollView>
       )}
-
-      {/* ====== 网贷详情弹窗 ====== */}
-      <Popup visible={!!irrDetail} onClose={() => setIrrDetail(null)} position="bottom" className="history-detail-popup">
-        {irrDetail && (
-          <View className="detail-content">
-            <View className="detail-header-bar">
-              <Text className="detail-back-btn" onClick={() => setIrrDetail(null)}>‹</Text>
-              <Text className="detail-header-title">记录详情</Text>
-              <View className="detail-header-placeholder" />
-            </View>
-            <View className="detail-section">
-              <View className="detail-header">
-                <Text className="detail-date">{formatDate(irrDetail.createdAt)}</Text>
-                <Text className="detail-status" style={{
-                  color: (statusMap[irrDetail.complianceStatus] || statusMap.compliant).color,
-                  background: (statusMap[irrDetail.complianceStatus] || statusMap.compliant).bg,
-                }}>
-                  {(statusMap[irrDetail.complianceStatus] || statusMap.compliant).label}
-                </Text>
-              </View>
-              <View className="detail-irr">
-                <Text className="detail-irr-value">{irrDetail.irr.toFixed(2)}%</Text>
-                <Text className="detail-irr-label">IRR</Text>
-              </View>
-              <View className="detail-info">
-                <View className="detail-row"><Text className="detail-label">借款本金</Text><Text className="detail-value">¥{irrDetail.principal.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总还款额</Text><Text className="detail-value">¥{irrDetail.totalPayment.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总利息</Text><Text className="detail-value">¥{irrDetail.totalInterest.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总期数</Text><Text className="detail-value">{irrDetail.periods} 期</Text></View>
-                <View className="detail-row"><Text className="detail-label">名义APR</Text><Text className="detail-value">{(irrDetail.nominalAPR ?? 0).toFixed(2)}%</Text></View>
-                <View className="detail-row"><Text className="detail-label">法定上限</Text><Text className="detail-value">{irrDetail.complianceLimit}%</Text></View>
-                {irrDetail.excessInterest != null && irrDetail.excessInterest > 0 && (
-                  <View className="detail-row excess">
-                    <Text className="detail-label">超额利息</Text>
-                    <Text className="detail-value" style={{ color: 'var(--color-excessive)' }}>¥{irrDetail.excessInterest.toLocaleString()}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            <View className="detail-actions">
-              <View className="detail-btn" onClick={() => handleRestoreIrr(irrDetail)}>📋 重新载入</View>
-              <View className="detail-btn detail-btn-delete" onClick={() => doDelete(irrDetail.id)}>🗑 删除</View>
-            </View>
-            <View className="detail-btn detail-btn-compare" onClick={() => handleCompareIrr(irrDetail)}>📊 加入对比</View>
-          </View>
-        )}
-      </Popup>
-
-      {/* ====== 房贷详情弹窗 ====== */}
-      <Popup visible={!!mortgageDetail} onClose={() => setMortgageDetail(null)} position="bottom" className="history-detail-popup">
-        {mortgageDetail && (
-          <View className="detail-content">
-            <View className="detail-header-bar">
-              <Text className="detail-back-btn" onClick={() => setMortgageDetail(null)}>‹</Text>
-              <Text className="detail-header-title">房贷记录详情</Text>
-              <View className="detail-header-placeholder" />
-            </View>
-            <View className="detail-section">
-              <View className="detail-header">
-                <Text className="detail-date">{formatDate(mortgageDetail.createdAt)}</Text>
-              </View>
-              <View className="detail-info">
-                <View className="detail-row"><Text className="detail-label">还款方式</Text><Text className="detail-value">{mortgageModeLabelMap[mortgageDetail.mode] || mortgageDetail.mode}</Text></View>
-                <View className="detail-row"><Text className="detail-label">贷款本金</Text><Text className="detail-value">¥{mortgageDetail.principal.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">商贷利率</Text><Text className="detail-value">{mortgageDetail.rate}%</Text></View>
-                <View className="detail-row"><Text className="detail-label">贷款年限</Text><Text className="detail-value">{mortgageDetail.years} 年（{mortgageDetail.periods}期）</Text></View>
-                {mortgageDetail.monthlyPayment && (
-                  <View className="detail-row"><Text className="detail-label">月供</Text><Text className="detail-value">¥{mortgageDetail.monthlyPayment.toLocaleString()}</Text></View>
-                )}
-                {mortgageDetail.firstMonthPayment && (
-                  <View className="detail-row"><Text className="detail-label">首月月供</Text><Text className="detail-value">¥{mortgageDetail.firstMonthPayment.toLocaleString()}</Text></View>
-                )}
-                {mortgageDetail.lastMonthPayment && (
-                  <View className="detail-row"><Text className="detail-label">末月月供</Text><Text className="detail-value">¥{mortgageDetail.lastMonthPayment.toLocaleString()}</Text></View>
-                )}
-                <View className="detail-row"><Text className="detail-label">总还款额</Text><Text className="detail-value">¥{mortgageDetail.totalPayment.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总利息</Text><Text className="detail-value">¥{mortgageDetail.totalInterest.toLocaleString()}</Text></View>
-                {mortgageDetail.downPaymentRatio && (
-                  <View className="detail-row"><Text className="detail-label">首付比例</Text><Text className="detail-value">{mortgageDetail.downPaymentRatio}%</Text></View>
-                )}
-              </View>
-            </View>
-            <View className="detail-actions">
-              <View className="detail-btn" onClick={() => handleViewMortgageDetail(mortgageDetail)}>🏠 查看详情</View>
-              <View className="detail-btn detail-btn-delete" onClick={() => doDelete(mortgageDetail.id)}>🗑 删除</View>
-            </View>
-          </View>
-        )}
-      </Popup>
-
-      {/* ====== 车贷详情弹窗 ====== */}
-      <Popup visible={!!autoDetail} onClose={() => setAutoDetail(null)} position="bottom" className="history-detail-popup">
-        {autoDetail && (
-          <View className="detail-content">
-            <View className="detail-header-bar">
-              <Text className="detail-back-btn" onClick={() => setAutoDetail(null)}>‹</Text>
-              <Text className="detail-header-title">车贷记录详情</Text>
-              <View className="detail-header-placeholder" />
-            </View>
-            <View className="detail-section">
-              <View className="detail-header">
-                <Text className="detail-date">{formatDate(autoDetail.createdAt)}</Text>
-              </View>
-              <View className="detail-info">
-                <View className="detail-row"><Text className="detail-label">还款方式</Text><Text className="detail-value">{autoModeLabelMap[autoDetail.mode] || autoDetail.mode}</Text></View>
-                <View className="detail-row"><Text className="detail-label">贷款本金</Text><Text className="detail-value">¥{autoDetail.principal.toLocaleString()}</Text></View>
-                {autoDetail.rate != null && (
-                  <View className="detail-row"><Text className="detail-label">年化利率</Text><Text className="detail-value">{autoDetail.rate}%</Text></View>
-                )}
-                <View className="detail-row"><Text className="detail-label">贷款期限</Text><Text className="detail-value">{autoDetail.periods} 期</Text></View>
-                {autoDetail.monthlyPayment && (
-                  <View className="detail-row"><Text className="detail-label">常规月供</Text><Text className="detail-value">¥{autoDetail.monthlyPayment.toLocaleString()}</Text></View>
-                )}
-                {autoDetail.irr != null && (
-                  <View className="detail-row"><Text className="detail-label">真实年化IRR</Text><Text className="detail-value" style={{ color: 'var(--brand-primary)' }}>{autoDetail.irr.toFixed(2)}%</Text></View>
-                )}
-                <View className="detail-row"><Text className="detail-label">总支出</Text><Text className="detail-value">¥{autoDetail.totalPayment.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总利息</Text><Text className="detail-value">¥{autoDetail.totalInterest.toLocaleString()}</Text></View>
-                <View className="detail-row"><Text className="detail-label">总费用</Text><Text className="detail-value">¥{autoDetail.totalFee.toLocaleString()}</Text></View>
-                {autoDetail.downPayment && (
-                  <View className="detail-row"><Text className="detail-label">首付金额</Text><Text className="detail-value">¥{autoDetail.downPayment.toLocaleString()}</Text></View>
-                )}
-              </View>
-            </View>
-            <View className="detail-actions">
-              <View className="detail-btn" onClick={() => { setAutoDetail(null); Taro.navigateTo({ url: '/pages/auto' }) }}>🚗 去计算</View>
-              <View className="detail-btn detail-btn-delete" onClick={() => doDelete(autoDetail.id)}>🗑 删除</View>
-            </View>
-          </View>
-        )}
-      </Popup>
     </View>
   )
 }

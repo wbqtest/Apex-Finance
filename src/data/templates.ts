@@ -405,11 +405,11 @@ export interface MenuItem {
 
 export const MENU_ITEMS: MenuItem[] = [
   { icon: '📊', title: '理财计算', url: '/pages/index' },
-  { icon: '🏠', title: '提前还款计算', url: '/pages/prepay' },
+  { icon: '🏠', title: '提前还款', url: '/pages/prepay' },
   { icon: '📜', title: '计算历史', url: '/pages/history' },
-  { icon: '⚖️', title: '网贷对比', url: '/pages/compare' },
-  { icon: '🎨', title: '主题切换', url: '', action: 'theme' },
+  { icon: '⚖️', title: '贷款对比', url: '/pages/compare' },
   { icon: '📈', title: 'LPR设置', url: '/pages/settings' },
   { icon: '📋', title: '查看模板', url: '/pages/templates' },
+  { icon: '🎨', title: '主题切换', url: '', action: 'theme' },
   { icon: '📝', title: '用户协议', url: '/pages/agreement' },
 ];

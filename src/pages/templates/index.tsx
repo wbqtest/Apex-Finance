@@ -83,8 +83,8 @@ export default function TemplateList() {
       const input = template.input;
       return {
         items: [
-          { label: '本金', value: `¥${input.principal.toLocaleString()}` },
-          { label: '月供', value: `¥${input.monthlyPayment.toLocaleString()}` },
+          { label: '本金', value: `¥${Math.round(input.principal).toLocaleString('zh-CN')}` },
+          { label: '月供', value: `¥${Math.round(input.monthlyPayment).toLocaleString('zh-CN')}` },
           { label: '期限', value: `${input.periods}期` },
         ],
       };
@@ -93,9 +93,9 @@ export default function TemplateList() {
       const totalPayment = input.payments.reduce((a, b) => a + b, 0);
       return {
         items: [
-          { label: '本金', value: `¥${input.principal.toLocaleString()}` },
+          { label: '本金', value: `¥${Math.round(input.principal).toLocaleString('zh-CN')}` },
           { label: '期数', value: `${input.payments.length}期` },
-          { label: '总还款', value: `¥${totalPayment.toLocaleString()}` },
+          { label: '总还款', value: `¥${Math.round(totalPayment).toLocaleString('zh-CN')}` },
         ],
       };
     } else if (template.type === 'fee') {
@@ -104,10 +104,10 @@ export default function TemplateList() {
       const totalOneTimeFee = input.fees.filter(f => f.chargeType === 'one-time').reduce((sum, f) => sum + f.amount, 0);
       return {
         items: [
-          { label: '本金', value: `¥${input.principal.toLocaleString()}` },
+          { label: '本金', value: `¥${Math.round(input.principal).toLocaleString('zh-CN')}` },
           { label: '期限', value: `${input.periods}期` },
-          { label: '月费用', value: `¥${totalMonthlyFee.toLocaleString()}` },
-          { label: '一次性费用', value: `¥${totalOneTimeFee.toLocaleString()}` },
+          { label: '月费用', value: `¥${Math.round(totalMonthlyFee).toLocaleString('zh-CN')}` },
+          { label: '一次性费用', value: `¥${Math.round(totalOneTimeFee).toLocaleString('zh-CN')}` },
         ],
         fees: input.fees,
       };
@@ -221,7 +221,7 @@ export default function TemplateList() {
                       {(selectedTemplate.input as TemplateInputFee).fees.map((fee, index) => (
                         <View key={index} className="template-fee-item">
                           <Text className="tr-label">{fee.name} ({fee.chargeType === 'monthly' ? '月' : '次'})</Text>
-                          <Text className="tr-value">¥{fee.amount.toLocaleString()}</Text>
+                          <Text className="tr-value">¥{Math.round(fee.amount).toLocaleString('zh-CN')}</Text>
                         </View>
                       ))}
                     </View>
@@ -241,11 +241,11 @@ export default function TemplateList() {
                     </View>
                     <View className="template-report-item">
                       <Text className="tr-label">总还款额</Text>
-                      <Text className="tr-value">¥{selectedTemplate.expected.totalPayment.toLocaleString()}</Text>
+                      <Text className="tr-value">¥{Math.round(selectedTemplate.expected.totalPayment).toLocaleString('zh-CN')}</Text>
                     </View>
                     <View className="template-report-item">
                       <Text className="tr-label">总利息</Text>
-                      <Text className="tr-value">¥{selectedTemplate.expected.totalInterest.toLocaleString()}</Text>
+                      <Text className="tr-value">¥{Math.round(selectedTemplate.expected.totalInterest).toLocaleString('zh-CN')}</Text>
                     </View>
                     <View className="template-report-item">
                       <Text className="tr-label">法定上限</Text>
@@ -265,7 +265,7 @@ export default function TemplateList() {
                     <Text className="template-report-label excess-label">⚠️ 超额利息分析</Text>
                     <Text className="excess-text">
                       该产品年化 IRR {selectedTemplate.expected.irr.toFixed(2)}% 已超过法定上限 {selectedTemplate.expected.complianceLimit}%（LPR×4），
-                      超额利息约 <Text className="excess-amount">¥{Math.round(selectedTemplate.expected.totalInterest * (selectedTemplate.expected.irr - selectedTemplate.expected.complianceLimit) / selectedTemplate.expected.irr).toLocaleString()}</Text>。
+                      超额利息约 <Text className="excess-amount">¥{Math.round(selectedTemplate.expected.totalInterest * (selectedTemplate.expected.irr - selectedTemplate.expected.complianceLimit) / selectedTemplate.expected.irr).toLocaleString('zh-CN')}</Text>。
                       根据相关法规，超过部分的利息可主张调整或返还。
                     </Text>
                   </View>
@@ -276,14 +276,14 @@ export default function TemplateList() {
                   <ScrollView scrollY className="template-cashflow-list">
                     <View className="template-cashflow-row">
                       <Text className="cashflow-label">期初（借款）</Text>
-                      <Text className="cashflow-value cashflow-in">+¥{selectedTemplate.input.principal.toLocaleString()}</Text>
+                      <Text className="cashflow-value cashflow-in">+¥{Math.round(selectedTemplate.input.principal).toLocaleString('zh-CN')}</Text>
                     </View>
                     {selectedTemplate.type === 'simple' && (
                       (selectedTemplate.input as TemplateInputSimple).periods > 0 &&
                       Array.from({ length: (selectedTemplate.input as TemplateInputSimple).periods }, (_, i) => (
                         <View key={i} className="template-cashflow-row">
                           <Text className="cashflow-label">第{i + 1}期（还款）</Text>
-                          <Text className="cashflow-value cashflow-out">-¥{(selectedTemplate.input as TemplateInputSimple).monthlyPayment.toLocaleString()}</Text>
+                          <Text className="cashflow-value cashflow-out">-¥{Math.round((selectedTemplate.input as TemplateInputSimple).monthlyPayment).toLocaleString('zh-CN')}</Text>
                         </View>
                       ))
                     )}
@@ -291,7 +291,7 @@ export default function TemplateList() {
                       (selectedTemplate.input as TemplateInputPeriodic).payments.map((payment, i) => (
                         <View key={i} className="template-cashflow-row">
                           <Text className="cashflow-label">第{i + 1}期（还款）</Text>
-                          <Text className="cashflow-value cashflow-out">-¥{payment.toLocaleString()}</Text>
+                          <Text className="cashflow-value cashflow-out">-¥{Math.round(payment).toLocaleString('zh-CN')}</Text>
                         </View>
                       ))
                     )}
@@ -303,7 +303,7 @@ export default function TemplateList() {
                         return (
                           <View key={i} className="template-cashflow-row">
                             <Text className="cashflow-label">第{i + 1}期（还款）</Text>
-                            <Text className="cashflow-value cashflow-out">-¥{monthlyFees.toLocaleString()}</Text>
+                            <Text className="cashflow-value cashflow-out">-¥{Math.round(monthlyFees).toLocaleString('zh-CN')}</Text>
                           </View>
                         );
                       })

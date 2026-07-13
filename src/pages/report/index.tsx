@@ -174,15 +174,15 @@ export default function ReportPage() {
 
           <View className="detail-grid">
             <View className="detail-item">
-              <Text className="detail-item-value">¥{params.principal.toLocaleString()}</Text>
+              <Text className="detail-item-value">¥{Math.round(params.principal).toLocaleString('zh-CN')}</Text>
               <Text className="detail-item-label">借款本金</Text>
             </View>
             <View className="detail-item">
-              <Text className="detail-item-value">¥{result.totalPayment.toLocaleString()}</Text>
+              <Text className="detail-item-value">¥{Math.round(result.totalPayment).toLocaleString('zh-CN')}</Text>
               <Text className="detail-item-label">总还款额</Text>
             </View>
             <View className="detail-item">
-              <Text className="detail-item-value">¥{result.totalInterest.toLocaleString()}</Text>
+              <Text className="detail-item-value">¥{Math.round(result.totalInterest).toLocaleString('zh-CN')}</Text>
               <Text className="detail-item-label">总利息</Text>
             </View>
             <View className="detail-item">
@@ -207,7 +207,7 @@ export default function ReportPage() {
             <View className="detail-row excess">
               <Text className="detail-label">超额利息</Text>
               <Text className="detail-value" style={{ color: 'var(--color-excessive)' }}>
-                ¥{result.excessInterest.toLocaleString()}
+                ¥{Math.round(result.excessInterest).toLocaleString('zh-CN')}
               </Text>
             </View>
           )}

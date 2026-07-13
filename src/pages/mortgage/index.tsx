@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import { useState, useMemo, useEffect } from 'react';
-import Taro from '@tarojs/taro';
-import { InputNumber, Button, Toast, Popup } from '@nutui/nutui-react-taro';
+import Taro, { useDidShow } from '@tarojs/taro';
+import { InputNumber, Button, Toast } from '@nutui/nutui-react-taro';
 import {
   RepayMethod,
   LoanType,
@@ -59,7 +59,6 @@ export default function MortgagePage() {
   /* ---- 结果与弹窗 ---- */
   const [result, setResult] = useState<MortgageResult | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [showSchedule, setShowSchedule] = useState(false);
   const [toast, setToast] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
 
   const isCombination = loanType === 'combination';
@@ -125,7 +124,7 @@ export default function MortgagePage() {
     }
   }, []);
 
-  useEffect(() => {
+  useDidShow(() => {
     const restore = Taro.getStorageSync('MORTGAGE_HISTORY_RESTORE');
     if (restore && typeof restore === 'string') {
       try {
@@ -165,7 +164,7 @@ export default function MortgagePage() {
         Taro.removeStorageSync('MORTGAGE_HISTORY_RESTORE');
       } catch (e) { console.error('parse mortgage restore error:', e); }
     }
-  }, []);
+  });
 
   useEffect(() => { saveCache(); }, [repayMethod, loanType, calcMode, housePrice, loanTotal, ratio, years, commercialRate, rateType, fundRate, fundAmount]);
 
@@ -174,7 +173,6 @@ export default function MortgagePage() {
     if (!result) return;
     Taro.setStorageSync('MORTGAGE_RESULT_DATA', { input, result });
     setShowResult(false);
-    setShowSchedule(false);
     Taro.navigateTo({ url: '/pages/mortgage-result' });
   };
 
@@ -505,54 +503,13 @@ export default function MortgagePage() {
               <Button className="result-btn-secondary" onClick={() => setShowResult(false)}>
                 关闭
               </Button>
-              <Button className="result-btn-secondary" onClick={() => { setShowResult(false); setShowSchedule(true); }}>
-                还款计划
-              </Button>
               <Button className="result-btn-primary" type="primary" onClick={handleViewDetail}>
-                完整详情
+                具体详情
               </Button>
             </View>
           </View>
         </View>
       )}
-
-      {/* ========== 还款计划抽屉 ========== */}
-      <Popup
-        visible={showSchedule}
-        position="bottom"
-        style={{ height: '80vh', borderRadius: '24rpx 24rpx 0 0' }}
-        onClose={() => setShowSchedule(false)}
-      >
-        <View className="schedule-drawer">
-          <View className="schedule-drawer-head">
-            <Text className="schedule-drawer-title">还款计划明细</Text>
-            <Text className="schedule-drawer-desc">{result?.schedule.length || 0} 期</Text>
-          </View>
-          <View className="schedule-table-fixed">
-            <View className="schedule-head">
-              <Text className="col col-period">期数</Text>
-              <Text className="col">月供</Text>
-              <Text className="col">本金</Text>
-              <Text className="col">利息</Text>
-              <Text className="col col-remain">剩余本金</Text>
-            </View>
-          </View>
-          <ScrollView className="schedule-scroll" scrollY>
-            {result?.schedule.map(r => (
-              <View className="schedule-row" key={r.period}>
-                <Text className="col col-period">{r.period}</Text>
-                <Text className="col col-primary">{formatCurrency(r.total)}</Text>
-                <Text className="col">{formatCurrency(r.principal)}</Text>
-                <Text className="col col-primary">{formatCurrency(r.interest)}</Text>
-                <Text className="col col-remain">{formatCurrency(r.remainingPrincipal)}</Text>
-              </View>
-            ))}
-          </ScrollView>
-          <View className="schedule-drawer-close">
-            <Button onClick={() => setShowSchedule(false)}>关闭</Button>
-          </View>
-        </View>
-      </Popup>
 
       <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
       <CustomTabBar />

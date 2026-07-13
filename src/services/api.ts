@@ -2,6 +2,7 @@
 import Taro from '@tarojs/taro'
 import { API_BASE_URL, REQUEST_TIMEOUT } from '../config/index'
 import { getToken, setToken, setUserInfo, removeToken, removeUserInfo, getUserInfo as getStoredUserInfo } from '../utils/storage'
+import { PrepayInput, PrepayResult } from '../utils/prepayCalc'
 
 // 响应类型定义
 interface ApiResponse<T = any> {
@@ -247,6 +248,10 @@ export const calculate = async (params: CalculationParams): Promise<ApiResponse<
   return request<CalculationResult>('/api/calculator/calculate', 'POST', params, false)
 }
 
+export const calculatePrepay = async (input: PrepayInput): Promise<ApiResponse<PrepayResult>> => {
+  return request<PrepayResult>('/api/calculator/prepay/calculate', 'POST', input, false)
+}
+
 export interface LPRInfo {
   date: string;
   value: number;
@@ -290,6 +295,10 @@ export const deleteHistoryRecord = async (id: number): Promise<ApiResponse<null>
   return request<null>(`/api/calculator/history/${id}`, 'DELETE', undefined, false)
 }
 
+export const deleteHistoryRecordsBatch = async (ids: number[]): Promise<ApiResponse<{ deleted: number }>> => {
+  return request<{ deleted: number }>('/api/calculator/history/batch', 'POST', { ids }, false)
+}
+
 // 房贷历史记录
 export interface MortgageHistoryItem {
   id: number;
@@ -315,6 +324,10 @@ export const fetchMortgageHistory = async (limit: number = 50, offset: number = 
 
 export const deleteMortgageRecord = async (id: number): Promise<ApiResponse<null>> => {
   return request<null>(`/api/calculator/mortgage/history/${id}`, 'DELETE', undefined, false)
+}
+
+export const deleteMortgageRecordsBatch = async (ids: number[]): Promise<ApiResponse<{ deleted: number }>> => {
+  return request<{ deleted: number }>('/api/calculator/mortgage/history/batch', 'POST', { ids }, false)
 }
 
 // 车贷历史记录
@@ -344,9 +357,48 @@ export const deleteAutoLoanRecord = async (id: number): Promise<ApiResponse<null
   return request<null>(`/api/calculator/auto/history/${id}`, 'DELETE', undefined, false)
 }
 
-// 通用保存计算记录（支持房贷/车贷/利率测算）
+export const deleteAutoLoanRecordsBatch = async (ids: number[]): Promise<ApiResponse<{ deleted: number }>> => {
+  return request<{ deleted: number }>('/api/calculator/auto/history/batch', 'POST', { ids }, false)
+}
+
+// 提前还贷历史记录
+export interface PrepayHistoryItem {
+  id: number;
+  userId: number | null;
+  mode: string;
+  principal: number;
+  rate: number;
+  years: number;
+  periods: number;
+  monthlyPayment: number;
+  totalPayment: number;
+  totalInterest: number;
+  paidMonths: number;
+  remainingPrincipal: number;
+  savedInterest: number;
+  penalty: number;
+  totalPrepay: number;
+  prepayType: 'FULL' | 'PARTIAL';
+  partialAmount: number | null;
+  inputSnapshot?: any;
+  createdAt: string;
+}
+
+export const fetchPrepayHistory = async (limit: number = 50, offset: number = 0): Promise<ApiResponse<PrepayHistoryItem[]>> => {
+  return request<PrepayHistoryItem[]>(`/api/calculator/prepay/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false)
+}
+
+export const deletePrepayRecord = async (id: number): Promise<ApiResponse<null>> => {
+  return request<null>(`/api/calculator/prepay/history/${id}`, 'DELETE', undefined, false)
+}
+
+export const deletePrepayRecordsBatch = async (ids: number[]): Promise<ApiResponse<{ deleted: number }>> => {
+  return request<{ deleted: number }>('/api/calculator/prepay/history/batch', 'POST', { ids }, false)
+}
+
+// 通用保存计算记录（支持房贷/车贷/利率测算/提前还贷）
 export interface SaveCalcRecordPayload {
-  calculatorType: 'irr' | 'mortgage' | 'auto';
+  calculatorType: 'irr' | 'mortgage' | 'auto' | 'prepay';
   mode: string;
   principal: number;
   totalPayment: number;
@@ -365,6 +417,14 @@ export interface SaveCalcRecordPayload {
   // 车贷特有
   totalFee?: number;
   downPayment?: number;
+  // 提前还贷特有
+  paidMonths?: number;
+  remainingPrincipal?: number;
+  savedInterest?: number;
+  penalty?: number;
+  totalPrepay?: number;
+  prepayType?: 'FULL' | 'PARTIAL';
+  partialAmount?: number;
 }
 
 export const saveCalcRecord = async (payload: SaveCalcRecordPayload): Promise<ApiResponse<null>> => {

@@ -284,7 +284,7 @@ export default function BatchFillModal({ currentCount, currentPayments, onConfir
           {preview.length > 0 && (
             <View className="batch-preview">
               <Text className="batch-preview__title">
-                预览（共 {preview.length} 期，合计 ¥{preview.reduce((a, b) => a + b, 0).toLocaleString()}）
+                预览（共 {preview.length} 期，合计 ¥{Math.round(preview.reduce((a, b) => a + b, 0)).toLocaleString('zh-CN')}）
               </Text>
               <View className="batch-preview__items">
                 {preview.slice(0, 8).map((v, i) => (

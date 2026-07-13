@@ -26,7 +26,11 @@ export default function AutoComparePage() {
   });
   const bestId = sorted[0]?.id;
 
-  const barData = sorted.map((s) => ({ name: s.label, value: s.result.totalCost }));
+  const barData = sorted.map((s) => ({
+    name: s.label,
+    principal: s.result.loanAmount,
+    interest: s.result.totalInterest,
+  }));
 
   const handleRemove = (id: string) => {
     removeCarScheme(id);
@@ -48,8 +52,14 @@ export default function AutoComparePage() {
         ) : (
           <>
             <View className="chart-card">
-              <Text className="chart-title">各方案总成本（利息+费用，比全款多花）</Text>
-              <CarChart kind="bar" data={barData} nameField="name" valueField="value" />
+              <Text className="chart-title">各方案本金与利息构成</Text>
+              <CarChart
+                kind="bar"
+                data={barData}
+                nameField="name"
+                seriesField={['principal', 'interest']}
+                seriesNames={['本金', '利息']}
+              />
             </View>
 
             <CellGroup title="方案明细">

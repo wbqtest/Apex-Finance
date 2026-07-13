@@ -199,25 +199,71 @@ export default function CarChart(props: CarChartProps) {
         // bar -> column
         // 官方格式: categories: [...], series: [{name, data}, ...]
         const names = data.map((d) => d[nameField]);
-        base.padding = [15, 15, 20, 15];
+        const hideXLabel = names.length > 2;
+        base.padding = [15, 15, hideXLabel ? 10 : 20, 15];
         base.categories = names;
-        base.series = [
-          {
-            name: '',
-            data: data.map((d) => d[valueField]),
-          },
-        ];
-        base.xAxis = { disableGrid: true };
+        base.xAxis = {
+          disableGrid: true,
+          fontSize: hideXLabel ? 0 : 10,
+          fontColor: hideXLabel ? 'transparent' : '#9CA3AF',
+          labelCount: Math.min(names.length, 5),
+        };
         base.yAxis = {
           data: [{ min: 0, max: null, splitNumber: 4, format: formatAxisValue }],
           gridType: 'dash',
           dashLength: 2,
         };
-        base.extra.column = {
-          type: 'group',
-          width: Math.max(12, Math.min(22, 200 / names.length)),
-        };
-        base.legend = { show: false };
+
+        const stackFields = Array.isArray(seriesField)
+          ? seriesField
+          : seriesField
+            ? [seriesField]
+            : [];
+
+        if (stackFields.length > 1) {
+          // 堆叠柱状图：本金 + 利息
+          const sNames = seriesNames || stackFields;
+          base.series = stackFields.map((field, idx) => ({
+            name: sNames[idx] || field,
+            data: data.map((d) => d[field]),
+          }));
+          base.legend = { show: true, position: 'bottom', fontSize: 10 };
+          base.tooltip = {
+            show: true,
+            showCategory: true,
+            showMarker: true,
+            format: (item: any) => {
+              const name = item?.name || '';
+              const val = item?.data ?? item;
+              return `${name}: ${val}`;
+            },
+          };
+          base.extra.column = {
+            type: 'stack',
+            width: Math.max(14, Math.min(28, 200 / names.length)),
+            activeBgColor: '#000000',
+            activeOpacity: 0.08,
+          };
+        } else {
+          // 单系列柱状图
+          base.series = [
+            {
+              name: '',
+              data: data.map((d) => d[valueField]),
+            },
+          ];
+          base.legend = { show: false };
+          base.tooltip = {
+            show: true,
+            showCategory: true,
+            showMarker: false,
+            format: (item: any, category: string) => `${category}: ${item}`,
+          };
+          base.extra.column = {
+            type: 'group',
+            width: Math.max(12, Math.min(22, 200 / names.length)),
+          };
+        }
       }
 
       return base;

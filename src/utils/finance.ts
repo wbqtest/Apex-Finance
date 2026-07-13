@@ -440,12 +440,12 @@ export const estimatePaymentRange = (principal: number, periods: number): { min:
 export const generateCSV = (params: CalculationParams, result: CalculationResult, fees: any[]): string => {
   let csv = '项目,数值\n';
   csv += `计算时间,${new Date().toLocaleString()}\n`;
-  csv += `本金,¥${params.principal.toFixed(2)}\n`;
+  csv += `本金,¥${Math.round(params.principal)}\n`;
   csv += `贷款时间,${params.loanDate || ''}\n`;
   csv += `已还期数,${params.paidPeriods || 0}\n`;
 
   if (params.mode === 'fixed') {
-    csv += `月供,¥${(params.fixedPayment || 0).toFixed(2)}\n`;
+    csv += `月供,¥${Math.round(params.fixedPayment || 0)}\n`;
     csv += `期限,${params.periods || 0}期\n`;
   } else if (params.mode === 'custom') {
     csv += `期限,${(params.customPayments || []).length}期\n`;
@@ -456,21 +456,21 @@ export const generateCSV = (params: CalculationParams, result: CalculationResult
   csv += `名义APR,${result.nominalAPR.toFixed(2)}%\n`;
   csv += `合规状态,${result.complianceStatus === 'compliant' ? '合规' : result.complianceStatus === 'warning' ? '偏高' : '超额'}\n`;
   csv += `法定上限(LPR×4),${result.complianceLimit.toFixed(2)}%\n`;
-  csv += `总还款额,¥${result.totalPayment.toFixed(2)}\n`;
-  csv += `总利息,¥${result.totalInterest.toFixed(2)}\n`;
-  csv += `超额利息,¥${result.excessInterest.toFixed(2)}\n`;
+  csv += `总还款额,¥${Math.round(result.totalPayment)}\n`;
+  csv += `总利息,¥${Math.round(result.totalInterest)}\n`;
+  csv += `超额利息,¥${Math.round(result.excessInterest)}\n`;
 
   if (result.excessDetails && result.excessDetails.length > 0) {
     csv += '\n超额利息明细\n';
     result.excessDetails.forEach(d => {
-      csv += `${d.tier},¥${d.amount.toFixed(2)}\n`;
+      csv += `${d.tier},¥${Math.round(d.amount)}\n`;
     });
   }
 
   if (fees && fees.length > 0) {
     csv += '\n费用明细\n';
     fees.forEach(fee => {
-      csv += `${fee.name},¥${fee.amount.toFixed(2)},${fee.chargeType === 'monthly' ? '每月' : '一次性'}\n`;
+      csv += `${fee.name},¥${Math.round(fee.amount)},${fee.chargeType === 'monthly' ? '每月' : '一次性'}\n`;
     });
   }
 
@@ -481,12 +481,12 @@ export const generateReportText = (params: CalculationParams, result: Calculatio
   let text = `📊 网贷利率检测报告\n\n`;
   text += `📅 计算时间：${new Date().toLocaleString()}\n\n`;
   text += `💰 贷款信息\n`;
-  text += `  • 本金：¥${params.principal.toFixed(2)}\n`;
+  text += `  • 本金：¥${Math.round(params.principal)}\n`;
   text += `  • 贷款时间：${params.loanDate || '未填写'}\n`;
   text += `  • 已还期数：${params.paidPeriods || 0}\n`;
 
   if (params.mode === 'fixed') {
-    text += `  • 月供：¥${(params.fixedPayment || 0).toFixed(2)}\n`;
+    text += `  • 月供：¥${Math.round(params.fixedPayment || 0)}\n`;
     text += `  • 期限：${params.periods || 0}期\n`;
   }
 
@@ -495,11 +495,11 @@ export const generateReportText = (params: CalculationParams, result: Calculatio
   text += `  • 名义APR：${result.nominalAPR.toFixed(2)}%\n`;
   text += `  • 合规状态：${result.complianceStatus === 'compliant' ? '🟢 合规' : result.complianceStatus === 'warning' ? '🟡 偏高' : '🔴 超额'}\n`;
   text += `  • 法定上限(LPR×4)：${result.complianceLimit.toFixed(2)}%\n`;
-  text += `  • 总还款额：¥${result.totalPayment.toFixed(2)}\n`;
-  text += `  • 总利息：¥${result.totalInterest.toFixed(2)}\n`;
+  text += `  • 总还款额：¥${Math.round(result.totalPayment)}\n`;
+  text += `  • 总利息：¥${Math.round(result.totalInterest)}\n`;
 
   if (result.excessInterest > 0) {
-    text += `  • 超额利息：¥${result.excessInterest.toFixed(2)}\n`;
+    text += `  • 超额利息：¥${Math.round(result.excessInterest)}\n`;
   }
 
   text += `\n⚖️ 法律依据\n`;

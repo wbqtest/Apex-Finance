@@ -509,7 +509,7 @@ export default function AutoCalcPage() {
                 关闭
               </Button>
               <Button className="result-btn-primary" type="primary" onClick={handleViewDetail}>
-                查看完整详情
+                具体详情
               </Button>
             </View>
           </View>

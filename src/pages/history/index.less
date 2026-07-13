@@ -250,6 +250,9 @@
 
 .detail-content {
   padding: 0 24rpx 60rpx;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ---- 详情页 Header Bar ---- */
@@ -283,6 +286,8 @@
 
 .detail-section {
   margin-bottom: 24rpx;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .detail-header {
@@ -355,6 +360,70 @@
   font-size: 30rpx;
   font-weight: 600;
   color: @text-primary;
+
+  &.saved {
+    color: var(--color-compliant);
+  }
+}
+
+.prepay-card .history-card-rate.saved,
+.prepay-card .irr-value.saved {
+  color: var(--color-compliant);
+}
+
+.prepay-advantage-card {
+  background: #ECFDF5;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.prepay-advantage-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--color-compliant);
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.prepay-advantage-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.prepay-advantage-icon {
+  font-size: 32rpx;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.prepay-advantage-content {
+  flex: 1;
+}
+
+.prepay-advantage-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: @text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.prepay-advantage-desc {
+  font-size: 24rpx;
+  color: @text-secondary;
+  line-height: 1.5;
+  display: block;
+}
+
+.detail-irr-value.saved {
+  color: var(--color-compliant);
 }
 
 .detail-actions {

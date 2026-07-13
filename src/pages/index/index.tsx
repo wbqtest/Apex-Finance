@@ -20,8 +20,6 @@ import {
   CalculationParams,
   parsePastedPaymentsWithInfo,
   estimatePaymentRange,
-  generateCSV,
-  generateReportText,
 } from '../../utils/finance';
 import { calculate } from '../../services/api';
 import { getLatestLPR } from '../../data/lpr';
@@ -39,18 +37,6 @@ const getGradientByNickname = (nickname: string): string => {
   const index = Math.abs(hash) % GRADIENTS.length;
   const colors = GRADIENTS[index];
   return `linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 100%)`;
-};
-
-const formatAnonymizedAmount = (amount: number, anonymize: boolean): string => {
-  if (!anonymize) return `¥${amount.toFixed(2)}`;
-  const str = amount.toFixed(2);
-  if (str.length <= 4) return '¥****';
-  return `¥${str[0]}****.${str.slice(-2)}`;
-};
-
-const formatAnonymizedRate = (rate: number, anonymize: boolean): string => {
-  if (!anonymize) return `${rate.toFixed(2)}%`;
-  return `${rate.toFixed(1)}%`;
 };
 
 const checkSuspectedInterest = (name: string): boolean => {
@@ -82,8 +68,6 @@ export default function Index() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showResultPopup, setShowResultPopup] = useState(false);
-  const [calculatedResult, setCalculatedResult] = useState<CalculationResult | null>(null);
   const paymentRefs = useRef<(HTMLInputElement | null)[]>([]);
   const lpr = getLatestLPR();
 
@@ -105,7 +89,8 @@ export default function Index() {
   ]);
   const [showTemplatePopup, setShowTemplatePopup] = useState(false);
   const [recalcResult, setRecalcResult] = useState<CalculationResult | null>(null);
-  const [anonymizeAmount, setAnonymizeAmount] = useState(false);
+  const [showResultPopup, setShowResultPopup] = useState(false);
+  const [calculatedResult, setCalculatedResult] = useState<CalculationResult | null>(null);
 
   const [addFeeForm, setAddFeeForm] = useState({
     name: '',
@@ -502,6 +487,17 @@ export default function Index() {
     }
   };
 
+  const handleViewDetail = () => {
+    if (!calculatedResult) return;
+    Taro.setStorageSync('IRR_RESULT_DETAIL', {
+      result: calculatedResult,
+      params,
+      fees,
+    });
+    setShowResultPopup(false);
+    Taro.navigateTo({ url: '/pages/result' });
+  };
+
   const goToLogin = () => {
     Taro.navigateTo({ url: '/pages/login' });
   };
@@ -526,35 +522,6 @@ export default function Index() {
     setUserInfoState(null);
     Taro.showToast({ title: '已退出登录', icon: 'none' });
     setShowLogoutDialog(false);
-  };
-
-  const handleCopyResult = async () => {
-    if (!calculatedResult) return;
-    try {
-      const text = generateReportText(params, calculatedResult, fees);
-      await Taro.setClipboardData({ data: text });
-      Taro.showToast({ title: '报告已复制', icon: 'success' });
-    } catch (error) {
-      Taro.showToast({ title: '复制失败', icon: 'none' });
-    }
-  };
-
-  const handleExportCSV = () => {
-    if (!calculatedResult) return;
-    try {
-      const csv = generateCSV(params, calculatedResult, fees);
-      Taro.setClipboardData({
-        data: csv,
-        success: () => {
-          Taro.showToast({ title: 'CSV已复制到剪贴板', icon: 'success' });
-        },
-        fail: () => {
-          Taro.showToast({ title: '导出失败', icon: 'none' });
-        },
-      });
-    } catch (error) {
-      Taro.showToast({ title: '导出失败', icon: 'none' });
-    }
   };
 
   const customPayments = params.customPayments || [];
@@ -698,7 +665,7 @@ export default function Index() {
               <View>
                 <Cell title="逐期还款额列表" subTitle="请按还款顺序逐期填写">
                   <Text className="payment-stats">
-                    已填 {filledCount}/{customPayments.length} 期，合计 ¥{paymentsTotal.toLocaleString()}
+                    已填 {filledCount}/{customPayments.length} 期，合计 ¥{Math.round(paymentsTotal).toLocaleString('zh-CN')}
                   </Text>
                 </Cell>
 
@@ -820,7 +787,7 @@ export default function Index() {
                     </View>
                     <View className="fee-total-row">
                       <Text className="fee-total-label">总费用</Text>
-                      <Text className="fee-total-value">¥{totalFees.toLocaleString()}</Text>
+                      <Text className="fee-total-value">¥{Math.round(totalFees).toLocaleString('zh-CN')}</Text>
                     </View>
                   </View>
                 </Cell>
@@ -933,231 +900,6 @@ export default function Index() {
           </View>
         </View>
       </Popup>
-
-      <Popup
-        visible={showResultPopup}
-        position="bottom"
-        onClose={() => setShowResultPopup(false)}
-      >
-        <View className="result-popup">
-          <View className="result-popup-header">
-            <Text className="result-popup-title">计算结果</Text>
-            <Button className="result-popup-close" onClick={() => setShowResultPopup(false)}>✕</Button>
-          </View>
-          <View className="result-popup-body">
-            {calculatedResult && (
-              <>
-                <View className={`result-status-card ${calculatedResult.complianceStatus}`}>
-                  <View className="result-status-badge">
-                    <Text className="result-status-icon">
-                      {calculatedResult.complianceStatus === 'compliant' ? '🟢' :
-                        calculatedResult.complianceStatus === 'warning' ? '🟡' : '🔴'}
-                    </Text>
-                    <Text className="result-status-label">
-                      {calculatedResult.complianceStatus === 'compliant' ? '合规' :
-                        calculatedResult.complianceStatus === 'warning' ? '偏高' : '超额'}
-                    </Text>
-                  </View>
-                  <Text className="result-status-text">
-                    {calculatedResult.complianceStatus === 'compliant' ? '该贷款利率在法定范围内' :
-                      calculatedResult.complianceStatus === 'warning' ? '该贷款利率已超过法定上限，建议关注' : '该贷款利率已严重超过法定上限，可主张调整'}
-                  </Text>
-                </View>
-
-                <View className="result-rate-card">
-                  <Text className="result-rate-label">实际年化利率(IRR)</Text>
-                  <Text className="result-rate-value" style={{ color: calculatedResult.complianceStatus === 'compliant' ? '#16A34A' : calculatedResult.complianceStatus === 'warning' ? '#D97706' : '#DC2626' }}>
-                    {formatAnonymizedRate(calculatedResult.irr, anonymizeAmount)}
-                  </Text>
-                  <View className="result-rate-comparison">
-                    <Text className="result-comparison-item">名义APR：{formatAnonymizedRate(calculatedResult.nominalAPR, anonymizeAmount)}</Text>
-                    {calculatedResult.irr > calculatedResult.nominalAPR && (
-                      <Text className="result-comparison-item">实际比名义高 {(calculatedResult.irr - calculatedResult.nominalAPR).toFixed(2)}%</Text>
-                    )}
-                  </View>
-                </View>
-
-                {calculatedResult.excessInterest > 0 && (
-                  <View className="result-excess-card">
-                    <Text className="result-excess-label">超额利息</Text>
-                    <Text className="result-excess-value">{formatAnonymizedAmount(calculatedResult.excessInterest, anonymizeAmount)}</Text>
-                    <Text className="result-excess-tip">该部分利息可能无需支付</Text>
-                  </View>
-                )}
-
-                <CellGroup className="result-summary">
-                  <Cell title="总还款额" extra={formatAnonymizedAmount(calculatedResult.totalPayment, anonymizeAmount)} border={false} />
-                  <Cell title="总利息" extra={formatAnonymizedAmount(calculatedResult.totalInterest, anonymizeAmount)} border={false} />
-                  <Cell title="法定上限(LPR×4)" extra={`${calculatedResult.complianceLimit.toFixed(2)}%`} border={false} />
-                  <Cell title="使用LPR" extra={`${calculatedResult.lprUsed}% (${calculatedResult.lprDate})`} border={false} />
-                </CellGroup>
-
-                {calculatedResult.avgPayment !== undefined && (
-                  <View className="result-stats-card">
-                    <Text className="result-stats-title">还款统计</Text>
-                    <View className="result-stats-grid">
-                      <View className="result-stat-item">
-                        <Text className="result-stat-label">平均月供</Text>
-                        <Text className="result-stat-value">{formatAnonymizedAmount(calculatedResult.avgPayment, anonymizeAmount)}</Text>
-                      </View>
-                      <View className="result-stat-item">
-                        <Text className="result-stat-label">最高月供</Text>
-                        <Text className="result-stat-value">{formatAnonymizedAmount(calculatedResult.maxPayment || 0, anonymizeAmount)}</Text>
-                      </View>
-                      <View className="result-stat-item">
-                        <Text className="result-stat-label">最低月供</Text>
-                        <Text className="result-stat-value">{formatAnonymizedAmount(calculatedResult.minPayment || 0, anonymizeAmount)}</Text>
-                      </View>
-                      <View className="result-stat-item">
-                        <Text className="result-stat-label">还款集中度</Text>
-                        <Text className="result-stat-value">{(calculatedResult.paymentConcentration || 0).toFixed(2)}%</Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
-
-                {calculatedResult.cashFlows && calculatedResult.cashFlows.length > 1 && (
-                  <View className="result-cashflow-card">
-                    <Text className="result-cashflow-title">📊 现金流明细</Text>
-                    <View className="result-cashflow-list">
-                      {calculatedResult.cashFlows.map((flow, index) => {
-                        if (index === 0) {
-                          return (
-                            <View key={index} className="result-cashflow-row">
-                              <Text className="result-cashflow-label">借款本金</Text>
-                              <Text className="result-cashflow-value result-cashflow-in">+{formatAnonymizedAmount(Math.abs(flow), anonymizeAmount)}</Text>
-                            </View>
-                          );
-                        }
-                        return (
-                          <View key={index} className="result-cashflow-row">
-                            <Text className="result-cashflow-label">第{index}期还款</Text>
-                            <Text className="result-cashflow-value result-cashflow-out">-{formatAnonymizedAmount(flow, anonymizeAmount)}</Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  </View>
-                )}
-
-                {totalFees > 0 && fees.length > 0 && (
-                  <View className="result-fee-card">
-                    <Text className="result-fee-title">费用明细</Text>
-
-                    <View className="fee-chart-section">
-                      <View className="fee-chart">
-                        {fees.map((fee, index) => {
-                          const feeTotal = fee.chargeType === 'monthly' ? fee.amount * (params.periods || 1) : fee.amount;
-                          const percent = totalFees > 0 ? (feeTotal / totalFees * 100).toFixed(1) : 0;
-                          const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
-                          const color = colors[index % colors.length];
-                          return (
-                            <View key={index} className="fee-chart-item">
-                              <View className="fee-chart-bar" style={{ width: `${Math.min(parseFloat(percent), 100)}%`, backgroundColor: color }} />
-                              <View className="fee-chart-label">
-                                <Text className="fee-chart-name" style={{ color }}>{fee.name}</Text>
-                                <Text className="fee-chart-value">¥{feeTotal.toFixed(0)} ({percent}%)</Text>
-                              </View>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    </View>
-
-                    <View className="result-fee-list">
-                      {fees.map((fee, index) => {
-                        const feeTotal = fee.chargeType === 'monthly' ? fee.amount * (params.periods || 1) : fee.amount;
-                        const feePercent = totalFees > 0 ? (feeTotal / totalFees * 100).toFixed(1) : 0;
-                        return (
-                          <View key={index} className={`result-fee-row ${fee.isSuspectedInterest ? 'suspected-interest' : ''}`}>
-                            <Text className="result-fee-name">{fee.name}</Text>
-                            {fee.isSuspectedInterest && <Text className="fee-suspected-tag">⚠️</Text>}
-                            <Text className="result-fee-amount">{formatAnonymizedAmount(feeTotal, anonymizeAmount)}</Text>
-                            <Text className="result-fee-percent">({feePercent}%)</Text>
-                          </View>
-                        );
-                      })}
-                      <View className="result-fee-total">
-                        <Text className="result-fee-name">费用合计</Text>
-                        <Text className="result-fee-amount">{formatAnonymizedAmount(totalFees, anonymizeAmount)}</Text>
-                      </View>
-                    </View>
-
-
-                  </View>
-                )}
-
-                <View className="result-law-card">
-                  <Text className="result-law-title">⚖️ 法律依据</Text>
-                  <Text className="result-law-item">• 《最高人民法院关于审理民间借贷案件适用法律若干问题的规定》第二十五条</Text>
-                  <Text className="result-law-item">• 出借人请求借款人按照合同约定利率支付利息的，人民法院应予支持，但是双方约定的利率超过合同成立时一年期LPR四倍的除外</Text>
-                </View>
-
-                {calculatedResult.excessLevel !== 'none' && (
-                  <View className={`result-action-card ${calculatedResult.excessLevel}`}>
-                    <Text className="result-action-title">💡 行动建议</Text>
-                    <Text className="result-action-suggestion">{calculatedResult.actionSuggestion}</Text>
-                    <View className="result-action-list">
-                      {calculatedResult.excessLevel === 'slight' && (
-                        <>
-                          <Text className="result-action-item">1. 仔细核对合同中的费用条款</Text>
-                          <Text className="result-action-item">2. 通过客服渠道询问费用构成</Text>
-                        </>
-                      )}
-                      {calculatedResult.excessLevel === 'moderate' && (
-                        <>
-                          <Text className="result-action-item">1. 收集完整的还款记录作为证据</Text>
-                          <Text className="result-action-item">2. 与平台协商要求调整利率至合法范围</Text>
-                          <Text className="result-action-item">3. 必要时咨询专业律师了解维权途径</Text>
-                        </>
-                      )}
-                      {calculatedResult.excessLevel === 'severe' && (
-                        <>
-                          <Text className="result-action-item">1. 立即停止继续还款</Text>
-                          <Text className="result-action-item">2. 收集所有相关证据（合同、还款记录等）</Text>
-                          <Text className="result-action-item">3. 向12378金融监管热线投诉举报</Text>
-                          <Text className="result-action-item">4. 咨询律师提起诉讼主张返还超额利息</Text>
-                        </>
-                      )}
-                    </View>
-                  </View>
-                )}
-
-                {calculatedResult.dataInsufficient && (
-                  <View className="result-warning-card">
-                    <Text className="result-warning-text">⚠️ 数据量不足（少于3期），计算结果仅供参考</Text>
-                  </View>
-                )}
-
-                <View className="result-legal-notice">
-                  <Text className="result-notice-icon">⚠️</Text>
-                  <Text className="result-notice-text">本工具仅供参考，不构成法律意见。利率上限标准因地区和案件具体情况存在差异，具体以司法机关认定为准。</Text>
-                </View>
-              </>
-            )}
-          </View>
-          <View className="result-popup-footer">
-            <View className="result-anonymize-row">
-              <Text className="result-anonymize-label">👤 隐藏金额（截图去敏）</Text>
-              <Button
-                type={anonymizeAmount ? 'primary' : 'default'}
-                size="small"
-                onClick={() => setAnonymizeAmount(!anonymizeAmount)}
-                className="result-anonymize-btn"
-              >
-                {anonymizeAmount ? '已隐藏' : '显示'}
-              </Button>
-            </View>
-            <View className="result-export-actions">
-              <Button type="default" size="small" onClick={handleExportCSV} className="result-export-btn">导出CSV</Button>
-              <Button type="default" size="small" onClick={handleCopyResult} className="result-copy-btn">复制报告</Button>
-            </View>
-            <Button type="primary" size="large" onClick={() => setShowResultPopup(false)} className="result-popup-btn">知道了</Button>
-          </View>
-        </View>
-      </Popup>
-
-
 
       <Dialog
         visible={showConfirmDialog}
@@ -1309,6 +1051,97 @@ export default function Index() {
             </View>
           </ScrollView>
         </Popup>
+      )}
+
+      {/* ========== 计算结果弹窗 ========== */}
+      {showResultPopup && calculatedResult && (
+        <View className="result-mask" onClick={() => setShowResultPopup(false)}>
+          <View className="result-panel" onClick={(e: any) => e.stopPropagation()}>
+            <View className="result-head">
+              <Text className="result-title">计算结果</Text>
+              <Text className="result-close" onClick={() => setShowResultPopup(false)}>✕</Text>
+            </View>
+            <ScrollView className="result-scroll" scrollY>
+              {/* 合规状态 */}
+              <View className={`result-block result-status-card ${calculatedResult.complianceStatus}`}>
+                <View className="result-status-badge">
+                  <Text className="result-status-icon">
+                    {calculatedResult.complianceStatus === 'compliant' ? '🟢' :
+                      calculatedResult.complianceStatus === 'warning' ? '🟡' : '🔴'}
+                  </Text>
+                  <Text className="result-status-label">
+                    {calculatedResult.complianceStatus === 'compliant' ? '合规' :
+                      calculatedResult.complianceStatus === 'warning' ? '偏高' : '超额'}
+                  </Text>
+                </View>
+                <Text className="result-status-text">
+                  {calculatedResult.complianceStatus === 'compliant'
+                    ? '该贷款利率在法定范围内'
+                    : calculatedResult.complianceStatus === 'warning'
+                    ? '该贷款利率已接近法定上限'
+                    : '该贷款利率已严重超过法定上限'}
+                </Text>
+              </View>
+
+              {/* 核心利率 */}
+              <View className="result-block">
+                <Text className="result-block-title">核心利率</Text>
+                <View className="result-row result-highlight">
+                  <Text className="res-label">实际年化利率(IRR)</Text>
+                  <Text className="res-value primary">{calculatedResult.irr.toFixed(2)}%</Text>
+                </View>
+                <View className="result-row">
+                  <Text className="res-label">名义APR</Text>
+                  <Text className="res-value">{calculatedResult.nominalAPR.toFixed(2)}%</Text>
+                </View>
+                <View className="result-row">
+                  <Text className="res-label">法定上限</Text>
+                  <Text className="res-value">{calculatedResult.complianceLimit.toFixed(2)}%</Text>
+                </View>
+              </View>
+
+              {/* 还款概览 */}
+              <View className="result-block">
+                <Text className="result-block-title">还款概览</Text>
+                <View className="result-row">
+                  <Text className="res-label">总还款额</Text>
+                  <Text className="res-value">¥{Math.round(calculatedResult.totalPayment).toLocaleString('zh-CN')}</Text>
+                </View>
+                <View className="result-row">
+                  <Text className="res-label">总利息</Text>
+                  <Text className="res-value warn">¥{Math.round(calculatedResult.totalInterest).toLocaleString('zh-CN')}</Text>
+                </View>
+                <View className="result-row">
+                  <Text className="res-label">本金</Text>
+                  <Text className="res-value">¥{Math.round(params.principal).toLocaleString('zh-CN')}</Text>
+                </View>
+                <View className="result-row">
+                  <Text className="res-label">期数</Text>
+                  <Text className="res-value">{calculatedResult.periods} 期</Text>
+                </View>
+              </View>
+
+              {/* 一句话结论 */}
+              <View className="result-summary">
+                <Text className="summary-text">
+                  {calculatedResult.excessInterest > 0
+                    ? `超额利息约 ¥${Math.round(calculatedResult.excessInterest).toLocaleString('zh-CN')}，建议与平台协商`
+                    : calculatedResult.complianceStatus === 'warning'
+                    ? '利率接近上限，需谨慎评估'
+                    : '当前利率在合法范围内，可放心借款'}
+                </Text>
+              </View>
+            </ScrollView>
+            <View className="result-footer-btns">
+              <Button className="result-btn-secondary" onClick={() => setShowResultPopup(false)}>
+                关闭
+              </Button>
+              <Button className="result-btn-primary" type="primary" onClick={handleViewDetail}>
+                具体详情
+              </Button>
+            </View>
+          </View>
+        </View>
       )}
     </>
   );
@@ -1502,7 +1335,7 @@ function BatchFillContent({ currentCount, currentPayments, onConfirm, onClose }:
       </View>
 
       {preview.length > 0 && (
-        <Cell title={`预览（共 ${preview.length} 期，合计 ¥${preview.reduce((a, b) => a + b, 0).toLocaleString()}）`} border={false}>
+        <Cell title={`预览（共 ${preview.length} 期，合计 ¥${Math.round(preview.reduce((a, b) => a + b, 0)).toLocaleString('zh-CN')}）`} border={false}>
           <Text className="batch-preview-content">
             {preview.slice(0, 8).map((v, i) => `第${i + 1}期: ¥${v}`).join(' | ')}
             {preview.length > 8 && ' ...'}

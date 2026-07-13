@@ -64,11 +64,11 @@ export default function ResultCard({ result, params }: Props) {
       {result.complianceStatus !== 'compliant' && (
         <View className="excess-card">
           <Text className="card-title">超额利息</Text>
-          <Text className="excess-amount">¥{result.excessInterest.toLocaleString()}</Text>
+          <Text className="excess-amount">¥{Math.round(result.excessInterest).toLocaleString('zh-CN')}</Text>
           <Text className="excess-note">⚠️ 该部分利息可能无需支付</Text>
           {result.excessPaid > 0 && (
             <CellGroup border={false}>
-              <Cell title="已付超额利息" extra={<Text className="compare-value positive">¥{result.excessPaid.toLocaleString()}</Text>} />
+              <Cell title="已付超额利息" extra={<Text className="compare-value positive">¥{Math.round(result.excessPaid).toLocaleString('zh-CN')}</Text>} />
             </CellGroup>
           )}
           <Text className="excess-law">
@@ -80,9 +80,9 @@ export default function ResultCard({ result, params }: Props) {
       <View className="summary-card">
         <Text className="card-title">还款汇总</Text>
         <CellGroup border={false}>
-          <Cell title="借款本金" extra={<Text className="compare-value">¥{params.principal.toLocaleString()}</Text>} />
-          <Cell title="总还款额" extra={<Text className="compare-value">¥{result.totalPayment.toLocaleString()}</Text>} />
-          <Cell title="总利息" extra={<Text className="compare-value">¥{result.totalInterest.toLocaleString()}</Text>} />
+          <Cell title="借款本金" extra={<Text className="compare-value">¥{Math.round(params.principal).toLocaleString('zh-CN')}</Text>} />
+          <Cell title="总还款额" extra={<Text className="compare-value">¥{Math.round(result.totalPayment).toLocaleString('zh-CN')}</Text>} />
+          <Cell title="总利息" extra={<Text className="compare-value">¥{Math.round(result.totalInterest).toLocaleString('zh-CN')}</Text>} />
           <Cell title="总期数" extra={<Text className="compare-value">{result.periods} 期</Text>} />
         </CellGroup>
       </View>
@@ -91,9 +91,9 @@ export default function ResultCard({ result, params }: Props) {
         <View className="stats-card">
           <Text className="card-title">逐期还款统计</Text>
           <CellGroup border={false}>
-            <Cell title="平均月供" extra={<Text className="compare-value">¥{result.avgPayment?.toLocaleString()}</Text>} />
-            <Cell title="最高月供" extra={<Text className="compare-value">¥{result.maxPayment?.toLocaleString()}</Text>} />
-            <Cell title="最低月供" extra={<Text className="compare-value">¥{result.minPayment?.toLocaleString()}</Text>} />
+            <Cell title="平均月供" extra={<Text className="compare-value">¥{Math.round(result.avgPayment || 0).toLocaleString('zh-CN')}</Text>} />
+            <Cell title="最高月供" extra={<Text className="compare-value">¥{Math.round(result.maxPayment || 0).toLocaleString('zh-CN')}</Text>} />
+            <Cell title="最低月供" extra={<Text className="compare-value">¥{Math.round(result.minPayment || 0).toLocaleString('zh-CN')}</Text>} />
             <Cell title="还款集中度" extra={<Text className="compare-value">前50%期数占总还款的 {result.paymentConcentration}%</Text>} />
           </CellGroup>
         </View>

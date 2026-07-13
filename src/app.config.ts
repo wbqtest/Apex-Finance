@@ -20,8 +20,10 @@ export default defineAppConfig({
     'pages/auto-schedule',
     'pages/auto-compare',
     'pages/prepay',
+    'pages/prepay-result',
     'pages/mortgage',
-    'pages/mortgage-result'
+    'pages/mortgage-result',
+    'pages/history-detail'
   ],
   window: {
     backgroundTextStyle: 'light',

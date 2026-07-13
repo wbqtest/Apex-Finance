@@ -12,6 +12,7 @@ import {
   calculateMortgage,
 } from '../../utils/mortgage';
 import { formatCurrency } from '../../utils/finance';
+import { addMortgageScheme } from '../../utils/mortgageCompare';
 import './index.less';
 
 const PERIODS_PER_PAGE = 12;
@@ -121,6 +122,21 @@ export default function MortgageResultPage() {
     Taro.setClipboardData({ data: text.join('\n'), success: () => setToast({ show: true, msg: '已复制' }) });
   };
 
+  const handleAddCompare = () => {
+    const scheme = {
+      id: `mort_${Date.now()}`,
+      label: `${METHOD_LABELS[input.repayMethod]} · ${LOAN_TYPE_LABELS[input.loanType]}`,
+      input,
+      result,
+      createdAt: Date.now(),
+    };
+    addMortgageScheme(scheme);
+    setToast({ show: true, msg: '已加入对比' });
+    setTimeout(() => {
+      Taro.navigateTo({ url: '/pages/compare?tab=mortgage' });
+    }, 300);
+  };
+
 
   return (
     <View className="mortgage-result">
@@ -228,7 +244,7 @@ export default function MortgageResultPage() {
               <Text className="col">利息</Text>
               <Text className="col col-remain">剩余本金</Text>
             </View>
-            <ScrollView className="schedule-body" scrollY>
+            <View className="schedule-body">
               {scheduleSlice.map((r) => (
                 <View className="schedule-row" key={r.period}>
                   <Text className="col col-period">{r.period}</Text>
@@ -238,7 +254,7 @@ export default function MortgageResultPage() {
                   <Text className="col col-remain">{formatCurrency(r.remainingPrincipal)}</Text>
                 </View>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
           {/* 分页指示器 */}
@@ -273,6 +289,9 @@ export default function MortgageResultPage() {
       <View className="result-footer">
         <Button className="foot-btn" onClick={handleCopy}>
           复制
+        </Button>
+        <Button className="foot-btn" onClick={handleAddCompare}>
+          加入对比
         </Button>
         <Button
           className="foot-btn primary"

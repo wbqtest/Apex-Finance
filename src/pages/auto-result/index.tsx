@@ -150,6 +150,9 @@ export default function AutoResultPage() {
     };
     addCarScheme(scheme);
     setToast({ show: true, msg: '已加入对比' });
+    setTimeout(() => {
+      Taro.navigateTo({ url: '/pages/compare?tab=auto' });
+    }, 300);
   };
 
   const handleViewSchedule = () => {
@@ -300,7 +303,7 @@ export default function AutoResultPage() {
         <Button
           className="foot-btn primary"
           type="primary"
-          onClick={() => Taro.navigateTo({ url: '/pages/auto-compare' })}
+          onClick={() => Taro.navigateTo({ url: '/pages/compare?tab=auto' })}
         >
           方案对比
         </Button>

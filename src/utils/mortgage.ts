@@ -260,7 +260,7 @@ function round2(v: number): number {
 }
 
 export function formatManYuan(v: number): string {
-  return round2(v).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Math.round(v).toLocaleString('zh-CN');
 }
 
 /** 根据按揭比例计算贷款总额（万元） */

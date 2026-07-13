@@ -1,18 +1,20 @@
 import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import { useState, useMemo } from 'react';
 import { InputNumber, Button, Toast } from '@nutui/nutui-react-taro';
+import Taro from '@tarojs/taro';
 import {
   PrepayInput,
-  PrepayResult,
   RepaymentType,
   PenaltyType,
   PrepayType,
+  PrepayResult,
   validatePrepayInput,
-  calculatePrepay,
 } from '../../utils/prepayCalc';
-import { formatCurrency } from '../../utils/finance';
+import { calculatePrepay } from '../../services/api';
 import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar';
+import { formatCurrency } from '../../utils/finance';
 import './index.less';
+
 
 const METHOD_OPTIONS: { key: RepaymentType; label: string }[] = [
   { key: 'EQUAL_PI', label: '等额本息' },
@@ -43,12 +45,14 @@ export default function PrepayCalcPage() {
   const [prepayType, setPrepayType] = useState<PrepayType>('FULL');
   const [partialAmount, setPartialAmount] = useState<number>(0);
 
-  /* ---- 结果弹窗 ---- */
-  const [result, setResult] = useState<PrepayResult | null>(null);
-  const [showResult, setShowResult] = useState(false);
-
   /* ---- Toast ---- */
   const [toast, setToast] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
+
+  /* ---- 结果弹窗 ---- */
+  const [showResult, setShowResult] = useState(false);
+  const [result, setResult] = useState<PrepayResult | null>(null);
+  const [calcLoading, setCalcLoading] = useState(false);
+
 
   const input: PrepayInput = useMemo(
     () => ({
@@ -71,27 +75,38 @@ export default function PrepayCalcPage() {
     return validatePrepayInput(input).length === 0;
   }, [input]);
 
-  const handleCalc = () => {
+  const handleCalc = async () => {
     const errs = validatePrepayInput(input);
     if (errs.length) {
       setToast({ show: true, msg: errs[0] });
       return;
     }
-    const res = calculatePrepay(input);
-    if (!res) {
-      setToast({ show: true, msg: '计算失败，请检查输入' });
-      return;
+    setCalcLoading(true);
+    try {
+      const response = await calculatePrepay(input);
+      if (response.code === 200 && response.data) {
+        setResult(response.data);
+        setShowResult(true);
+      } else {
+        setToast({ show: true, msg: response.message || '计算失败' });
+      }
+    } catch (err: any) {
+      setToast({ show: true, msg: err?.message || '计算失败，请稍后重试' });
+    } finally {
+      setCalcLoading(false);
     }
-    setResult(res);
-    setShowResult(true);
   };
 
-  const handleCloseResult = () => {
+  const handleViewDetail = () => {
+    if (!result) return;
+    Taro.setStorageSync('PREPAY_RESULT_DATA', { input, result });
+    Taro.navigateTo({ url: '/pages/prepay-result' });
     setShowResult(false);
   };
 
   /* 日期格式化显示 */
   const fmtDate = (d: string) => (d || '请选择');
+
 
   return (
     <View className="prepay-page">
@@ -305,22 +320,43 @@ export default function PrepayCalcPage() {
 
         {/* 底部按钮 */}
         <View className="prepay-footer">
-          <Button type="primary" block disabled={!canSubmit} onClick={handleCalc}>
-            开始计算
+          <Button type="primary" block disabled={!canSubmit} loading={calcLoading} onClick={handleCalc}>
+            {calcLoading ? '计算中…' : '开始计算'}
           </Button>
         </View>
       </ScrollView>
 
-      {/* 结果弹窗 */}
+      {/* ========== 计算结果弹窗 ========== */}
       {showResult && result && (
-        <View className="result-mask" onClick={handleCloseResult}>
+        <View className="result-mask" onClick={() => setShowResult(false)}>
           <View className="result-panel" onClick={(e: any) => e.stopPropagation()}>
             <View className="result-head">
-              <Text className="result-title">计算结果</Text>
-              <Text className="result-close" onClick={handleCloseResult}>✕</Text>
+              <Text className="result-title">提前还款测算结果</Text>
+              <Text className="result-close" onClick={() => setShowResult(false)}>✕</Text>
             </View>
             <ScrollView className="result-scroll" scrollY>
-              {/* 贷款概况 */}
+              <View className="result-block">
+                <Text className="result-block-title">核心摘要</Text>
+                <View className="result-row result-highlight">
+                  <Text className="res-label">实际节省利息</Text>
+                  <Text className={`res-value ${result.savedInterest - result.penalty > 0 ? 'saved' : 'warn'}`}>
+                    ¥{formatCurrency(result.savedInterest - result.penalty)}
+                  </Text>
+                </View>
+                <View className="result-row">
+                  <Text className="res-label">本次需还总额</Text>
+                  <Text className="res-value primary">¥{formatCurrency(result.totalPrepay)}</Text>
+                </View>
+                <View className="result-row">
+                  <Text className="res-label">剩余本金</Text>
+                  <Text className="res-value">¥{formatCurrency(result.remainingPrincipal)}</Text>
+                </View>
+                <View className="result-row">
+                  <Text className="res-label">已还期数</Text>
+                  <Text className="res-value">{result.paidMonths} 期</Text>
+                </View>
+              </View>
+
               <View className="result-block">
                 <Text className="result-block-title">贷款概况</Text>
                 <View className="result-row">
@@ -332,86 +368,29 @@ export default function PrepayCalcPage() {
                   <Text className="res-value">{result.loanTerm} 期（{result.loanTerm / 12} 年）</Text>
                 </View>
                 <View className="result-row">
-                  <Text className="res-label">还款方式</Text>
-                  <Text className="res-value">{repaymentType === 'EQUAL_PI' ? '等额本息' : '等额本金'}</Text>
-                </View>
-                <View className="result-row">
                   <Text className="res-label">月供</Text>
-                  <Text className="res-value highlight">¥{formatCurrency(result.monthlyPayment)}</Text>
+                  <Text className="res-value">¥{formatCurrency(result.monthlyPayment)}</Text>
                 </View>
               </View>
 
-              {/* 已还情况 */}
-              <View className="result-block">
-                <Text className="result-block-title">已还情况</Text>
-                <View className="result-row">
-                  <Text className="res-label">已还月数</Text>
-                  <Text className="res-value">{result.paidMonths} 期</Text>
-                </View>
-                <View className="result-row">
-                  <Text className="res-label">已还本金</Text>
-                  <Text className="res-value">¥{formatCurrency(result.paidPrincipal)}</Text>
-                </View>
-                <View className="result-row">
-                  <Text className="res-label">已还利息</Text>
-                  <Text className="res-value warn">¥{formatCurrency(result.paidInterest)}</Text>
-                </View>
-              </View>
-
-              {/* 提前还款分析 */}
-              <View className="result-block">
-                <Text className="result-block-title">提前还款分析</Text>
-                <View className="result-row result-highlight">
-                  <Text className="res-label">剩余本金</Text>
-                  <Text className="res-value primary">¥{formatCurrency(result.remainingPrincipal)}</Text>
-                </View>
-                {result.penalty > 0 && (
-                  <View className="result-row">
-                    <Text className="res-label">违约金</Text>
-                    <Text className="res-value warn">¥{formatCurrency(result.penalty)}</Text>
-                  </View>
-                )}
-                <View className="result-row result-highlight">
-                  <Text className="res-label">本次需还总额</Text>
-                  <Text className="res-value primary">¥{formatCurrency(result.totalPrepay)}</Text>
-                </View>
-              </View>
-
-              {/* 节省分析 */}
-              <View className="result-block result-block-green">
-                <Text className="result-block-title">节省分析</Text>
-                <View className="result-row">
-                  <Text className="res-label">原计划剩余利息</Text>
-                  <Text className="res-value">¥{formatCurrency(result.remainingInterest)}</Text>
-                </View>
-                <View className="result-row">
-                  <Text className="res-label">违约金</Text>
-                  <Text className="res-value">¥{formatCurrency(result.penalty)}</Text>
-                </View>
-                <View className="result-row result-highlight">
-                  <Text className="res-label">实际节省利息</Text>
-                  <Text className="res-value saved">¥{formatCurrency(result.savedInterest - result.penalty)}</Text>
-                </View>
-                <View className="result-row">
-                  <Text className="res-label">节省比例</Text>
-                  <Text className="res-value saved">{result.saveRatio}%</Text>
-                </View>
-              </View>
-
-              {/* 一句话结论 */}
               <View className="result-summary">
                 <Text className="summary-text">
-                  {result.savedInterest > result.penalty
-                    ? `提前还款可为您节省约 ¥${formatCurrency(result.savedInterest - result.penalty)} 利息`
+                  {result.savedInterest - result.penalty > 0
+                    ? `提前还款可节省约 ¥${formatCurrency(result.savedInterest - result.penalty)} 利息`
                     : result.penalty > 0
-                    ? `当前违约金较高，节省空间不大，建议综合考量`
-                    : `提前还款仅需偿还剩余本金，无需违约金`}
+                    ? '当前违约金较高，节省空间不大，建议综合考量'
+                    : '提前还款仅需偿还剩余本金，无需违约金'}
                 </Text>
               </View>
             </ScrollView>
-            <Button className="result-btn" onClick={handleCloseResult}>
-              知道了
-            </Button>
+            <View className="result-footer-btns">
+              <Button className="result-btn-secondary" onClick={() => setShowResult(false)}>
+                关闭
+              </Button>
+              <Button className="result-btn-primary" type="primary" onClick={handleViewDetail}>
+                具体详情
+              </Button>
+            </View>
           </View>
         </View>
       )}
@@ -421,3 +400,4 @@ export default function PrepayCalcPage() {
     </View>
   );
 }
+
