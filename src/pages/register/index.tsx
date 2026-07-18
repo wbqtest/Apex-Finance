@@ -79,7 +79,8 @@ export default function Register() {
 
   return (
     <View className="register-container">
-      <NavBar title="注册" />
+      <NavBar title="" />
+      <View className="bg-gradient" />
       <View className="register-card">
         <View className="card-header">
           <View className="logo">

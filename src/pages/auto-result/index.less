@@ -269,8 +269,9 @@
   left: 0;
   right: 0;
   display: flex;
-  gap: @spacing-sm;
-  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  gap: 20rpx;
+  padding: 24rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   background: @bg-card;
   border-top: 1rpx solid @border-color;
   z-index: 10;
@@ -278,15 +279,19 @@
 
 .foot-btn {
   flex: 1;
-  height: 80rpx;
-  line-height: 80rpx;
+  height: 88rpx;
+  line-height: 88rpx;
   font-size: 28rpx;
-  border-radius: @radius-button;
+  font-weight: 500;
+  border-radius: 44rpx;
+  background: @bg-card !important;
+  color: @text-primary !important;
+  border: 1rpx solid @border-color !important;
 
   &.primary {
-    background: @brand-primary !important;
-    border-color: @brand-primary !important;
-    color: @text-on-primary !important;
+    background: #E53935 !important;
+    color: #fff !important;
+    border: none !important;
   }
 }
 

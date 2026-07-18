@@ -46,7 +46,7 @@ export default function Login() {
 
   return (
     <View className="login-container">
-      <NavBar title="登录" />
+      <NavBar title="" />
       <View className="bg-gradient" />
 
       <View className="login-card">

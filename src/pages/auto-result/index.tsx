@@ -155,6 +155,26 @@ export default function AutoResultPage() {
     }, 300);
   };
 
+  const handleCopy = () => {
+    if (!result) return;
+    try {
+      const text = `车贷详情\n月供: ¥${formatCurrency(result.monthlyPayment)}\n贷款总额: ¥${formatCurrency(result.loanAmount)}\n年利率: ${formatRate(result.annualRate)}\n期限: ${result.loanTerm}期\n总利息: ¥${formatCurrency(result.totalInterest)}\n总费用: ¥${formatCurrency(result.totalFee)}`;
+      Taro.setClipboardData({ data: text });
+      Taro.showToast({ title: '报告已复制', icon: 'success' });
+    } catch {
+      Taro.showToast({ title: '复制失败', icon: 'none' });
+    }
+  };
+
+  const handleBack = () => {
+    const pages = Taro.getCurrentPages();
+    if (pages.length > 1) {
+      Taro.navigateBack();
+    } else {
+      Taro.switchTab({ url: '/pages/index' });
+    }
+  };
+
   const handleViewSchedule = () => {
     Taro.setStorageSync('AUTO_RESULT_INPUT', input);
     Taro.navigateTo({ url: '/pages/auto-schedule' });
@@ -297,16 +317,9 @@ export default function AutoResultPage() {
 
       {/* ===== 底部操作栏 ===== */}
       <View className="result-footer">
-        <Button className="foot-btn" onClick={handleAddCompare}>
-          加入对比
-        </Button>
-        <Button
-          className="foot-btn primary"
-          type="primary"
-          onClick={() => Taro.navigateTo({ url: '/pages/compare?tab=auto' })}
-        >
-          方案对比
-        </Button>
+        <Button className="foot-btn" onClick={handleCopy}>复制</Button>
+        <Button className="foot-btn" onClick={handleAddCompare}>加入对比</Button>
+        <Button className="foot-btn primary" onClick={handleBack}>返回修改</Button>
       </View>
 
       <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />

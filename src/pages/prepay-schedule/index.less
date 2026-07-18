@@ -1,0 +1,106 @@
+@import '../../styles/theme.less';
+
+.prepay-schedule {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: @bg-page;
+}
+
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: @text-secondary;
+}
+
+.schedule-header {
+  padding: 32rpx 24rpx;
+  background: linear-gradient(135deg, @brand-primary-light, @brand-primary-muted);
+  text-align: center;
+}
+
+.schedule-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: @brand-primary-dark;
+  margin-bottom: 8rpx;
+}
+
+.schedule-sub {
+  font-size: 26rpx;
+  color: @text-secondary;
+}
+
+.schedule-body {
+  flex: 1;
+  padding: 20rpx 24rpx 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.schedule-table {
+  background: @bg-card;
+  border-radius: @radius-card;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.schedule-head {
+  display: flex;
+  padding: 20rpx 16rpx;
+  background: @bg-page;
+  border-bottom: 1rpx solid @border-color;
+
+  .col {
+    flex: 1;
+    text-align: center;
+    font-size: 24rpx;
+    color: @text-secondary;
+    font-weight: 500;
+
+    &.col-period {
+      flex: none;
+      width: 15%;
+    }
+  }
+}
+
+.schedule-row {
+  display: flex;
+  padding: 16rpx;
+  border-bottom: 1rpx solid @border-color;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.prepay-month {
+    background: #fff3e0;
+
+    .col {
+      font-weight: 600;
+    }
+  }
+
+  .col {
+    flex: 1;
+    text-align: center;
+    font-size: 24rpx;
+    color: @text-primary;
+
+    &.col-period {
+      font-weight: 500;
+      flex: none;
+      width: 15%;
+    }
+  }
+}
+
+.bottom-spacer {
+  height: 48rpx;
+}

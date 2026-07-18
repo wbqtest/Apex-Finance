@@ -1,5 +1,5 @@
 // 提前还贷 - 方案对比本地存储（独立命名空间）
-import Taro from '@taro';
+import Taro from '@tarojs/taro';
 import { PrepayInput, PrepayResult } from './prepayCalc';
 
 export interface PrepayScheme {

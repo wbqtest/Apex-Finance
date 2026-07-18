@@ -6,6 +6,7 @@ import NavBar from '../../components/NavBar';
 import { calculatePrepay } from '../../services/api';
 import { PrepayInput, PrepayResult } from '../../utils/prepayCalc';
 import { formatCurrency } from '../../utils/finance';
+import { addPrepayScheme, PrepayScheme } from '../../utils/prepayCompare';
 import './index.less';
 
 const METHOD_LABELS: Record<string, string> = {
@@ -103,6 +104,27 @@ export default function PrepayResultPage() {
     });
   };
 
+  const handleAddCompare = () => {
+    if (!input || !result) return;
+    const scheme: PrepayScheme = {
+      id: Date.now().toString(),
+      label: `${METHOD_LABELS[input.repaymentType]} · ${PREPAY_TYPE_LABELS[input.prepayType]} · ¥${formatCurrency(result.totalPrepay)}`,
+      input: input,
+      result: result,
+      createdAt: Date.now(),
+    };
+    addPrepayScheme(scheme);
+    setToast({ show: true, msg: '已加入对比' });
+    setTimeout(() => {
+      Taro.navigateTo({ url: '/pages/compare?tab=prepay' });
+    }, 300);
+  };
+
+  const handleViewSchedule = () => {
+    Taro.setStorageSync('PREPAY_RESULT_DATA', { input, result });
+    Taro.navigateTo({ url: '/pages/prepay-schedule' });
+  };
+
   if (loading) {
     return (
       <View className="prepay-result">
@@ -150,8 +172,8 @@ export default function PrepayResultPage() {
             {netSave > 0
               ? `提前还款可为您节省约 ¥${formatCurrency(netSave)} 利息`
               : result.penalty > 0
-              ? '当前违约金较高，节省空间不大，建议综合考量'
-              : '提前还款仅需偿还剩余本金，无需违约金'}
+                ? '当前违约金较高，节省空间不大，建议综合考量'
+                : '提前还款仅需偿还剩余本金，无需违约金'}
           </Text>
         </View>
 
@@ -268,6 +290,14 @@ export default function PrepayResultPage() {
           </View>
         </View>
 
+        <View className="schedule-link-card" onClick={handleViewSchedule}>
+          <View className="schedule-link-main">
+            <Text className="schedule-link-title">查看完整还款计划表</Text>
+            <Text className="schedule-link-sub">共 {result.loanTerm} 期，纯列表更省流</Text>
+          </View>
+          <Text className="schedule-link-arrow">›</Text>
+        </View>
+
         <View className="legal-notice">
           <Text className="notice-icon">ℹ️</Text>
           <Text className="notice-text">
@@ -280,7 +310,10 @@ export default function PrepayResultPage() {
 
       <View className="result-footer">
         <Button className="foot-btn" onClick={handleCopy}>
-          复制结果
+          复制
+        </Button>
+        <Button className="foot-btn" onClick={handleAddCompare}>
+          加入对比
         </Button>
         <Button
           className="foot-btn primary"

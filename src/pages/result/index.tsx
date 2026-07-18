@@ -2,7 +2,8 @@ import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { Button, Cell, CellGroup } from '@nutui/nutui-react-taro';
-import { CalculationResult, CalculationParams, generateCSV, generateReportText } from '../../utils/finance';
+import NavBar from '../../components/NavBar';
+import { CalculationResult, CalculationParams, generateReportText } from '../../utils/finance';
 import { CompareItem, addToCompare } from '../../utils/storage';
 import './index.less';
 
@@ -19,21 +20,12 @@ interface StoredData {
   fees: FeeItem[];
 }
 
-const formatAnonymizedAmount = (amount: number, anonymize: boolean): string => {
-  if (!anonymize) return `¥${amount.toFixed(2)}`;
-  const str = amount.toFixed(2);
-  if (str.length <= 4) return '¥****';
-  return `¥${str[0]}****.${str.slice(-2)}`;
-};
+const formatAmount = (amount: number): string => `¥${amount.toFixed(2)}`;
 
-const formatAnonymizedRate = (rate: number, anonymize: boolean): string => {
-  if (!anonymize) return `${rate.toFixed(2)}%`;
-  return `${rate.toFixed(1)}%`;
-};
+const formatRate = (rate: number): string => `${rate.toFixed(2)}%`;
 
 export default function ResultPage() {
   const [data, setData] = useState<StoredData | null>(null);
-  const [anonymizeAmount, setAnonymizeAmount] = useState(false);
 
   useEffect(() => {
     const stored = Taro.getStorageSync<StoredData | null>('IRR_RESULT_DETAIL');
@@ -65,12 +57,14 @@ export default function ResultPage() {
     }
   };
 
-  const handleRecalculate = () => {
-    const pages = Taro.getCurrentPages();
-    if (pages.length > 1) {
-      Taro.navigateBack();
-    } else {
-      Taro.switchTab({ url: '/pages/index' });
+  const handleCopy = () => {
+    if (!data) return;
+    try {
+      const text = generateReportText(data.params, data.result, data.fees);
+      Taro.setClipboardData({ data: text });
+      Taro.showToast({ title: '报告已复制', icon: 'success' });
+    } catch {
+      Taro.showToast({ title: '复制失败', icon: 'none' });
     }
   };
 
@@ -90,41 +84,10 @@ export default function ResultPage() {
     }, 300);
   };
 
-  const handleCopy = () => {
-    if (!data) return;
-    try {
-      const text = generateReportText(data.params, data.result, data.fees);
-      Taro.setClipboardData({ data: text });
-      Taro.showToast({ title: '报告已复制', icon: 'success' });
-    } catch {
-      Taro.showToast({ title: '复制失败', icon: 'none' });
-    }
-  };
-
-  const handleExportCSV = () => {
-    if (!data) return;
-    try {
-      const csv = generateCSV(data.params, data.result, data.fees);
-      Taro.setClipboardData({
-        data: csv,
-        success: () => Taro.showToast({ title: 'CSV已复制', icon: 'success' }),
-        fail: () => Taro.showToast({ title: '导出失败', icon: 'none' }),
-      });
-    } catch {
-      Taro.showToast({ title: '导出失败', icon: 'none' });
-    }
-  };
-
   if (!data) {
     return (
       <View className="result-container">
-        <View className="result-header">
-          <View className="header-left" onClick={handleBack}>
-            <Text className="back-icon">‹</Text>
-          </View>
-          <Text className="header-title">计算结果</Text>
-          <View className="header-right" />
-        </View>
+        <NavBar title="计算结果" />
         <View className="loading">加载中...</View>
       </View>
     );
@@ -167,15 +130,7 @@ export default function ResultPage() {
 
   return (
     <View className="result-container">
-      <View className="result-header">
-        <View className="header-left" onClick={handleBack}>
-          <Text className="back-icon">‹</Text>
-        </View>
-        <Text className="header-title">计算结果</Text>
-        <View className="header-right" onClick={handleCopy}>
-          <Text className="copy-icon">📋</Text>
-        </View>
-      </View>
+      <NavBar title="计算结果" />
 
       <ScrollView scrollY className="result-content">
         <View className={`status-card ${result.complianceStatus}`}>
@@ -192,10 +147,10 @@ export default function ResultPage() {
         <View className="rate-card">
           <Text className="rate-label">实际年化利率(IRR)</Text>
           <Text className="rate-value" style={{ color: getStatusColor(result.complianceStatus) }}>
-            {formatAnonymizedRate(result.irr, anonymizeAmount)}
+            {formatRate(result.irr)}
           </Text>
           <View className="rate-comparison">
-            <Text className="comparison-item">名义APR：{formatAnonymizedRate(result.nominalAPR, anonymizeAmount)}</Text>
+            <Text className="comparison-item">名义APR：{formatRate(result.nominalAPR)}</Text>
             {result.irr > result.nominalAPR && (
               <Text className="comparison-item">实际比名义高 {(result.irr - result.nominalAPR).toFixed(2)}%</Text>
             )}
@@ -205,7 +160,7 @@ export default function ResultPage() {
         {result.excessInterest > 0 && (
           <View className="excess-card">
             <Text className="excess-label">超额利息</Text>
-            <Text className="excess-value">{formatAnonymizedAmount(result.excessInterest, anonymizeAmount)}</Text>
+            <Text className="excess-value">{formatAmount(result.excessInterest)}</Text>
             <Text className="excess-tip">该部分利息可能无需支付</Text>
             {result.excessPaid > 0 && (
               <View className="paid-excess">
@@ -217,8 +172,8 @@ export default function ResultPage() {
         )}
 
         <CellGroup className="summary-card">
-          <Cell title="总还款额" extra={formatAnonymizedAmount(result.totalPayment, anonymizeAmount)} border={false} />
-          <Cell title="总利息" extra={formatAnonymizedAmount(result.totalInterest, anonymizeAmount)} border={false} />
+          <Cell title="总还款额" extra={formatAmount(result.totalPayment)} border={false} />
+          <Cell title="总利息" extra={formatAmount(result.totalInterest)} border={false} />
           <Cell title="法定上限(LPR×4)" extra={`${result.complianceLimit.toFixed(2)}%`} border={false} />
           <Cell title="使用LPR" extra={`${result.lprUsed}% (${result.lprDate})`} border={false} />
         </CellGroup>
@@ -229,15 +184,15 @@ export default function ResultPage() {
             <View className="stats-grid">
               <View className="stat-item">
                 <Text className="stat-label">平均月供</Text>
-                <Text className="stat-value">{formatAnonymizedAmount(result.avgPayment, anonymizeAmount)}</Text>
+                <Text className="stat-value">{formatAmount(result.avgPayment)}</Text>
               </View>
               <View className="stat-item">
                 <Text className="stat-label">最高月供</Text>
-                <Text className="stat-value">{formatAnonymizedAmount(result.maxPayment || 0, anonymizeAmount)}</Text>
+                <Text className="stat-value">{formatAmount(result.maxPayment || 0)}</Text>
               </View>
               <View className="stat-item">
                 <Text className="stat-label">最低月供</Text>
-                <Text className="stat-value">{formatAnonymizedAmount(result.minPayment || 0, anonymizeAmount)}</Text>
+                <Text className="stat-value">{formatAmount(result.minPayment || 0)}</Text>
               </View>
               <View className="stat-item">
                 <Text className="stat-label">还款集中度</Text>
@@ -255,7 +210,7 @@ export default function ResultPage() {
                 <View key={index} className="cashflow-row">
                   <Text className="cashflow-label">{index === 0 ? '借款本金' : `第${index}期还款`}</Text>
                   <Text className={`cashflow-value ${index === 0 ? 'cashflow-in' : 'cashflow-out'}`}>
-                    {index === 0 ? '+' : '-'}{formatAnonymizedAmount(Math.abs(flow), anonymizeAmount)}
+                    {index === 0 ? '+' : '-'}{formatAmount(Math.abs(flow))}
                   </Text>
                 </View>
               ))}
@@ -291,14 +246,14 @@ export default function ResultPage() {
                   <View key={index} className={`fee-row ${fee.isSuspectedInterest ? 'suspected-interest' : ''}`}>
                     <Text className="fee-name">{fee.name}</Text>
                     {fee.isSuspectedInterest && <Text className="fee-suspected-tag">⚠️</Text>}
-                    <Text className="fee-amount">{formatAnonymizedAmount(feeTotal, anonymizeAmount)}</Text>
+                    <Text className="fee-amount">{formatAmount(feeTotal)}</Text>
                     <Text className="fee-percent">({feePercent}%)</Text>
                   </View>
                 );
               })}
               <View className="fee-total">
                 <Text className="fee-name">费用合计</Text>
-                <Text className="fee-amount">{formatAnonymizedAmount(totalFees, anonymizeAmount)}</Text>
+                <Text className="fee-amount">{formatAmount(totalFees)}</Text>
               </View>
             </View>
           </View>
@@ -349,25 +304,9 @@ export default function ResultPage() {
       </ScrollView>
 
       <View className="result-footer">
-        <View className="result-anonymize-row">
-          <Text className="result-anonymize-label">隐藏金额（截图去敏）</Text>
-          <Button
-            type={anonymizeAmount ? 'primary' : 'default'}
-            size="small"
-            onClick={() => setAnonymizeAmount(!anonymizeAmount)}
-            className="result-anonymize-btn"
-          >
-            {anonymizeAmount ? '已隐藏' : '显示'}
-          </Button>
-        </View>
-        <View className="footer-actions">
-          <Button type="default" size="large" onClick={handleExportCSV} className="footer-btn secondary">导出CSV</Button>
-          <Button type="default" size="large" onClick={handleCopy} className="footer-btn secondary">复制报告</Button>
-        </View>
-        <View className="footer-actions">
-          <Button type="default" size="large" onClick={handleCompare} className="footer-btn secondary">加入对比</Button>
-          <Button type="primary" size="large" onClick={handleRecalculate} className="footer-btn primary">重新计算</Button>
-        </View>
+        <Button className="footer-btn" onClick={handleCopy}>复制</Button>
+        <Button className="footer-btn" onClick={handleCompare}>加入对比</Button>
+        <Button className="footer-btn primary" onClick={handleBack}>返回修改</Button>
       </View>
     </View>
   );

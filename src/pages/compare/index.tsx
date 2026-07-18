@@ -9,16 +9,17 @@ import CarChart from '../../components/CarChart'
 import { REPAYMENT_LABELS, calculateCarLoan, CarLoanInput } from '../../utils/carFinance'
 import { getCarSchemes, removeCarScheme, CarScheme, addCarScheme, clearCarSchemes } from '../../utils/carCompare'
 import { getMortgageSchemes, removeMortgageScheme, MortgageScheme, addMortgageScheme, clearMortgageSchemes } from '../../utils/mortgageCompare'
+import { getPrepaySchemes, removePrepayScheme, PrepayScheme, clearPrepaySchemes, addPrepayScheme } from '../../utils/prepayCompare'
 import { calculateMortgage, MortgageInput } from '../../utils/mortgage'
-import { fetchMortgageHistory, MortgageHistoryItem, fetchAutoLoanHistory, AutoLoanHistoryItem } from '../../services/api'
-import CustomTabBar from '../../components/CustomTabBar/custom-tab-bar'
+import { fetchMortgageHistory, MortgageHistoryItem, fetchAutoLoanHistory, AutoLoanHistoryItem, fetchPrepayHistory, PrepayHistoryItem } from '../../services/api'
 
 // ---- 标签 ----
-type TabType = 'irr' | 'mortgage' | 'auto'
+type TabType = 'irr' | 'mortgage' | 'auto' | 'prepay'
 const TABS: { key: TabType; label: string }[] = [
   { key: 'irr', label: '网贷' },
   { key: 'mortgage', label: '房贷' },
   { key: 'auto', label: '车贷' },
+  { key: 'prepay', label: '提前还贷' },
 ]
 
 const checkLogin = (): boolean => {
@@ -86,7 +87,7 @@ function IrrCompare() {
     } catch (e) { /* ignore */ }
   }
 
-  useDidShow(() => { loadData() })
+  useEffect(() => { loadData() }, [])
 
   const openSelectModal = (fromHistoryOnly = false) => {
     if (!checkLogin()) return;
@@ -363,23 +364,14 @@ function IrrCompare() {
           <View className="empty-state">
             <Text className="empty-icon">📊</Text>
             <Text className="empty-text">暂无对比记录</Text>
-            <Text className="empty-hint">选择历史记录或当前计算结果进行对比</Text>
+            <Text className="empty-hint">从历史记录中选择网贷方案，或先去计算</Text>
             <View className="empty-actions">
-              {currentResult && (
-                <Button className="empty-btn primary" onClick={() => openSelectModal(false)}>
-                  📊 加入当前结果对比
-                </Button>
-              )}
-              {history.length >= 2 && (
-                <Button className="empty-btn secondary" onClick={() => openSelectModal(true)}>
-                  🔄 仅历史记录之间对比
-                </Button>
-              )}
-              {!currentResult && history.length < 2 && (
-                <Button className="empty-btn primary" onClick={() => Taro.navigateTo({ url: '/pages/index' })}>
-                  去计算
-                </Button>
-              )}
+              <Button className="empty-btn primary" onClick={() => openSelectModal(true)}>
+                📋 从历史记录添加
+              </Button>
+              <Button className="empty-btn secondary" onClick={() => Taro.navigateTo({ url: '/pages/index' })}>
+                💳 去计算网贷
+              </Button>
             </View>
           </View>
         ) : (
@@ -1230,19 +1222,362 @@ function AutoCompare() {
 }
 
 // ============================================================
+// 提前还贷对比
+// ============================================================
+function PrepayCompare() {
+  const [schemes, setSchemes] = useState<PrepayScheme[]>([])
+  const [toast, setToast] = useState({ show: false, msg: '' })
+  const [history, setHistory] = useState<PrepayHistoryItem[]>([])
+  const [showSelectModal, setShowSelectModal] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const refresh = useCallback(() => {
+    setSchemes(getPrepaySchemes())
+  }, [])
+
+  useEffect(() => { refresh() }, [])
+
+  const loadHistory = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetchPrepayHistory(100, 0)
+      if (res.data) setHistory(res.data)
+    } catch { /* ignore */ }
+    finally { setLoading(false) }
+  }, [])
+
+  const handleRemove = (id: string) => {
+    removePrepayScheme(id)
+    refresh()
+    setToast({ show: true, msg: '已删除' })
+  }
+
+  const handleClear = () => {
+    clearPrepaySchemes()
+    refresh()
+    setToast({ show: true, msg: '已清空所有对比' })
+  }
+
+  const openSelectModal = () => {
+    if (!checkLogin()) return
+    setSelectedIds([])
+    loadHistory().then(() => setShowSelectModal(true))
+  }
+
+  const toggleHistorySelect = (id: number) => {
+    const idx = selectedIds.indexOf(id)
+    if (idx >= 0) {
+      setSelectedIds(selectedIds.filter(sid => sid !== id))
+    } else {
+      if (selectedIds.length >= 3) {
+        showToast('最多选择 3 个方案进行对比')
+        return
+      }
+      setSelectedIds([...selectedIds, id])
+    }
+  }
+
+  const confirmSelect = () => {
+    if (selectedIds.length === 0) return
+    const newItems: PrepayScheme[] = []
+    selectedIds.forEach((hid) => {
+      const hrec = history.find(r => r.id === hid)
+      if (hrec) {
+        try {
+          const d = hrec.inputSnapshot || {}
+          newItems.push({
+            id: 'prepay_h_' + hid,
+            label: `${d.repaymentType === 'EQUAL_PI' ? '等额本息' : '等额本金'} · ${hrec.prepayType === 'FULL' ? '全部提前还' : '部分提前还'} · ¥${Math.round(hrec.totalPrepay || d.partialAmount || hrec.principal).toLocaleString('zh-CN')}`,
+            input: {
+              loanAmount: d.loanAmount ?? hrec.principal ?? 0,
+              loanYears: d.loanYears ?? hrec.years ?? 20,
+              annualRate: d.annualRate ?? hrec.rate ?? 4.2,
+              repaymentType: d.repaymentType ?? 'EQUAL_PI',
+              firstPaymentDate: d.firstPaymentDate ?? '2026-01-01',
+              prepaymentDate: d.prepaymentDate ?? '2026-07-01',
+              penaltyType: d.penaltyType ?? 'NONE',
+              penaltyValue: d.penaltyValue ?? 0,
+              prepayType: hrec.prepayType ?? d.prepayType ?? 'PARTIAL',
+              partialAmount: d.partialAmount ?? hrec.partialAmount ?? 0,
+            },
+            result: {
+              loanAmount: hrec.principal ?? 0,
+              loanTerm: hrec.periods ?? (hrec.years ? hrec.years * 12 : 240),
+              monthlyPayment: hrec.monthlyPayment ?? 0,
+              totalInterest: hrec.totalInterest ?? 0,
+              totalPayment: hrec.totalPayment ?? ((hrec.totalInterest ?? 0) + (hrec.principal ?? 0)),
+              paidMonths: hrec.paidMonths ?? 0,
+              paidInterest: hrec.paidInterest ?? 0,
+              paidPrincipal: hrec.paidPrincipal ?? 0,
+              remainingPrincipal: hrec.remainingPrincipal ?? 0,
+              remainingInterest: hrec.remainingInterest ?? 0,
+              penalty: hrec.penalty ?? 0,
+              totalPrepay: hrec.totalPrepay ?? 0,
+              savedInterest: hrec.savedInterest ?? 0,
+              saveRatio: hrec.saveRatio ?? 0,
+              prepayMonth: hrec.prepayMonth ?? 0,
+              schedules: [],
+            },
+            createdAt: new Date(hrec.createdAt).getTime(),
+          })
+        } catch (e) {
+          console.error('parse prepay history error:', e)
+        }
+      }
+    })
+
+    if (newItems.length > 0) {
+      clearPrepaySchemes()
+      newItems.forEach(item => addPrepayScheme(item))
+      refresh()
+      setToast({ show: true, msg: '已添加 ' + newItems.length + ' 个方案' })
+    }
+    setShowSelectModal(false)
+  }
+
+  const sorted = useMemo(() => {
+    return [...schemes].sort((a, b) => a.result.savedInterest - b.result.savedInterest).reverse()
+  }, [schemes])
+
+  const bestId = sorted.length > 0 ? sorted[0].id : ''
+
+  const barData = useMemo(() => {
+    return sorted.map(s => ({
+      name: s.label,
+      principal: s.result.remainingPrincipal,
+      interest: s.result.remainingInterest,
+    }))
+  }, [sorted])
+
+  const prepayRows = [
+    { label: '还款方式', get: (s: PrepayScheme) => s.input.repaymentType === 'EQUAL_PI' ? '等额本息' : '等额本金' },
+    { label: '贷款本金', get: (s: PrepayScheme) => '¥' + Math.round(s.input.loanAmount).toLocaleString('zh-CN') },
+    { label: '年利率', get: (s: PrepayScheme) => s.input.annualRate + '%' },
+    { label: '贷款年限', get: (s: PrepayScheme) => s.input.loanYears + '年' },
+    { label: '月供', get: (s: PrepayScheme) => '¥' + Math.round(s.result.monthlyPayment).toLocaleString('zh-CN') },
+    { label: '原计划总利息', get: (s: PrepayScheme) => '¥' + Math.round(s.result.totalInterest).toLocaleString('zh-CN') },
+    { label: '已还月数', get: (s: PrepayScheme) => s.result.paidMonths + '期' },
+    { label: '剩余本金', get: (s: PrepayScheme) => '¥' + Math.round(s.result.remainingPrincipal).toLocaleString('zh-CN') },
+    { label: '违约金', get: (s: PrepayScheme) => '¥' + Math.round(s.result.penalty).toLocaleString('zh-CN') },
+    { label: '本次需还', get: (s: PrepayScheme) => '¥' + Math.round(s.result.totalPrepay).toLocaleString('zh-CN'), highlight: true },
+    { label: '节省利息', get: (s: PrepayScheme) => '¥' + Math.round(s.result.savedInterest).toLocaleString('zh-CN') },
+    { label: '节省比例', get: (s: PrepayScheme) => s.result.saveRatio.toFixed(1) + '%' },
+  ]
+
+  return (
+    <View className="irr-compare">
+      <ScrollView scrollY className="compare-content">
+        {schemes.length === 0 ? (
+          <View className="empty-state">
+            <Text className="empty-icon">💰</Text>
+            <Text className="empty-text">暂无提前还贷方案</Text>
+            <Text className="empty-hint">从历史记录中选择方案，或先去计算</Text>
+            <View className="empty-actions">
+              <Button className="empty-btn primary" onClick={openSelectModal}>
+                📋 从历史记录添加
+              </Button>
+              <Button className="empty-btn secondary" onClick={() => Taro.navigateTo({ url: '/pages/prepay' })}>
+                🔄 去计算提前还贷
+              </Button>
+            </View>
+          </View>
+        ) : (
+          <>
+            <View className="card">
+              <Text className="card-title">方案列表</Text>
+              {sorted.map((s) => (
+                <View key={s.id} className="compare-item-row">
+                  <View className="compare-item-info">
+                    <View className="compare-item-header">
+                      <Text className="compare-item-name">
+                        {s.label}
+                      </Text>
+                      {s.id === bestId && (
+                        <Text className="compare-item-status" style={{ color: 'var(--color-compliant)', background: '#ECFDF5' }}>
+                          最省利息
+                        </Text>
+                      )}
+                    </View>
+                    <Text className="compare-item-desc">
+                      本金 ¥{Math.round(s.input.loanAmount).toLocaleString('zh-CN')} · {s.input.loanYears}年 · 节省 ¥{Math.round(s.result.savedInterest).toLocaleString('zh-CN')}
+                    </Text>
+                  </View>
+                  <Button className="compare-item-remove" onClick={() => handleRemove(s.id)}>
+                    ×
+                  </Button>
+                </View>
+              ))}
+            </View>
+
+            {sorted.length >= 2 && (
+              <>
+                <View className="chart-card">
+                  <Text className="chart-title">各方案剩余本金与利息</Text>
+                  <CarChart
+                    kind="bar"
+                    data={barData}
+                    nameField="name"
+                    seriesField={['principal', 'interest']}
+                    seriesNames={['剩余本金', '剩余利息']}
+                  />
+                </View>
+
+                <View className="card">
+                  <Text className="card-title">并排对比</Text>
+                  <ScrollView scrollX className="compare-table-scroll">
+                    <View className="compare-table">
+                      <View className="compare-table-header">
+                        <Text className="compare-table-th">指标</Text>
+                        {sorted.map(s => (
+                          <Text key={s.id} className="compare-table-th">{s.label}</Text>
+                        ))}
+                      </View>
+                      {prepayRows.map((row, ri) => (
+                        <View key={ri} className="compare-table-row">
+                          <Text className="compare-table-td label">{row.label}</Text>
+                          {sorted.map(s => {
+                            const val = row.get(s)
+                            return (
+                              <Text
+                                key={s.id}
+                                className="compare-table-td"
+                                style={{
+                                  color: row.highlight ? 'var(--brand-primary)' : '#333',
+                                  fontWeight: row.highlight ? 700 : 400,
+                                }}
+                              >
+                                {val}
+                              </Text>
+                            )
+                          })}
+                        </View>
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+
+                <View className="analysis-card">
+                  <Text className="card-title">📊 对比分析</Text>
+                  {(() => {
+                    const best = sorted[0]
+                    const worst = sorted[sorted.length - 1]
+                    const saveDiff = best.result.savedInterest - worst.result.savedInterest
+                    return (
+                      <>
+                        <View className="compare-analysis-card">
+                          <View className="compare-analysis-header">
+                            <Text className="compare-icon">✅</Text>
+                            <Text className="compare-analysis-title">推荐选择「{best.label}」</Text>
+                          </View>
+                          <Text className="compare-analysis-desc">
+                            节省利息最多（¥{Math.round(best.result.savedInterest).toLocaleString('zh-CN')}），相比最少方案多省 ¥{Math.round(saveDiff).toLocaleString('zh-CN')}
+                          </Text>
+                        </View>
+                      </>
+                    )
+                  })()}
+                </View>
+              </>
+            )}
+
+            <View className="compare-actions">
+              <Button className="compare-action-btn add" onClick={openSelectModal}>
+                + 添加方案
+              </Button>
+              <Button className="compare-action-btn clear" onClick={handleClear}>
+                清空所有对比
+              </Button>
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      <Popup
+        visible={showSelectModal}
+        onClose={() => setShowSelectModal(false)}
+        position="bottom"
+        className="compare-select-popup"
+      >
+        <View className="modal-content">
+          <Button className="modal-close" onClick={() => setShowSelectModal(false)}>✕</Button>
+          <Text className="modal-title">从历史记录添加提前还贷方案</Text>
+          <Text className="modal-subtitle">（已选 {selectedIds.length} 个，最多 3 个）</Text>
+
+          {loading ? (
+            <View className="empty-state"><Text className="empty-text">加载中...</Text></View>
+          ) : history.length > 0 ? (
+            <ScrollView scrollY className="select-history-list">
+              {history.map(r => {
+                const isSel = selectedIds.includes(r.id)
+                const d = r.inputSnapshot || {}
+                const label = `${d.repaymentType === 'EQUAL_PI' ? '等额本息' : '等额本金'} · ${d.prepayType === 'FULL' ? '全部提前还' : '部分提前还'}`
+                return (
+                  <View key={r.id} className="select-item" onClick={() => toggleHistorySelect(r.id)} style={{
+                    borderColor: isSel ? 'var(--brand-primary)' : '#eee',
+                    background: isSel ? '#fff8e7' : '#fff',
+                  }}>
+                    <Text className="select-checkbox">{isSel ? '☑' : '☐'}</Text>
+                    <View className="select-info">
+                      <Text className="select-name">{label}</Text>
+                      <Text className="select-desc">
+                        {formatDate(r.createdAt)} · 本金 ¥{Math.round(r.principal).toLocaleString('zh-CN')} · {r.years}年 · 节省 ¥{Math.round(r.savedInterest).toLocaleString('zh-CN')}
+                      </Text>
+                    </View>
+                  </View>
+                )
+              })}
+            </ScrollView>
+          ) : (
+            <View className="empty-state">
+              <Text className="empty-text">暂无历史记录</Text>
+              <Text className="empty-hint">请先去提前还贷计算器完成计算并保存</Text>
+            </View>
+          )}
+
+          <Button className="modal-confirm" onClick={confirmSelect} disabled={selectedIds.length < 1}>
+            📊 开始对比分析（{selectedIds.length} 个方案）
+          </Button>
+        </View>
+      </Popup>
+
+      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+    </View>
+  )
+}
+
+// ============================================================
 // 主页面
 // ============================================================
 export default function ComparePage() {
-  const [activeTab, setActiveTab] = useState<TabType>('irr')
+  const getInitialTab = (): TabType => {
+    try {
+      const pages = Taro.getCurrentPages()
+      const cur = pages[pages.length - 1]
+      const params = (cur as any)?.$taroParams || {}
+      const tab = params.tab
+      if (tab && TABS.some(t => t.key === tab)) {
+        return tab as TabType
+      }
+    } catch { /* ignore */ }
+    return 'irr'
+  }
+
+  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab())
 
   useEffect(() => {
+    Taro.hideTabBar({})
+  }, [])
+
+  useDidShow(() => {
     const pages = Taro.getCurrentPages()
     const cur = pages[pages.length - 1]
-    const tab = (cur as any)?.options?.tab
+    const params = (cur as any)?.$taroParams || {}
+    const tab = params.tab
     if (tab && TABS.some(t => t.key === tab)) {
       setActiveTab(tab as TabType)
     }
-  }, [])
+  })
 
   return (
     <View className="compare-page">
@@ -1267,8 +1602,7 @@ export default function ComparePage() {
       {activeTab === 'irr' && <IrrCompare />}
       {activeTab === 'auto' && <AutoCompare />}
       {activeTab === 'mortgage' && <MortgageCompare />}
-
-      <CustomTabBar />
+      {activeTab === 'prepay' && <PrepayCompare />}
     </View>
   )
 }

@@ -249,7 +249,16 @@ export const calculate = async (params: CalculationParams): Promise<ApiResponse<
 }
 
 export const calculatePrepay = async (input: PrepayInput): Promise<ApiResponse<PrepayResult>> => {
-  return request<PrepayResult>('/api/calculator/prepay/calculate', 'POST', input, false)
+  const params = {
+    ...input,
+    loanAmount: Number(input.loanAmount),
+    loanYears: Number(input.loanYears),
+    annualRate: Number(input.annualRate),
+    penaltyValue: Number(input.penaltyValue),
+    partialAmount: Number(input.partialAmount),
+  };
+  console.log('[API] 提前还贷请求参数:', params);
+  return request<PrepayResult>('/api/calculator/prepay/calculate', 'POST', params, false)
 }
 
 export interface LPRInfo {

@@ -21,6 +21,7 @@ export default defineAppConfig({
     'pages/auto-compare',
     'pages/prepay',
     'pages/prepay-result',
+    'pages/prepay-schedule',
     'pages/mortgage',
     'pages/mortgage-result',
     'pages/history-detail'

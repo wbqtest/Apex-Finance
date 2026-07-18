@@ -10,6 +10,7 @@
 .result-body {
   flex: 1;
   padding: 24rpx;
+  padding-top: 100rpx;
   padding-bottom: 160rpx;
   box-sizing: border-box;
 }
@@ -170,6 +171,44 @@
   }
 }
 
+/* ===== 查看还款计划链接 ===== */
+.schedule-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24rpx;
+  padding: 24rpx;
+  background: @bg-card;
+  border-radius: @radius-card;
+  border: 1rpx solid @border-color;
+
+  &:active {
+    background: @bg-page;
+  }
+}
+
+.schedule-link-main {
+  flex: 1;
+}
+
+.schedule-link-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: @text-primary;
+  margin-bottom: 8rpx;
+}
+
+.schedule-link-sub {
+  font-size: 24rpx;
+  color: @text-secondary;
+}
+
+.schedule-link-arrow {
+  font-size: 40rpx;
+  color: @text-secondary;
+}
+
 /* ===== 免责声明 ===== */
 .legal-notice {
   display: flex;
@@ -206,25 +245,29 @@
   bottom: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24rpx;
-  padding: 24rpx 32rpx;
-  background: @bg-card;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+  gap: 20rpx;
+  padding: 24rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1rpx solid #f0f0f0;
   box-sizing: border-box;
   z-index: 100;
 }
 
 .foot-btn {
   flex: 1;
-  height: 80rpx;
-  line-height: 80rpx;
+  height: 88rpx;
+  line-height: 88rpx;
   font-size: 28rpx;
-  border-radius: @radius-button;
+  font-weight: 500;
+  border-radius: 44rpx;
+  background: #fff !important;
+  color: #333 !important;
+  border: 1rpx solid #e0e0e0 !important;
 
   &.primary {
-    background: @brand-primary !important;
-    border-color: @brand-primary !important;
-    color: @text-on-primary !important;
+    background: #E53935 !important;
+    color: #fff !important;
+    border: none !important;
   }
 }
