@@ -33,7 +33,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@pnpm@v4
+        with:
+          version: "8"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -49,16 +53,12 @@ jobs:
           build-tools: "34.0.0"
           ndk: "26.1.10909125"
 
-      - name: Configure Gradle
-        run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-
       # ========== 2. 构建 JS Bundle ==========
       - name: Install JS dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build JS bundle for Android
-        run: npm run build:rn -- --platform android
+        run: pnpm run build:rn -- --platform android
 
       # ========== 3. 准备壳工程 ==========
       - name: Clone Taro Native Shell
@@ -84,7 +84,7 @@ jobs:
             done
           fi
 
-          # 复制 raw 资源 (如需要)
+          # 复制 raw 资源
           if [ -d dist/raw ]; then
             rm -rf $ANDROID_RES/raw
             cp -r dist/raw $ANDROID_RES/raw
@@ -99,9 +99,6 @@ jobs:
 
           # 创建 assets 目录
           mkdir -p android/app/src/main/assets
-
-          # 确保 MainApplication 使用壳工程的 Application 类
-          echo "android:name=\".MainApplication\"" >> android/app/src/main/AndroidManifest.xml
 
       # ========== 5. 生成签名密钥 ==========
       - name: Generate debug keystore

@@ -8,15 +8,15 @@ on:
   workflow_dispatch:
     inputs:
       release_notes:
-        description: '发布说明'
+        description: "发布说明"
         required: false
-        default: '自动构建的 iOS 版本'
+        default: "自动构建的 iOS 版本"
 
 env:
-  NODE_VERSION: '18'
-  APP_NAME: 'ApexFinance'
-  SHELL_REPO: 'NervJS/taro-native-shell'
-  SHELL_BRANCH: '0.73.2'
+  NODE_VERSION: "18"
+  APP_NAME: "ApexFinance"
+  SHELL_REPO: "NervJS/taro-native-shell"
+  SHELL_BRANCH: "0.73.2"
 
 jobs:
   assemble:
@@ -32,14 +32,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@pnpm@v4
+        with:
+          version: "8"
 
       # ========== 2. 构建 JS Bundle ==========
       - name: Install JS dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build JS bundle for iOS
-        run: npm run build:rn -- --platform ios
+        run: pnpm run build:rn -- --platform ios
 
       # ========== 3. 准备壳工程 ==========
       - name: Clone Taro Native Shell
@@ -50,37 +54,28 @@ jobs:
         run: |
           SHELL_DIR=../taro-native-shell
           IOS_DIR=$SHELL_DIR/ios
-          IOS_ASSETS=$IOS_DIR/ApexFinance
-
-          # 创建应用目录
-          mkdir -p $IOS_ASSETS
 
           # 复制 JS bundle
           cp dist/index.bundle $IOS_DIR/main.jsbundle
 
           # 复制资源文件
           if [ -d dist/raw ]; then
-            cp -r dist/raw $IOS_ASSETS/
-          fi
-
-          # 创建 Info.plist 资源目录 (如需要)
-          if [ -d dist/drawable-mdpi ]; then
-            # 将 drawable 资源转换为 iOS 可用的格式
-            # 这里简化处理，实际项目可能需要调整
-            true
+            IOS_ASSETS=$IOS_DIR/ApexFinance
+            mkdir -p $IOS_ASSETS
+            cp -r dist/raw/* $IOS_ASSETS/ 2>/dev/null || true
           fi
 
       # ========== 4. 配置壳工程 ==========
       - name: Configure shell project
         working-directory: ../taro-native-shell
         run: |
-          # 如果使用 Taro 提供的壳工程，需要执行 pod install
           cd ios
-          pod install || pod install --repo-update || true
+          # 安装 CocoaPods 依赖
+          pod install || true
 
           # 修改应用名
-          if [ -f ApexFinance/Info.plist ]; then
-            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ env.APP_NAME }}" ApexFinance/Info.plist 2>/dev/null || true
+          if [ -f tnsDemo/Info.plist ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ env.APP_NAME }}" tnsDemo/Info.plist 2>/dev/null || true
           fi
 
       # ========== 5. 构建 iOS 应用 ==========
@@ -89,26 +84,30 @@ jobs:
         run: |
           cd ios
 
-          # 检查是否有 workspace 文件
-          if [ -d ApexFinance.xcworkspace ]; then
+          # 确定项目文件
+          if [ -d tnsDemo.xcworkspace ]; then
+            PROJECT_FLAG="-workspace tnsDemo.xcworkspace"
+            SCHEME="tnsDemo"
+          elif [ -d tnsDemo.xcodeproj ]; then
+            PROJECT_FLAG="-project tnsDemo.xcodeproj"
+            SCHEME="tnsDemo"
+          elif [ -d ApexFinance.xcworkspace ]; then
             PROJECT_FLAG="-workspace ApexFinance.xcworkspace"
+            SCHEME="ApexFinance"
           elif [ -d ApexFinance.xcodeproj ]; then
             PROJECT_FLAG="-project ApexFinance.xcodeproj"
+            SCHEME="ApexFinance"
           else
-            # 使用 tns 项目文件
-            if [ -d tnsDemo.xcworkspace ]; then
-              PROJECT_FLAG="-workspace tnsDemo.xcworkspace"
-            elif [ -d tnsDemo.xcodeproj ]; then
-              PROJECT_FLAG="-project tnsDemo.xcodeproj"
-            else
-              echo "使用默认项目配置"
-              PROJECT_FLAG="-project tnsDemo.xcodeproj"
-            fi
+            echo "ERROR: 未找到 iOS 项目文件"
+            ls -la
+            exit 1
           fi
+
+          echo "Using $PROJECT_FLAG with scheme $SCHEME"
 
           # 归档构建 (Release 模式)
           xcodebuild $PROJECT_FLAG \
-            -scheme ApexFinance \
+            -scheme $SCHEME \
             -sdk iphoneos \
             -configuration Release \
             -destination 'generic/platform=iOS' \
@@ -139,14 +138,14 @@ jobs:
             <key>signingStyle</key>
             <string>manual</string>
             <key>teamID</key>
-            <string>${{ secrets.APPLE_TEAM_ID || 'DEVELOPMENT' }}</string>
+            <string>DEVELOPMENT</string>
             <key>skipInstall</key>
             <false/>
           </dict>
           </plist>
           EOF
 
-          # 导出 IPA (Ad-hoc 签名，可在非越狱设备安装)
+          # 导出 IPA
           xcodebuild -exportArchive \
             -archivePath build/ApexFinance.xcarchive \
             -exportPath build/output \
