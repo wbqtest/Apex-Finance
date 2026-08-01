@@ -37,6 +37,9 @@ page {
   --nutui-button-primary-disabled: var(--brand-primary);
 }
 
+/* NutUI 全局样式：H5/小程序需要显式引入，RN 走 app.rn.less */
+@import (inline) '@nutui/nutui-react-taro/dist/style.css';
+
 view,
 text {
   box-sizing: border-box;
@@ -96,18 +99,23 @@ button {
 /* 核心问题: web 中 display:flex 默认 flex-direction:row， */
 /* React Native 中默认 flex-direction:column，导致横向布局变成纵向堆积 */
 
-/* NutUI Tabs: 确保子选项横向排列不换行 */
+/* NutUI Tabs: 确保子选项横向排列不换行（需用父选择器提高优先级） */
+.nut-tabs-horizontal .nut-tabs-titles .nut-tabs-list,
 .nut-tabs-list {
+  display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
 }
 
-.nut-tabs-titles-item {
+.nut-tabs-titles-item,
+.nut-tabs-horizontal .nut-tabs-titles-item {
   flex-shrink: 0;
+  flex: none;
 }
 
 .nut-tabs-titles-item-text {
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* NutUI Tabs horizontal 模式 */

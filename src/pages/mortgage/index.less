@@ -65,103 +65,7 @@
   color: @text-primary;
 }
 
-/* ===== 还款方式 / 计算方式卡片 ===== */
-.method-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: @spacing-md;
-}
-
-.method-card {
-  display: flex;
-  align-items: center;
-  padding: 16rpx 24rpx;
-  background: @bg-card;
-  border: 2rpx solid @border-color;
-  border-radius: @radius-card;
-  box-shadow: @shadow-sm;
-
-  &.active {
-    border-color: @brand-primary;
-    background: @brand-primary-light;
-    box-shadow: @shadow-md;
-  }
-}
-
-.method-radio {
-  width: 32rpx;
-  height: 32rpx;
-  border: 2rpx solid @brand-primary-muted;
-  border-radius: 50%;
-  margin-right: 20rpx;
-  position: relative;
-  flex-shrink: 0;
-
-  &.checked {
-    border-color: @brand-primary;
-  }
-
-  &.checked::after {
-    content: '';
-    position: absolute;
-    top: 6rpx;
-    left: 6rpx;
-    width: 16rpx;
-    height: 16rpx;
-    border-radius: 50%;
-    background: @brand-primary;
-  }
-}
-
-.method-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.method-name {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: @text-primary;
-  line-height: 1.3;
-}
-
-.method-desc {
-  font-size: 22rpx;
-  color: @text-secondary;
-  margin-top: 4rpx;
-}
-
-/* ===== 贷款类别 3列 ===== */
-.loan-type-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20rpx;
-}
-
-.loan-type-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16rpx 16rpx;
-  background: @bg-card;
-  border: 2rpx solid @border-color;
-  border-radius: @radius-card;
-  box-shadow: @shadow-sm;
-
-  &.active {
-    border-color: @brand-primary;
-    background: @brand-primary-light;
-    box-shadow: @shadow-md;
-  }
-
-  .method-radio {
-    margin-right: 12rpx;
-  }
-
-  .method-name {
-    font-size: 26rpx;
-  }
-}
+/* ===== 还款方式 / 计算方式卡片（已迁移至 OptionGroup） ===== */
 
 /* ===== 表单卡片 ===== */
 .form-card {
@@ -245,30 +149,6 @@
   font-weight: 500;
 }
 
-/* ===== 年份标签 ===== */
-.tag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: @spacing-xs;
-  justify-content: flex-end;
-}
-
-.tag-chip {
-  padding: 6rpx 12rpx;
-  background: #fff;
-  border: 1rpx solid @border-color;
-  font-size: 24rpx;
-  border-radius: 6rpx;
-  color: @text-primary;
-  font-weight: 500;
-
-  &.active {
-    background: @brand-primary;
-    border-color: @brand-primary;
-    color: @text-on-primary;
-  }
-}
-
 /* 日期选择器 */
 .picker-value {
   display: flex;
@@ -285,50 +165,6 @@
   font-size: 22rpx;
   color: @icon-arrow;
   margin-left: 12rpx;
-}
-
-/* ===== 利率快捷按钮 ===== */
-.rate-shortcuts {
-  display: flex;
-  gap: @spacing-sm;
-  padding: 16rpx 0 24rpx;
-}
-
-.rate-chip {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20rpx 12rpx;
-  background: @brand-primary-pale;
-  border: 1rpx solid @border-color;
-  border-radius: @radius-input;
-
-  &.active {
-    background: @brand-primary-light;
-    border-color: @brand-primary;
-  }
-}
-
-.rate-chip-label {
-  font-size: 24rpx;
-  color: @text-secondary;
-}
-
-.rate-chip.active .rate-chip-label {
-  color: @brand-primary;
-  font-weight: 600;
-}
-
-.rate-chip-val {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: @text-primary;
-  margin-top: 4rpx;
-}
-
-.rate-chip.active .rate-chip-val {
-  color: @brand-primary;
 }
 
 /* ===== 底部空间 ===== */

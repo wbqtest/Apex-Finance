@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
 import { InputNumber, Button } from '@nutui/nutui-react-taro';
 import { SafeToast } from '../../components/SafeToast';
+import OptionGroup from '../../components/OptionGroup';
 
 import {
   RepayMethod,
@@ -40,6 +41,11 @@ const CALC_MODE_OPTIONS: { key: CalcMode; label: string }[] = [
 ];
 
 const YEAR_OPTIONS = [5, 10, 15, 20, 25, 30];
+
+const methodOptions = METHOD_OPTIONS.map((m) => ({ value: m.key, label: m.label, desc: m.desc }));
+const loanTypeOptions = LOAN_TYPE_OPTIONS.map((l) => ({ value: l.key, label: l.label }));
+const calcModeOptions = CALC_MODE_OPTIONS.map((c) => ({ value: c.key, label: c.label }));
+const yearOptions = YEAR_OPTIONS.map((y) => ({ value: y, label: `${y}年` }));
 
 const STORAGE_KEY = 'mortgage_params';
 
@@ -226,55 +232,38 @@ export default function MortgagePage() {
         {/* 1. 还款方式 */}
         <View className="section">
           <Text className="section-title">还款方式</Text>
-          <View className="method-grid">
-            {METHOD_OPTIONS.map(m => (
-              <View
-                key={m.key}
-                className={`method-card ${repayMethod === m.key ? 'active' : ''}`}
-                onClick={() => setRepayMethod(m.key)}
-              >
-                <View className={`method-radio ${repayMethod === m.key ? 'checked' : ''}`} />
-                <View className="method-info">
-                  <Text className="method-name">{m.label}</Text>
-                  <Text className="method-desc">{m.desc}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
+          <OptionGroup
+            options={methodOptions}
+            value={repayMethod}
+            onChange={setRepayMethod}
+            variant="card"
+            showRadio
+          />
         </View>
 
         {/* 2. 贷款类别 */}
         <View className="section">
           <Text className="section-title">贷款类别</Text>
-          <View className="loan-type-grid">
-            {LOAN_TYPE_OPTIONS.map(l => (
-              <View
-                key={l.key}
-                className={`loan-type-card ${loanType === l.key ? 'active' : ''}`}
-                onClick={() => setLoanType(l.key)}
-              >
-                <View className={`method-radio ${loanType === l.key ? 'checked' : ''}`} />
-                <Text className="method-name">{l.label}</Text>
-              </View>
-            ))}
-          </View>
+          <OptionGroup
+            options={loanTypeOptions}
+            value={loanType}
+            onChange={setLoanType}
+            variant="card"
+            columns={3}
+            showRadio
+          />
         </View>
 
         {/* 3. 计算方式 */}
         <View className="section">
           <Text className="section-title">计算方式</Text>
-          <View className="method-grid">
-            {CALC_MODE_OPTIONS.map(cm => (
-              <View
-                key={cm.key}
-                className={`method-card ${calcMode === cm.key ? 'active' : ''}`}
-                onClick={() => setCalcMode(cm.key)}
-              >
-                <View className={`method-radio ${calcMode === cm.key ? 'checked' : ''}`} />
-                <Text className="method-name">{cm.label}</Text>
-              </View>
-            ))}
-          </View>
+          <OptionGroup
+            options={calcModeOptions}
+            value={calcMode}
+            onChange={setCalcMode}
+            variant="card"
+            showRadio
+          />
         </View>
 
         {/* 4. 贷款信息 */}
@@ -324,17 +313,12 @@ export default function MortgagePage() {
 
             <View className="form-row">
               <Text className="form-label">按揭年数</Text>
-              <View className="tag-row">
-                {YEAR_OPTIONS.map(y => (
-                  <View
-                    key={y}
-                    className={`tag-chip ${years === y ? 'active' : ''}`}
-                    onClick={() => setYears(y)}
-                  >
-                    <Text>{y}年</Text>
-                  </View>
-                ))}
-              </View>
+              <OptionGroup
+                options={yearOptions}
+                value={years}
+                onChange={setYears}
+                variant="tag"
+              />
             </View>
 
             <View className="form-row">
@@ -374,18 +358,17 @@ export default function MortgagePage() {
                   <Text className="suffix">%</Text>
                 </View>
               </View>
-              <View className="rate-shortcuts">
-                {RATE_TYPE_OPTIONS.map(rt => (
-                  <View
-                    key={rt.key}
-                    className={`rate-chip ${rateType === rt.key ? 'active' : ''}`}
-                    onClick={() => handleRateType(rt.key)}
-                  >
-                    <Text className="rate-chip-label">{rt.label}</Text>
-                    <Text className="rate-chip-val">{round2(BASE_RATE * rt.multiplier)}%</Text>
-                  </View>
-                ))}
-              </View>
+              <OptionGroup
+                options={RATE_TYPE_OPTIONS.map((rt) => ({
+                  value: rt.key,
+                  label: rt.label,
+                  desc: `${round2(BASE_RATE * rt.multiplier)}%`,
+                }))}
+                value={rateType}
+                onChange={handleRateType}
+                variant="card"
+                block
+              />
             </View>
           </View>
         )}

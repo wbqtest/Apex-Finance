@@ -2,6 +2,7 @@ import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import { useState, useMemo } from 'react';
 import { InputNumber, Button } from '@nutui/nutui-react-taro';
 import { SafeToast } from '../../components/SafeToast';
+import OptionGroup from '../../components/OptionGroup';
 
 import Taro from '@tarojs/taro';
 import {
@@ -33,6 +34,11 @@ const PREPAY_OPTIONS: { key: PrepayType; label: string }[] = [
   { key: 'FULL', label: '全部偿还' },
   { key: 'PARTIAL', label: '部分偿还' },
 ];
+
+const methodOptions = METHOD_OPTIONS.map((m) => ({ value: m.key, label: m.label }));
+const penaltyOptions = PENALTY_OPTIONS.map((p) => ({ value: p.key, label: p.label }));
+const prepayOptions = PREPAY_OPTIONS.map((p) => ({ value: p.key, label: p.label }));
+const yearOptions = [5, 10, 15, 20, 25, 30].map((y) => ({ value: y, label: `${y}年` }));
 
 export default function PrepayCalcPage() {
   /* ---- 表单状态 ---- */
@@ -124,18 +130,13 @@ export default function PrepayCalcPage() {
         {/* 还款方式 */}
         <View className="section">
           <Text className="section-title">还款方式</Text>
-          <View className="method-grid">
-            {METHOD_OPTIONS.map((m) => (
-              <View
-                key={m.key}
-                className={`method-card ${repaymentType === m.key ? 'active' : ''}`}
-                onClick={() => setRepaymentType(m.key)}
-              >
-                <View className={`method-radio ${repaymentType === m.key ? 'checked' : ''}`} />
-                <Text className="method-name">{m.label}</Text>
-              </View>
-            ))}
-          </View>
+          <OptionGroup
+            options={methodOptions}
+            value={repaymentType}
+            onChange={setRepaymentType}
+            variant="card"
+            showRadio
+          />
         </View>
 
         {/* 贷款信息 */}
@@ -171,17 +172,12 @@ export default function PrepayCalcPage() {
                   <Text className="suffix">年</Text>
                 </View>
               </View>
-              <View className="tag-row">
-                {[5, 10, 15, 20, 25, 30].map((y) => (
-                  <View
-                    key={y}
-                    className={`tag-chip ${loanYears === y ? 'active' : ''}`}
-                    onClick={() => setLoanYears(y)}
-                  >
-                    <Text>{y}年</Text>
-                  </View>
-                ))}
-              </View>
+              <OptionGroup
+                options={yearOptions}
+                value={loanYears}
+                onChange={setLoanYears}
+                variant="tag"
+              />
             </View>
 
             <View className="form-row">
@@ -249,17 +245,12 @@ export default function PrepayCalcPage() {
           <View className="form-card">
             <View className="form-row">
               <Text className="form-label">违约金类型</Text>
-              <View className="seg">
-                {PENALTY_OPTIONS.map((p) => (
-                  <View
-                    key={p.key}
-                    className={`seg-item ${penaltyType === p.key ? 'active' : ''}`}
-                    onClick={() => setPenaltyType(p.key)}
-                  >
-                    <Text>{p.label}</Text>
-                  </View>
-                ))}
-              </View>
+              <OptionGroup
+                options={penaltyOptions}
+                value={penaltyType}
+                onChange={setPenaltyType}
+                variant="segment"
+              />
             </View>
 
             {penaltyType !== 'NONE' && (
@@ -286,18 +277,13 @@ export default function PrepayCalcPage() {
         {/* 提前还款方式 */}
         <View className="section">
           <Text className="section-title">提前还款方式</Text>
-          <View className="method-grid">
-            {PREPAY_OPTIONS.map((p) => (
-              <View
-                key={p.key}
-                className={`method-card ${prepayType === p.key ? 'active' : ''}`}
-                onClick={() => setPrepayType(p.key)}
-              >
-                <View className={`method-radio ${prepayType === p.key ? 'checked' : ''}`} />
-                <Text className="method-name">{p.label}</Text>
-              </View>
-            ))}
-          </View>
+          <OptionGroup
+            options={prepayOptions}
+            value={prepayType}
+            onChange={setPrepayType}
+            variant="card"
+            showRadio
+          />
 
           {prepayType === 'PARTIAL' && (
             <View className="form-card partial-card">

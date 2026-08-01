@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Taro from '@tarojs/taro';
 import { Button, Cell, CellGroup, Range, InputNumber } from '@nutui/nutui-react-taro';
 import { SafeToast } from '../../components/SafeToast';
+import OptionGroup from '../../components/OptionGroup';
 
 import CarChart from '../../components/CarChart';
 import {
@@ -22,6 +23,8 @@ const PENALTY_OPTIONS: { key: PenaltyType; label: string }[] = [
   { key: 'PERCENT', label: '百分比' },
   { key: 'FIXED', label: '固定金额' },
 ];
+
+const penaltyOptions = PENALTY_OPTIONS.map((p) => ({ value: p.key, label: p.label }));
 
 const formatWan = (v: number): string => `${(v / 10000).toFixed(1)}`;
 
@@ -237,17 +240,12 @@ export default function AutoResultPage() {
             </View>
           </Cell>
           <Cell title="违约金类型">
-            <View className="seg">
-              {PENALTY_OPTIONS.map((p) => (
-                <View
-                  key={p.key}
-                  className={`seg-item ${penaltyType === p.key ? 'active' : ''}`}
-                  onClick={() => setPenaltyType(p.key)}
-                >
-                  <Text>{p.label}</Text>
-                </View>
-              ))}
-            </View>
+            <OptionGroup
+              options={penaltyOptions}
+              value={penaltyType}
+              onChange={setPenaltyType}
+              variant="segment"
+            />
           </Cell>
           {penaltyType !== 'NONE' && (
             <Cell title={penaltyType === 'PERCENT' ? '违约金比例(%)' : '违约金金额(元)'}>

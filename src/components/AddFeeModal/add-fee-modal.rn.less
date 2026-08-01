@@ -1,0 +1,28 @@
+/**
+ * AddFeeModal - RN 专属样式
+ * H5/小程序使用 add-fee-modal.less
+ * RN 修复：gap 不可用、伪元素不可用，使用 margin 和背景色替代
+ */
+
+@import './add-fee-modal.less';
+
+.fee-form__charge-options {
+  justify-content: space-between;
+}
+
+.fee-form__charge-option {
+  margin-right: 24rpx;
+
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+.fee-form__radio {
+  margin-right: 16rpx;
+
+  &--active {
+    background: @primary-color-start;
+    border-color: @primary-color-start;
+  }
+}

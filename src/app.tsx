@@ -5,7 +5,7 @@ import { initTheme } from './utils/theme';
 import { initCarConfig } from './services/carConfig';
 import { ThemeProvider } from './context/ThemeContext';
 
-// NutUI 样式在各平台下由组件自动处理，无需手动导入 style.css
+// NutUI 全局样式已在 app.less 中引入，H5/小程序生效；RN 使用 app.rn.less 避免引入不兼容样式
 
 function App({ children }: PropsWithChildren<any>) {
   useLaunch(() => {

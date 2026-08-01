@@ -1,0 +1,41 @@
+/**
+ * BatchFillModal - RN 专属样式
+ * H5/小程序使用 batch-fill-modal.less
+ * RN 修复：position: fixed → absolute，移除 RN 不支持的 overflow-y
+ */
+
+@import './batch-fill-modal.less';
+
+.batch-modal {
+  position: absolute;
+}
+
+.batch-modal__body {
+  overflow: hidden;
+}
+
+.batch-modal__footer {
+  flex-direction: row;
+  border-top-width: 1rpx;
+  border-top-color: #F0F0F0;
+}
+
+.batch-modal__btn {
+  flex: 1;
+  width: auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.batch-modal__btn--cancel {
+  border-right-width: 1rpx;
+  border-right-color: #F0F0F0;
+  color: #666666;
+  font-size: 30rpx;
+}
+
+.batch-modal__btn--confirm {
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 500;
+}

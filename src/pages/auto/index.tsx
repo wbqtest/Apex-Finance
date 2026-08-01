@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Taro from '@tarojs/taro';
 import { InputNumber, Button } from '@nutui/nutui-react-taro';
 import { SafeToast } from '../../components/SafeToast';
+import OptionGroup from '../../components/OptionGroup';
 
 import {
   validateCarInput,
@@ -39,6 +40,10 @@ const PENALTY_OPTIONS: { key: PenaltyType; label: string }[] = [
   { key: 'PERCENT', label: '百分比' },
   { key: 'FIXED', label: '固定金额' },
 ];
+
+const methodOptions = METHODS.map((m) => ({ value: m.key, label: m.label }));
+const cycleOptions = CYCLES.map((c) => ({ value: c.key, label: c.label }));
+const penaltyOptions = PENALTY_OPTIONS.map((p) => ({ value: p.key, label: p.label }));
 
 // 「算法说明」弹层兜底文案：后端知识库不可用 / 为空时展示，结构对齐 KnowledgeItem
 const FALLBACK_KNOWLEDGE: KnowledgeItem[] = [
@@ -210,18 +215,13 @@ export default function AutoCalcPage() {
         {/* 还款方式 */}
         <View className="section">
           <Text className="section-title">还款方式</Text>
-          <View className="method-grid">
-            {METHODS.map((m) => (
-              <View
-                key={m.key}
-                className={`method-card ${method === m.key ? 'active' : ''}`}
-                onClick={() => setMethod(m.key)}
-              >
-                <View className={`method-radio ${method === m.key ? 'checked' : ''}`} />
-                <Text className="method-name">{m.label}</Text>
-              </View>
-            ))}
-          </View>
+          <OptionGroup
+            options={methodOptions}
+            value={method}
+            onChange={setMethod}
+            variant="card"
+            showRadio
+          />
         </View>
 
         {/* 贷款信息 */}
@@ -244,17 +244,12 @@ export default function AutoCalcPage() {
 
             <View className="form-row">
               <Text className="form-label">贷款期限</Text>
-              <View className="tag-row">
-                {termOptions.map((t) => (
-                  <View
-                    key={t}
-                    className={`tag-chip ${term === t ? 'active' : ''}`}
-                    onClick={() => setTerm(t)}
-                  >
-                    <Text>{t}期</Text>
-                  </View>
-                ))}
-              </View>
+              <OptionGroup
+                options={termOptions.map((t) => ({ value: t, label: `${t}期` }))}
+                value={term}
+                onChange={setTerm}
+                variant="tag"
+              />
             </View>
 
             <View className="form-row">
@@ -319,17 +314,12 @@ export default function AutoCalcPage() {
                   </View>
                   <View className="fee-field">
                     <Text className="fee-label">周期</Text>
-                    <View className="seg">
-                      {CYCLES.map((c) => (
-                        <View
-                          key={c.key}
-                          className={`seg-item ${f.cycle === c.key ? 'active' : ''}`}
-                          onClick={() => updateFee(f.id, { cycle: c.key })}
-                        >
-                          <Text>{c.label}</Text>
-                        </View>
-                      ))}
-                    </View>
+                    <OptionGroup
+                      options={cycleOptions}
+                      value={f.cycle}
+                      onChange={(v) => updateFee(f.id, { cycle: v })}
+                      variant="segment"
+                    />
                   </View>
                 </View>
               </View>
@@ -361,17 +351,12 @@ export default function AutoCalcPage() {
 
               <View className="form-row">
                 <Text className="form-label">违约金类型</Text>
-                <View className="seg">
-                  {PENALTY_OPTIONS.map((p) => (
-                    <View
-                      key={p.key}
-                      className={`seg-item ${penaltyType === p.key ? 'active' : ''}`}
-                      onClick={() => setPenaltyType(p.key)}
-                    >
-                      <Text>{p.label}</Text>
-                    </View>
-                  ))}
-                </View>
+                <OptionGroup
+                  options={penaltyOptions}
+                  value={penaltyType}
+                  onChange={setPenaltyType}
+                  variant="segment"
+                />
               </View>
 
               {penaltyType !== 'NONE' && (

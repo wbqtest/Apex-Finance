@@ -103,6 +103,7 @@ export const SafeDialog: React.FC<SafeDialogProps> = (props) => {
       onOverlayClick?.();
       if (closeOnOverlayClick !== false) {
         onClose?.();
+        onCancel?.();
       }
     };
 
@@ -110,6 +111,7 @@ export const SafeDialog: React.FC<SafeDialogProps> = (props) => {
       setLoading(true);
       try {
         await onConfirm?.();
+        onClose?.();
       } finally {
         setLoading(false);
       }
