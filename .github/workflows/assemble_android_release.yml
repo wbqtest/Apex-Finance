@@ -98,6 +98,9 @@ jobs:
           # 创建 assets 目录
           mkdir -p android/app/src/main/assets
 
+          # 安装壳工程依赖
+          npm install || true
+
       # ========== 5. 生成签名密钥 ==========
       - name: Generate debug keystore
         run: |

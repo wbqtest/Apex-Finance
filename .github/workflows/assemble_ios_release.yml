@@ -67,6 +67,9 @@ jobs:
       - name: Configure shell project
         working-directory: ../taro-native-shell
         run: |
+          # 安装壳工程依赖
+          npm install || true
+
           cd ios
           # 安装 CocoaPods 依赖
           pod install || true
