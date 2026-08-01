@@ -95,9 +95,11 @@ jobs:
           # 创建 assets 目录
           mkdir -p android/app/src/main/assets
 
-          # === 修复 jcenter 关停问题：添加 mavenCentral() 仓库 ===
+          # === 修复 jcenter 关停问题：添加 mavenCentral() + jitpack 仓库 ===
           # Google 已将 ExoPlayer 等库从 jcenter 迁移到 Maven Central
           sed -i '/google()/a\        mavenCentral()' android/build.gradle || true
+          # android-image-cropper 的继任者 CanHub fork 托管在 jitpack
+          sed -i '/mavenCentral()/a\        maven { url "https://jitpack.io" }' android/build.gradle || true
 
           # 安装壳工程依赖（会拉取 expo-av 等模块到 node_modules）
           npm install || true
@@ -142,8 +144,16 @@ jobs:
             find ../node_modules/expo-av -name "*.java" -exec sed -i 's/com\.google\.android\.exoplayer2\.util\.Util/com.google.android.exoplayer2.util.Util/g' {} \; || true
           fi
 
-          # NDK 26.x 目录结构与 AGP 3.x 不兼容，项目大概率不需要 NDK，不设此变量
-          # 如需 NDK，改用旧版如 21.4.7075529
+          # expo-image-picker 依赖的 android-image-cropper 2.7.0 已从 jcenter 下线
+          # 替换为 CanHub 维护的 API 兼容版本（通过 jitpack 发布）
+          EXPO_IMAGE_PICKER_DIR=../node_modules/expo-image-picker/android
+          if [ -f "$EXPO_IMAGE_PICKER_DIR/build.gradle" ]; then
+            echo ">>> Fixing expo-image-picker dependencies..."
+            sed -i 's/com\.theartofdev\.edmodo:android-image-cropper:[0-9.]\+/com.github.CanHub:Android-Image-Cropper:2.8.0/g' "$EXPO_IMAGE_PICKER_DIR/build.gradle"
+          fi
+
+          # NDK 目录结构与 AGP 3.x 不兼容，且本项目不需要 NDK；清除环境变量消除警告
+          unset ANDROID_NDK_HOME
 
           # 执行打包
           chmod +x gradlew
