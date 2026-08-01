@@ -123,9 +123,14 @@ jobs:
           }
 
       # ========== 6. 上传 APK ==========
+      - name: Copy APK to workspace
+        run: |
+          mkdir -p artifacts
+          cp ../taro-native-shell/android/app/build/outputs/apk/debug/app-debug.apk artifacts/
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-APK
-          path: ../taro-native-shell/android/app/build/outputs/apk/debug/app-debug.apk
+          path: artifacts/app-debug.apk
           retention-days: 30
