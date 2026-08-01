@@ -114,7 +114,7 @@ jobs:
             -sdk iphoneos \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath build/ApexFinance.xcarchive \
+            -archivePath build/${SCHEME}.xcarchive \
             clean archive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
@@ -122,13 +122,26 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             2>&1 | tee build_log.txt
 
-          echo "Archive completed: build/ApexFinance.xcarchive"
+          echo "Archive completed: build/${SCHEME}.xcarchive"
 
       # ========== 6. 导出 IPA ==========
       - name: Export IPA
         working-directory: ../taro-native-shell
         run: |
           cd ios
+
+          # 确定 archive 路径
+          if [ -d build/taroDemo.xcarchive ]; then
+            ARCHIVE_PATH="build/taroDemo.xcarchive"
+          elif [ -d build/ApexFinance.xcarchive ]; then
+            ARCHIVE_PATH="build/ApexFinance.xcarchive"
+          else
+            echo "ERROR: 未找到 archive 文件"
+            ls -la build/ 2>/dev/null || echo "build 目录不存在"
+            exit 1
+          fi
+
+          echo "Using archive: $ARCHIVE_PATH"
 
           # 创建导出配置
           cat > exportOptions.plist << 'EOF'
@@ -150,7 +163,7 @@ jobs:
 
           # 导出 IPA
           xcodebuild -exportArchive \
-            -archivePath build/ApexFinance.xcarchive \
+            -archivePath $ARCHIVE_PATH \
             -exportPath build/output \
             -exportOptionsPlist exportOptions.plist \
             CODE_SIGNING_ALLOWED=NO \
