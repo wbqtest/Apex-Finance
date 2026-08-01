@@ -126,22 +126,10 @@ jobs:
       - name: Fix expo module build
         working-directory: ../taro-native-shell/android
         run: |
-          BUILD_FILE="build.gradle"
-          cp $BUILD_FILE $BUILD_FILE.bak
-
-          # 确保 ext 块存在且包含 kotlinVersion (expo 从 rootProject.ext 读取)
-          if ! grep -q "^ext {" $BUILD_FILE; then
-            # 没有 ext 块则在文件开头创建
-            printf 'ext {\n    kotlinVersion = "1.9.22"\n}\n\n' > temp.gradle
-            cat $BUILD_FILE >> temp.gradle
-            mv temp.gradle $BUILD_FILE
-          elif ! grep -q "kotlinVersion" $BUILD_FILE; then
-            # ext 块存在但缺少 kotlinVersion，追加到 ext { 下一行
-            sed -i '/^ext {/a\    kotlinVersion = "1.9.22"' $BUILD_FILE
-          fi
-
-          echo "=== fix 后的 build.gradle (前30行) ==="
-          head -30 $BUILD_FILE
+          # 在 build.gradle 最顶部注入 ext.kotlinVersion (expo 读 rootProject.ext)
+          sed -i '1i\ext.kotlinVersion = "1.9.22"' build.gradle
+          echo "=== build.gradle 前 8 行 ==="
+          head -8 build.gradle
 
       # ========== 6. 打包 Debug APK ==========
       - name: Build Debug APK
@@ -156,9 +144,17 @@ jobs:
           PROPS
 
           chmod +x gradlew
+
+          # 创建 init 脚本双保险：确保所有 project 的 ext 都带有 kotlinVersion
+          cat > /tmp/init.gradle << 'INIT'
+          allprojects { p ->
+            p.ext.kotlinVersion = "1.9.22"
+          }
+          INIT
+
           # 捕获完整构建日志，失败时打印 Kotlin 具体编译错误
           set -o pipefail
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee /tmp/gradle.log
+          ./gradlew assembleDebug -I /tmp/init.gradle --stacktrace 2>&1 | tee /tmp/gradle.log
           GRADLE_EXIT=${PIPESTATUS[0]}
           if [ $GRADLE_EXIT -ne 0 ]; then
             echo ""
