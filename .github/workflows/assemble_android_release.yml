@@ -101,6 +101,7 @@ jobs:
       # ========== 5. 生成签名密钥 ==========
       - name: Generate debug keystore
         run: |
+          mkdir -p $HOME/.android
           keytool -genkeypair -v \
             -storepass android \
             -alias androiddebugkey \
