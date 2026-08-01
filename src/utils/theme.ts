@@ -144,7 +144,7 @@ export const applyTheme = (themeName: ThemeName): void => {
   const theme = themes[themeName]
   if (!theme) return
 
-  // 只在 H5 环境下操作 DOM CSS 变量；RN 环境没有 document
+  // 只在 H5 环境操作 DOM CSS 变量；小程序 / RN 没有 document，改用 JS 常量
   if (typeof document === 'undefined') return
 
   const root = document.documentElement

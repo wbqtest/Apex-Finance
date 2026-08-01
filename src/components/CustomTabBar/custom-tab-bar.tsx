@@ -35,6 +35,7 @@ const getActiveKey = (): string => {
     console.warn('getCurrentPages error:', e);
   }
 
+  // H5 兜底：通过 URL hash 匹配当前 tab（小程序 / RN 无 window）
   if (typeof window !== 'undefined' && window.location) {
     const hash = window.location.hash;
     for (const tab of tabs) {

@@ -17,13 +17,11 @@ export default function ResetPassword() {
     const getParamsFromUrl = () => {
       let userId: number | null = null;
 
-      if (typeof window !== 'undefined') {
-        console.log('[ResetPassword] window.location.href:', window.location?.href);
-        console.log('[ResetPassword] window.location.search:', window.location?.search);
-        console.log('[ResetPassword] window.location.hash:', window.location?.hash);
-      }
-
+      // H5 环境：从 URL 解析 userId 参数；小程序 / RN 走 Taro 路由参数兜底
       if (typeof window !== 'undefined' && window.location) {
+        console.log('[ResetPassword] window.location.href:', window.location.href);
+        console.log('[ResetPassword] window.location.search:', window.location.search);
+        console.log('[ResetPassword] window.location.hash:', window.location.hash);
         const hash = window.location.hash;
         const hashIndex = hash.indexOf('?');
 
