@@ -98,12 +98,35 @@ jobs:
           # 安装壳工程依赖 (RN 0.73, 无 jcenter 遗留问题)
           npm install || true
 
-      # ========== 5. 打包 Debug APK ==========
+      # ========== 5. 修复仓库源 ==========
+      - name: Fix repository for Gradle
+        working-directory: ../taro-native-shell/android
+        run: |
+          # 备份原文件
+          cp build.gradle build.gradle.bak
+
+          # 将阿里云镜像替换为 Google
+          sed -i 's|https://maven.aliyun.com/repository/public|https://dl.google.com/dl/android/maven2|g' build.gradle
+          sed -i 's|https://maven.aliyun.com/repository/google|https://dl.google.com/dl/android/maven2|g' build.gradle
+          sed -i 's|https://maven.aliyun.com/nexus/content/groups/public|https://repo1.maven.org/maven2|g' build.gradle
+
+          # 如果还有 jcenter，也替换掉
+          sed -i 's|jcenter()|mavenCentral()|g' build.gradle
+
+          # 对 settings.gradle 也做同样处理（如有）
+          if [ -f settings.gradle ]; then
+            sed -i 's|https://maven.aliyun.com/repository/public|https://dl.google.com/dl/android/maven2|g' settings.gradle
+            sed -i 's|jcenter()|mavenCentral()|g' settings.gradle
+          fi
+
+          echo "=== 修改后的 build.gradle (前30行) ==="
+          head -30 build.gradle
+
+      # ========== 6. 打包 Debug APK ==========
       - name: Build Debug APK
         working-directory: ../taro-native-shell/android
         run: |
           # 设置 Gradle 属性 (RN 0.73 使用 AGP 8.x, JDK 17 原生兼容)
-          # 先追加空行防止和上行内容拼接
           echo "" >> gradle.properties
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
@@ -111,10 +134,6 @@ jobs:
           echo "kotlinVersion=1.9.22" >> gradle.properties
           # expo 从 rootProject.ext 读取 kotlinVersion，需在 build.gradle ext{} 中注入
           sed -i '/^ext {/a\    kotlinVersion = "1.9.22"' build.gradle || true
-          # 替换阿里云 Maven 镜像 → 官方源（GitHub Actions 境外 runner 访问阿里云 502）
-          sed -i 's|https://maven\.aliyun\.com/repository/public|https://repo1.maven.org/maven2|g' build.gradle settings.gradle 2>/dev/null || true
-          sed -i 's|https://maven\.aliyun\.com/repository/google|https://dl.google.com/dl/android/maven2|g' build.gradle settings.gradle 2>/dev/null || true
-          sed -i 's|https://maven\.aliyun\.com/nexus/content/groups/public|https://repo1.maven.org/maven2|g' build.gradle settings.gradle 2>/dev/null || true
           # 允许 JVM target 兼容
           echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
 
@@ -131,7 +150,7 @@ jobs:
             exit $GRADLE_EXIT
           fi
 
-      # ========== 6. 上传 APK ==========
+      # ========== 7. 上传 APK ==========
       - name: Copy APK to workspace
         run: |
           mkdir -p artifacts
