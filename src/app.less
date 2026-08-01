@@ -57,7 +57,7 @@ button {
   }
 }
 
-::deep(.nut-button-primary-solid) {
+:deep(.nut-button-primary-solid) {
   background: linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%) !important;
   color: var(--text-on-primary) !important;
   border-color: transparent !important;
@@ -67,7 +67,7 @@ button {
   }
 }
 
-::deep(.nut-button-primary) {
+:deep(.nut-button-primary) {
   color: var(--text-on-primary) !important;
 
   &:active {
@@ -76,9 +76,9 @@ button {
   }
 }
 
-::deep(.nut-button-primary-disabled),
-::deep(.nut-button-primary-solid-disabled),
-::deep(.nut-button--disabled) {
+:deep(.nut-button-primary-disabled),
+:deep(.nut-button-primary-solid-disabled),
+:deep(.nut-button--disabled) {
   background: var(--brand-primary-muted, #CBD5E1) !important;
   border-color: var(--brand-primary-muted, #CBD5E1) !important;
   color: #A0916B !important;
@@ -90,4 +90,119 @@ button {
     border-color: var(--brand-primary-muted, #CBD5E1) !important;
     color: #A0916B !important;
   }
+}
+
+/* ===== RN 兼容修复: flex-direction ===== */
+/* 核心问题: web 中 display:flex 默认 flex-direction:row， */
+/* React Native 中默认 flex-direction:column，导致横向布局变成纵向堆积 */
+
+/* NutUI Tabs: 确保子选项横向排列不换行 */
+.nut-tabs-list {
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+.nut-tabs-titles-item {
+  flex-shrink: 0;
+}
+
+.nut-tabs-titles-item-text {
+  flex-shrink: 0;
+}
+
+/* NutUI Tabs horizontal 模式 */
+.nut-tabs-horizontal {
+  flex-direction: column;
+}
+
+/* 业务组件: 横向排列的栅格/按钮组 */
+.input-row,
+.quick-btns,
+.form-row,
+.button-group,
+.compare-tabs,
+.history-tabs,
+.rate-input-row,
+.period-row,
+.export-row,
+.summary-header,
+.summary-row,
+.result-actions,
+.chart-legend,
+.toolbar-row,
+.calculator-mode-row,
+.total-row,
+.quick-input-row,
+.rate-range-row {
+  flex-direction: row;
+}
+
+/* 共享组件: NavBar */
+.navbar,
+.navbar-back,
+.navbar-title-wrapper {
+  flex-direction: row;
+}
+
+/* 共享组件: CustomTabBar */
+.custom-tab-bar {
+  flex-direction: row;
+}
+
+/* 共享组件: Modal 弹窗 */
+.modal,
+.modal__header,
+.modal__footer {
+  flex-direction: row;
+}
+
+/* 共享组件: BatchFillModal */
+.batch-modal,
+.batch-modal__header,
+.batch-modal__footer,
+.batch-section__options,
+.batch-mode-item,
+.batch-input-row,
+.batch-warning,
+.batch-preview__items {
+  flex-direction: row;
+}
+
+/* 共享组件: AddFeeModal */
+.fee-form__input-wrapper,
+.fee-form__charge-options,
+.fee-form__charge-option {
+  flex-direction: row;
+}
+
+/* 通用: 按钮行 */
+.action-row,
+.actions,
+.footer-actions {
+  flex-direction: row;
+}
+
+/* 页面级: 顶部 Header 栏（返回按钮 + 标题 + 操作） */
+.template-header,
+.compare-header,
+.report-header,
+.result-header,
+.card-header,
+.history-card-header,
+.risk-card-header,
+.page-header,
+.header-row {
+  flex-direction: row;
+}
+
+/* 返回按钮图标 */
+.back-btn {
+  flex-direction: row;
+}
+
+/* Action 按钮组 */
+.report-actions,
+.header-actions,
+.toolbar-actions {
+  flex-direction: row;
 }
