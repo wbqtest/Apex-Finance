@@ -17,9 +17,11 @@ export default function ResetPassword() {
     const getParamsFromUrl = () => {
       let userId: number | null = null;
 
-      console.log('[ResetPassword] window.location.href:', window.location?.href);
-      console.log('[ResetPassword] window.location.search:', window.location?.search);
-      console.log('[ResetPassword] window.location.hash:', window.location?.hash);
+      if (typeof window !== 'undefined') {
+        console.log('[ResetPassword] window.location.href:', window.location?.href);
+        console.log('[ResetPassword] window.location.search:', window.location?.search);
+        console.log('[ResetPassword] window.location.hash:', window.location?.hash);
+      }
 
       if (typeof window !== 'undefined' && window.location) {
         const hash = window.location.hash;

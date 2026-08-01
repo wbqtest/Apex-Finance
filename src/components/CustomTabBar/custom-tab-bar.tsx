@@ -35,10 +35,12 @@ const getActiveKey = (): string => {
     console.warn('getCurrentPages error:', e);
   }
 
-  const hash = window.location.hash;
-  for (const tab of tabs) {
-    if (hash.includes(tab.path)) {
-      return tab.key;
+  if (typeof window !== 'undefined' && window.location) {
+    const hash = window.location.hash;
+    for (const tab of tabs) {
+      if (hash.includes(tab.path)) {
+        return tab.key;
+      }
     }
   }
 
