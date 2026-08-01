@@ -1,6 +1,6 @@
-# Android APK 自动打包工作流
-# 触发条件：推送到 main 分支或手动触发
-name: Assemble Android Release
+# Android Debug APK 自动打包工作流
+# 手动触发生成 Debug APK，用于验证流程完整性
+name: Assemble Android Debug
 
 on:
   push:
@@ -98,58 +98,21 @@ jobs:
           # 安装壳工程依赖 (RN 0.73, 无 jcenter 遗留问题)
           npm install || true
 
-      # ========== 5. 生成签名密钥 ==========
-      - name: Generate debug keystore
-        run: |
-          mkdir -p $HOME/.android
-          keytool -genkeypair -v \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storetype JKS \
-            -keystore $HOME/.android/debug.keystore \
-            -dname "CN=Debug, OU=Debug, O=Debug, L=Debug, ST=Debug, C=CN"
-
-      # ========== 6. 打包 APK ==========
-      - name: Build Release APK
+      # ========== 5. 打包 Debug APK ==========
+      - name: Build Debug APK
         working-directory: ../taro-native-shell/android
         run: |
           # 设置 Gradle 属性 (RN 0.73 使用 AGP 8.x, JDK 17 原生兼容)
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
-          # 执行打包
           chmod +x gradlew
-          ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=$HOME/.android/debug.keystore \
-            -Pandroid.injected.signing.store.password=android \
-            -Pandroid.injected.key.alias=androiddebugkey \
-            -Pandroid.injected.key.password=android \
-            --stacktrace
+          ./gradlew assembleDebug --stacktrace
 
-      # ========== 7. 上传 APK ==========
+      # ========== 6. 上传 APK ==========
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-APK
-          path: ../taro-native-shell/android/app/build/outputs/apk/release/app-release.apk
+          path: ../taro-native-shell/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          body: |
-            ## ${{ github.event.tag_name }}
-
-            ${{ github.event.inputs.release_notes || '自动构建版本' }}
-
-            ### 下载 APK
-            请查看 Artifacts 中的 `${{ env.APP_NAME }}-APK` 下载安装包。
-
-            ### 版本信息
-            - 构建时间: ${{ github.event.head_commit.timestamp }}
-            - 提交: ${{ github.sha }}
