@@ -63,8 +63,10 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper/dists
-          key: ${{ runner.os }}-gradle-${{ hashFiles('../taro-native-shell/android/**/*.gradle*') }}
-          restore-keys: ${{ runner.os }}-gradle-
+          key: ${{ runner.os }}-gradle-v1-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-v1-
+            ${{ runner.os }}-gradle-
 
       # ========== 3. 安装 JS 依赖 ==========
       - name: Install JS dependencies
