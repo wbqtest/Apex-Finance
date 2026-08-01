@@ -103,6 +103,8 @@ jobs:
         working-directory: ../taro-native-shell/android
         run: |
           # 设置 Gradle 属性 (RN 0.73 使用 AGP 8.x, JDK 17 原生兼容)
+          # 先追加空行防止和上行内容拼接
+          echo "" >> gradle.properties
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
 
