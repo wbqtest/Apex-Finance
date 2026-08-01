@@ -1,7 +1,9 @@
 import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import { useState, useMemo, useEffect } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
-import { InputNumber, Button, Toast } from '@nutui/nutui-react-taro';
+import { InputNumber, Button } from '@nutui/nutui-react-taro';
+import { SafeToast } from '../../components/SafeToast';
+
 import {
   RepayMethod,
   LoanType,
@@ -511,7 +513,7 @@ export default function MortgagePage() {
         </View>
       )}
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
       <CustomTabBar />
     </View>
   );

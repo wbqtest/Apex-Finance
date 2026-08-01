@@ -1,7 +1,7 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
-import { Input, Button, Toast } from '@nutui/nutui-react-taro';
+import { Input, Button } from '@nutui/nutui-react-taro';
 import { register } from '../../services/api';
 import NavBar from '../../components/NavBar';
 import './index.less';
@@ -30,40 +30,40 @@ export default function Register() {
 
   const handleRegister = async () => {
     if (!phone || !email || !password || !confirmPassword || !nickname) {
-      Toast.show('', { content: '请填写完整信息', duration: 2000 });
+      Taro.showToast({ title: '请填写完整信息', icon: 'none', duration: 2000 });
       return;
     }
 
     if (!/^1[3-9]\d{9}$/.test(phone)) {
-      Toast.show('', { content: '请输入正确的手机号', duration: 2000 });
+      Taro.showToast({ title: '请输入正确的手机号', icon: 'none', duration: 2000 });
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Toast.show('', { content: '请输入正确的邮箱地址', duration: 2000 });
+      Taro.showToast({ title: '请输入正确的邮箱地址', icon: 'none', duration: 2000 });
       return;
     }
 
     if (password.length < 6) {
-      Toast.show('', { content: '密码至少6位', duration: 2000 });
+      Taro.showToast({ title: '密码至少6位', icon: 'none', duration: 2000 });
       return;
     }
 
     if (password !== confirmPassword) {
-      Toast.show('', { content: '两次密码输入不一致', duration: 2000 });
+      Taro.showToast({ title: '两次密码输入不一致', icon: 'none', duration: 2000 });
       return;
     }
 
     const finalQuestion = securityQuestion === 'custom' ? customQuestion : securityQuestion;
     if (finalQuestion && !securityAnswer) {
-      Toast.show('', { content: '请填写安全问题答案', duration: 2000 });
+      Taro.showToast({ title: '请填写安全问题答案', icon: 'none', duration: 2000 });
       return;
     }
 
     setLoading(true);
     try {
       await register({ phone, email, password, nickname, securityQuestion: finalQuestion, securityAnswer });
-      Toast.show('', { content: '注册成功', duration: 2000 });
+      Taro.showToast({ title: '注册成功', icon: 'none', duration: 2000 });
       setTimeout(() => {
         Taro.redirectTo({ url: '/pages/login' });
       }, 1500);

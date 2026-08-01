@@ -1,7 +1,9 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
-import { Input, Button, Cell, CellGroup, Dialog } from '@nutui/nutui-react-taro';
+import { Input, Button, Cell, CellGroup } from '@nutui/nutui-react-taro';
+import { SafeDialog } from '../../components/SafeDialog';
+
 import { getLatestLPR, formatLPRDate, LPR_HISTORY } from '../../data/lpr';
 import { clearAllLocalData, getToken } from '../../utils/storage';
 import './index.less';
@@ -152,7 +154,7 @@ export default function Settings() {
         </View>
 
       </View>
-      <Dialog
+      <SafeDialog
         visible={showClearDialog}
         title="确认清除"
         confirmText="确定清除"
@@ -164,7 +166,7 @@ export default function Settings() {
         onCancel={() => setShowClearDialog(false)}
       >
         确定要清除所有本地数据吗？此操作将删除历史记录和草稿，且不可恢复。
-      </Dialog>
+      </SafeDialog>
     </View>
   );
 }

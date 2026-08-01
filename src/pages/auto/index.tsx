@@ -1,11 +1,9 @@
 import { View, Text, ScrollView, Input } from '@tarojs/components';
 import { useState, useEffect, useMemo } from 'react';
 import Taro from '@tarojs/taro';
-import {
-  InputNumber,
-  Button,
-  Toast,
-} from '@nutui/nutui-react-taro';
+import { InputNumber, Button } from '@nutui/nutui-react-taro';
+import { SafeToast } from '../../components/SafeToast';
+
 import {
   validateCarInput,
   calculateCarLoan,
@@ -551,7 +549,7 @@ export default function AutoCalcPage() {
         </View>
       )}
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
 
       <CustomTabBar />
     </View>

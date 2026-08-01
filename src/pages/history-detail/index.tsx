@@ -1,7 +1,9 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
-import { Button, Toast } from '@nutui/nutui-react-taro'
+import { Button } from '@nutui/nutui-react-taro';
+import { SafeToast } from '../../components/SafeToast';
+
 import NavBar from '../../components/NavBar'
 import { addToCompare, CompareItem } from '../../utils/storage'
 import { addMortgageScheme } from '../../utils/mortgageCompare'
@@ -162,7 +164,7 @@ export default function HistoryDetailPage() {
         </Button>
       </View>
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
     </View>
   )
 }

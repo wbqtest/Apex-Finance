@@ -1,7 +1,7 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
-import { Input, Button, Toast } from '@nutui/nutui-react-taro';
+import { Input, Button } from '@nutui/nutui-react-taro';
 import { resetPassword } from '../../services/api';
 import './index.less';
 
@@ -14,80 +14,53 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
 
   useDidShow(() => {
-    const getParamsFromUrl = () => {
-      let userId: number | null = null;
-
-      // H5 环境：从 URL 解析 userId 参数；小程序 / RN 走 Taro 路由参数兜底
-      if (typeof window !== 'undefined' && window.location) {
-        console.log('[ResetPassword] window.location.href:', window.location.href);
-        console.log('[ResetPassword] window.location.search:', window.location.search);
-        console.log('[ResetPassword] window.location.hash:', window.location.hash);
-        const hash = window.location.hash;
-        const hashIndex = hash.indexOf('?');
-
-        if (hashIndex !== -1) {
-          const searchStr = hash.substring(hashIndex);
-          console.log('[ResetPassword] hash searchStr:', searchStr);
-          const urlParams = new URLSearchParams(searchStr);
-          const userIdStr = urlParams.get('userId');
-          if (userIdStr) {
-            userId = parseInt(userIdStr, 10);
-          }
-        } else if (window.location.search) {
-          console.log('[ResetPassword] search:', window.location.search);
-          const urlParams = new URLSearchParams(window.location.search);
-          const userIdStr = urlParams.get('userId');
-          if (userIdStr) {
-            userId = parseInt(userIdStr, 10);
-          }
+    // 跨端兼容：统一通过 Taro 路由参数获取 userId
+    // H5 环境也可通过页面 query 拿到参数，不再依赖 window.location / URLSearchParams
+    try {
+      const pages = Taro.getCurrentPages();
+      if (pages.length > 0) {
+        const currentPage = pages[pages.length - 1];
+        const options = (currentPage as any)?.options || {};
+        console.log('[ResetPassword] page options:', options);
+        if (options.userId) {
+          setUserId(parseInt(options.userId, 10));
+          return;
         }
       }
+    } catch (e) {
+      console.error('获取页面参数失败:', e);
+    }
 
-      console.log('[ResetPassword] after URL parse - userId:', userId);
-
-      if (!userId) {
-        try {
-          const pages = Taro.getCurrentPages();
-          if (pages.length > 0) {
-            const currentPage = pages[pages.length - 1];
-            const options = (currentPage as any)?.options || {};
-            console.log('[ResetPassword] page options:', options);
-            if (options.userId) {
-              userId = parseInt(options.userId, 10);
-            }
-          }
-        } catch (e) {
-          console.error('获取页面参数失败:', e);
-        }
+    // H5 兜底：部分场景下路由参数挂在 router 上
+    try {
+      const router = Taro.getCurrentInstance();
+      const params = (router as any)?.router?.params || {};
+      if (params.userId) {
+        setUserId(parseInt(params.userId, 10));
       }
-
-      console.log('[ResetPassword] final - userId:', userId);
-
-      return userId;
-    };
-
-    const userIdFromUrl = getParamsFromUrl();
-    setUserId(userIdFromUrl);
+    } catch (e) {
+      // ignore
+    }
   });
 
   const handleReset = async () => {
     if (!newPassword) {
-      Toast.show('', { content: '请输入新密码', duration: 2000 });
+      Taro.showToast({ title: '请输入新密码', icon: 'none', duration: 2000 });
       return;
     }
 
     if (newPassword.length < 6) {
-      Toast.show('', { content: '密码至少6位', duration: 2000 });
+      Taro.showToast({ title: '密码至少6位', icon: 'none', duration: 2000 });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Toast.show('', { content: '两次密码输入不一致', duration: 2000 });
+      Taro.showToast({ title: '两次密码输入不一致', icon: 'none', duration: 2000 });
       return;
     }
 
     if (!userId) {
-      Toast.show('', { content: '缺少用户信息', duration: 2000 });
+      Taro.showToast({ title: '缺少用户信息', icon: 'none', duration: 2000 });
       return;
     }
 
@@ -96,7 +69,7 @@ export default function ResetPassword() {
     setLoading(true);
     try {
       await resetPassword({ userId, newPassword });
-      Toast.show('', { content: '密码重置成功', duration: 2000 });
+      Taro.showToast({ title: '密码重置成功', icon: 'none', duration: 2000 });
       setTimeout(() => {
         Taro.redirectTo({ url: '/pages/login' });
       }, 1500);

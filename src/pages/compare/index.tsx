@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { View, Text, Button, ScrollView } from '@tarojs/components'
-import { Popup, Cell, CellGroup, Tag, Empty, Toast } from '@nutui/nutui-react-taro'
+import { Cell, CellGroup, Tag, Empty } from '@nutui/nutui-react-taro';
+import { SafePopup } from '../../components/SafePopup';
+import { SafeToast } from '../../components/SafeToast';
+
 import './index.less'
 import { CalculationParams, CalculationResult, formatCurrency, formatRate } from '../../utils/finance'
 import { getHistory, CalcHistoryItem, CompareItem, getCompareList, saveCompareList, addToCompare, removeFromCompare, updateComparePlatformName, getToken } from '../../utils/storage'
@@ -481,7 +484,7 @@ function IrrCompare() {
         )}
       </ScrollView>
 
-      <Popup
+      <SafePopup
         visible={showSelectModal}
         onClose={() => setShowSelectModal(false)}
         position="bottom"
@@ -544,7 +547,7 @@ function IrrCompare() {
             📊 开始对比分析（{((includeCurrent ? 1 : 0) + selectedIds.length)} 笔贷款）
           </Button>
         </View>
-      </Popup>
+      </SafePopup>
     </View>
   )
 }
@@ -835,7 +838,7 @@ function MortgageCompare() {
         )}
       </ScrollView>
 
-      <Popup
+      <SafePopup
         visible={showSelectModal}
         onClose={() => setShowSelectModal(false)}
         position="bottom"
@@ -881,9 +884,9 @@ function MortgageCompare() {
             📊 开始对比分析（{selectedIds.length} 个方案）
           </Button>
         </View>
-      </Popup>
+      </SafePopup>
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
     </View>
   )
 }
@@ -1168,7 +1171,7 @@ function AutoCompare() {
         )}
       </ScrollView>
 
-      <Popup
+      <SafePopup
         visible={showSelectModal}
         onClose={() => setShowSelectModal(false)}
         position="bottom"
@@ -1214,9 +1217,9 @@ function AutoCompare() {
             📊 开始对比分析（{selectedIds.length} 个方案）
           </Button>
         </View>
-      </Popup>
+      </SafePopup>
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
     </View>
   )
 }
@@ -1493,7 +1496,7 @@ function PrepayCompare() {
         )}
       </ScrollView>
 
-      <Popup
+      <SafePopup
         visible={showSelectModal}
         onClose={() => setShowSelectModal(false)}
         position="bottom"
@@ -1539,9 +1542,9 @@ function PrepayCompare() {
             📊 开始对比分析（{selectedIds.length} 个方案）
           </Button>
         </View>
-      </Popup>
+      </SafePopup>
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
     </View>
   )
 }

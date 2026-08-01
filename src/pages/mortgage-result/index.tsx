@@ -1,7 +1,9 @@
 import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Taro from '@tarojs/taro';
-import { Button, Toast } from '@nutui/nutui-react-taro';
+import { Button } from '@nutui/nutui-react-taro';
+import { SafeToast } from '../../components/SafeToast';
+
 import CarChart from '../../components/CarChart';
 import NavBar from '../../components/NavBar';
 import {
@@ -302,7 +304,7 @@ export default function MortgageResultPage() {
         </Button>
       </View>
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
     </View>
   );
 }

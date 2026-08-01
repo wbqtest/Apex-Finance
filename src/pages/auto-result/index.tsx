@@ -1,14 +1,9 @@
 import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect, useMemo } from 'react';
 import Taro from '@tarojs/taro';
-import {
-  Button,
-  Cell,
-  CellGroup,
-  Range,
-  InputNumber,
-  Toast,
-} from '@nutui/nutui-react-taro';
+import { Button, Cell, CellGroup, Range, InputNumber } from '@nutui/nutui-react-taro';
+import { SafeToast } from '../../components/SafeToast';
+
 import CarChart from '../../components/CarChart';
 import {
   calculateCarLoan,
@@ -322,7 +317,7 @@ export default function AutoResultPage() {
         <Button className="foot-btn primary" onClick={handleBack}>返回修改</Button>
       </View>
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
     </View>
   );
 }

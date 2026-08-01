@@ -1,0 +1,84 @@
+/**
+ * Modal - RN 专属样式
+ * H5/小程序使用 modal.less
+ * RN 修复：position: fixed → absolute
+ */
+
+.modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal__content {
+  position: relative;
+  width: 80%;
+  max-width: 600rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.modal__header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+}
+
+.modal__title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.modal__close {
+  padding: 8rpx 12rpx;
+  font-size: 32rpx;
+  color: #999;
+}
+
+.modal__body {
+  padding: 0 32rpx 24rpx;
+}
+
+.modal__footer {
+  flex-direction: row;
+  border-top-width: 1rpx;
+  border-top-color: #f0f0f0;
+}
+
+.modal__btn {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 0;
+}
+
+.modal__btn--cancel {
+  border-right-width: 1rpx;
+  border-right-color: #f0f0f0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.modal__btn--confirm {
+  color: #1A3A5C;
+  font-size: 28rpx;
+  font-weight: 600;
+}

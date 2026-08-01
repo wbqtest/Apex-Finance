@@ -1,7 +1,10 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
-import { Cell, CellGroup, Button, Dialog, Input, Toast } from '@nutui/nutui-react-taro';
+import { Cell, CellGroup, Button, Input } from '@nutui/nutui-react-taro';
+import { SafeDialog } from '../../components/SafeDialog';
+import { SafeToast } from '../../components/SafeToast';
+
 import { getToken, getUserInfo as getStorageUserInfo, UserInfo, getHistory, removeHistoryItem, clearHistory, CalcHistoryItem, clearLoginInfo, setUserInfo } from '../../utils/storage';
 import { updateNickname } from '../../services/api';
 import { ThemeName, themes, applyTheme, saveTheme, getTheme, themeDisplayNames } from '../../utils/theme';
@@ -99,7 +102,7 @@ export default function Mine() {
       return;
     }
     if (!item.url) {
-      Toast.show('功能开发中', { duration: 2000 });
+      Taro.showToast({ title: '功能开发中', icon: 'none', duration: 2000 });
       return;
     }
     Taro.navigateTo({ url: item.url });
@@ -114,7 +117,7 @@ export default function Mine() {
   };
 
   const handleOpenVIP = () => {
-    Toast.show('', { content: '会员功能开发中', duration: 2000 });
+    Taro.showToast({ title: '会员功能开发中', icon: 'none', duration: 2000 });
   };
 
   const handleLogout = () => {
@@ -252,7 +255,7 @@ export default function Mine() {
 
       <CustomTabBar />
 
-      <Dialog
+      <SafeDialog
         visible={showLogoutDialog}
         title="提示"
         confirmText="确定"
@@ -264,9 +267,9 @@ export default function Mine() {
         onCancel={() => setShowLogoutDialog(false)}
       >
         确定要退出登录吗？
-      </Dialog>
+      </SafeDialog>
 
-      <Dialog
+      <SafeDialog
         visible={showDeleteDialog}
         title="确认删除"
         confirmText="确定"
@@ -278,9 +281,9 @@ export default function Mine() {
         onCancel={() => setShowDeleteDialog(false)}
       >
         确定要删除这条记录吗？
-      </Dialog>
+      </SafeDialog>
 
-      <Dialog
+      <SafeDialog
         visible={showClearDialog}
         title="确认清空"
         confirmText="确定"
@@ -292,9 +295,9 @@ export default function Mine() {
         onCancel={() => setShowClearDialog(false)}
       >
         确定要清空所有历史记录吗？此操作不可恢复。
-      </Dialog>
+      </SafeDialog>
 
-      <Dialog
+      <SafeDialog
         visible={showEditDialog}
         title="编辑资料"
         confirmText="保存"
@@ -323,9 +326,9 @@ export default function Mine() {
             />
           </View>
         </View>
-      </Dialog>
+      </SafeDialog>
 
-      <Dialog
+      <SafeDialog
         visible={showThemeDialog}
         title="主题切换"
         cancelText="关闭"
@@ -372,7 +375,7 @@ export default function Mine() {
             );
           })}
         </View>
-      </Dialog>
+      </SafeDialog>
     </View>
   );
 }

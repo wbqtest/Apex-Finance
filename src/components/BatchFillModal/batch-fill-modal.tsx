@@ -1,4 +1,4 @@
-import { View, Text, Input, Button } from '@tarojs/components';
+import { View, Text, Input, Textarea, Button } from '@tarojs/components';
 import { useState } from 'react';
 import { generateArithmeticSequence, generateGeometricSequence, parsePastedPayments, parsePastedPaymentsWithInfo } from '../../utils/finance';
 
@@ -261,11 +261,11 @@ export default function BatchFillModal({ currentCount, currentPayments, onConfir
             </View>
             {fillMode === 'paste' && (
               <View className="batch-paste-section">
-                <textarea
+                <Textarea
                   className="batch-paste-section__textarea"
                   placeholder="支持多种格式：逗号、空格、换行分隔、表格数据等"
                   value={pasteText}
-                  onChange={(e: any) => { setPasteText(e.detail.value); setTimeout(updatePreview, 0); }}
+                  onInput={(e: any) => { setPasteText(e.detail.value); setTimeout(updatePreview, 0); }}
                 />
                 {preview.length > 0 && (
                   <Text className="batch-paste-section__hint">已识别 {preview.length} 条数据</Text>

@@ -1,0 +1,86 @@
+/* SafeDialog - RN 兼容弹窗样式 */
+
+/* RN 模式下的遮罩弹窗 */
+.safe-dialog-rn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.safe-dialog-rn__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.safe-dialog-rn__content {
+  position: relative;
+  width: 80%;
+  max-width: 600rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.safe-dialog-rn__header {
+  padding: 32rpx 32rpx 0;
+}
+
+.safe-dialog-rn__title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.safe-dialog-rn__body {
+  padding: 24rpx 32rpx;
+}
+
+.safe-dialog-rn__text {
+  font-size: 28rpx;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.safe-dialog-rn__footer {
+  flex-direction: row;
+  border-top-width: 1rpx;
+  border-top-color: #f0f0f0;
+}
+
+.safe-dialog-rn__btn {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 0;
+}
+
+.safe-dialog-rn__btn--cancel {
+  border-right-width: 1rpx;
+  border-right-color: #f0f0f0;
+}
+
+.safe-dialog-rn__btn--cancel text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.safe-dialog-rn__btn--confirm {
+  background-color: #1A3A5C;
+}
+
+.safe-dialog-rn__btn--confirm text {
+  font-size: 28rpx;
+  color: #fff;
+  font-weight: 600;
+}

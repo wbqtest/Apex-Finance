@@ -1,20 +1,11 @@
 import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect, useRef } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
-import {
-  Input,
-  Button,
-  Dialog,
-  Radio,
-  RadioGroup,
-  Tabs,
-  TabPane,
-  Cell,
-  CellGroup,
-  Toast,
-  Popup,
-  DatePicker,
-} from '@nutui/nutui-react-taro';
+import { Input, Button, Radio, RadioGroup, Tabs, TabPane, Cell, CellGroup, DatePicker } from '@nutui/nutui-react-taro';
+import { SafeDialog } from '../../components/SafeDialog';
+import { SafePopup } from '../../components/SafePopup';
+import { SafeToast } from '../../components/SafeToast';
+
 import {
   CalculationResult,
   CalculationParams,
@@ -829,7 +820,7 @@ export default function Index() {
 
       <CustomTabBar />
 
-      <Popup
+      <SafePopup
         visible={showBatchDialog}
         position="bottom"
         onClose={() => setShowBatchDialog(false)}
@@ -848,9 +839,9 @@ export default function Index() {
             />
           </View>
         </View>
-      </Popup>
+      </SafePopup>
 
-      <Popup
+      <SafePopup
         visible={showAddFeeDialog}
         position="bottom"
         onClose={() => setShowAddFeeDialog(false)}
@@ -899,9 +890,9 @@ export default function Index() {
             <Button type="primary" size="large" onClick={handleAddFeeConfirm} className="add-fee-btn-confirm">确认添加</Button>
           </View>
         </View>
-      </Popup>
+      </SafePopup>
 
-      <Dialog
+      <SafeDialog
         visible={showConfirmDialog}
         title="期数不匹配"
         confirmText="替换"
@@ -913,9 +904,9 @@ export default function Index() {
         onCancel={() => setShowConfirmDialog(false)}
       >
         检测到 {pendingPayments.length} 条数据，当前有 {customPayments.length} 期。是否替换全部期数？
-      </Dialog>
+      </SafeDialog>
 
-      <Dialog
+      <SafeDialog
         visible={showLogoutDialog}
         title="提示"
         confirmText="确定"
@@ -927,9 +918,9 @@ export default function Index() {
         onCancel={() => setShowLogoutDialog(false)}
       >
         确定要退出登录吗？
-      </Dialog>
+      </SafeDialog>
 
-      <Popup
+      <SafePopup
         visible={showHelpDialog}
         position="bottom"
         onClose={() => setShowHelpDialog(false)}
@@ -985,9 +976,9 @@ export default function Index() {
             </View>
           </ScrollView>
         </View>
-      </Popup>
+      </SafePopup>
 
-      <Popup
+      <SafePopup
         visible={showTemplatePopup}
         position="bottom"
         onClose={() => setShowTemplatePopup(false)}
@@ -1008,10 +999,10 @@ export default function Index() {
             ))}
           </View>
         </ScrollView>
-      </Popup>
+      </SafePopup>
 
       {recalcResult && (
-        <Popup
+        <SafePopup
           visible={!!recalcResult}
           position="bottom"
           onClose={() => setRecalcResult(null)}
@@ -1050,7 +1041,7 @@ export default function Index() {
               </Text>
             </View>
           </ScrollView>
-        </Popup>
+        </SafePopup>
       )}
 
       {/* ========== 计算结果弹窗 ========== */}

@@ -1,0 +1,126 @@
+/**
+ * app.rn.less - React Native 专属样式覆盖
+ * 
+ * Taro 构建 RN 时会使用此文件替代 app.less 中的不兼容属性。
+ * 目的：为 RN 中不支持的 CSS 属性提供替代，不破坏 H5/小程序的原始样式。
+ * 
+ * RN 不支持的 CSS 属性：
+ * - position: fixed / sticky → 改用 position: relative 或 absolute
+ * - box-shadow → 不生效，RN 用 elevation (Android) 或 shadow* (iOS)
+ * - linear-gradient / radial-gradient → 纯色降级
+ * - transition / animation / @keyframes → 忽略
+ * - ::before / ::after → 忽略
+ * - env(safe-area-inset-bottom) → 忽略
+ * - backdrop-filter / filter → 忽略
+ */
+
+/* ===== 通用修复 ===== */
+
+/* position: fixed → relative/absolute（RN 不支持 fixed） */
+.navbar {
+  position: relative;
+  top: 0;
+  z-index: 100;
+}
+
+.custom-tab-bar {
+  position: relative;
+  bottom: 0;
+  z-index: 999;
+  padding-bottom: 16rpx; /* RN 不支持 env(safe-area) */
+}
+
+.modal {
+  position: absolute;
+}
+
+.batch-modal {
+  position: absolute;
+}
+
+.template-tabs {
+  position: relative;
+}
+
+.calc-header {
+  position: relative;
+}
+
+.algo-mask {
+  position: absolute;
+}
+
+/* position: sticky → relative（RN 不支持 sticky） */
+.template-header,
+.settings-header {
+  position: relative;
+}
+
+/* ===== 渐变降级 → 纯色 ===== */
+.bg-gradient {
+  background-color: var(--brand-primary-pale, #E8EEF4);
+  background-image: none;
+}
+
+.apply-btn,
+.detail-btn-apply {
+  background-color: var(--brand-primary, #1A3A5C);
+  background-image: none;
+}
+
+.login-container .bg-gradient,
+.forgot-password-container .bg-gradient,
+.register-container .bg-gradient,
+.reset-password-container .bg-gradient {
+  background-color: var(--brand-primary-pale, #E8EEF4);
+  background-image: none;
+}
+
+/* result 页面渐变背景 → 纯色 */
+.result-container {
+  background-color: #F5F7FA;
+  background-image: none;
+}
+
+/* 渐变按钮 → 纯色 */
+:deep(.nut-button-primary-solid),
+.nut-button-primary-solid,
+.apply-btn,
+.register-btn,
+.login-btn,
+.forgot-btn,
+.reset-btn {
+  background-color: var(--brand-primary, #1A3A5C);
+  background-image: none;
+}
+
+/* ===== 阴影降级 ===== */
+/* RN 不支持 box-shadow，使用 elevation 属性（仅 Android）+ shadowColor 等 */
+.result-section,
+.template-card,
+.form-card,
+.method-card,
+.algo-panel,
+.result-panel-wide,
+.info-card,
+.summary-card,
+.lpr-card,
+.history-card,
+.about-card,
+.data-card,
+.disclaimer-card,
+.profile-card,
+.menu-card,
+.settings-card,
+.vip-banner,
+.theme-item,
+.register-card,
+.login-card,
+.forgot-card,
+.reset-card,
+.compare-table,
+.action-card,
+.recommendation-card {
+  /* box-shadow 在 RN 中会被忽略，这里添加 RN 可用的替代 */
+  /* 注意：这些属性需要在对应组件的 style 中通过 JS 动态设置 */
+}

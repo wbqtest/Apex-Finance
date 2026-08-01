@@ -1,7 +1,7 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
-import { Input, Button, Toast } from '@nutui/nutui-react-taro';
+import { Input, Button } from '@nutui/nutui-react-taro';
 import { sendResetEmail, verifyEmailCode, getSecurityQuestion, verifySecurityAnswer } from '../../services/api';
 import './index.less';
 
@@ -20,19 +20,19 @@ export default function ForgotPassword() {
 
   const handleSendEmail = async () => {
     if (!email) {
-      Toast.show('', { content: '请输入邮箱', duration: 2000 });
+      Taro.showToast({ title: '请输入邮箱', icon: 'none', duration: 2000 });
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Toast.show('', { content: '请输入正确的邮箱格式', duration: 2000 });
+      Taro.showToast({ title: '请输入正确的邮箱格式', icon: 'none', duration: 2000 });
       return;
     }
 
     setLoading(true);
     try {
       await sendResetEmail({ email });
-      Toast.show('', { content: '验证码已发送，请查收邮件', duration: 2000 });
+      Taro.showToast({ title: '验证码已发送，请查收邮件', icon: 'none', duration: 2000 });
       setStep(2);
       setCountdown(60);
       const timer = setInterval(() => {
@@ -52,12 +52,12 @@ export default function ForgotPassword() {
 
   const handleVerifyCode = async () => {
     if (!verifyCode) {
-      Toast.show('', { content: '请输入验证码', duration: 2000 });
+      Taro.showToast({ title: '请输入验证码', icon: 'none', duration: 2000 });
       return;
     }
 
     if (verifyCode.length !== 6) {
-      Toast.show('', { content: '请输入6位验证码', duration: 2000 });
+      Taro.showToast({ title: '请输入6位验证码', icon: 'none', duration: 2000 });
       return;
     }
 
@@ -75,12 +75,12 @@ export default function ForgotPassword() {
 
   const handleGetQuestion = async () => {
     if (!phone) {
-      Toast.show('', { content: '请输入手机号', duration: 2000 });
+      Taro.showToast({ title: '请输入手机号', icon: 'none', duration: 2000 });
       return;
     }
 
     if (!/^1[3-9]\d{9}$/.test(phone)) {
-      Toast.show('', { content: '请输入正确的手机号', duration: 2000 });
+      Taro.showToast({ title: '请输入正确的手机号', icon: 'none', duration: 2000 });
       return;
     }
 
@@ -97,7 +97,7 @@ export default function ForgotPassword() {
 
   const handleVerifyAnswer = async () => {
     if (!securityAnswer) {
-      Toast.show('', { content: '请输入安全问题答案', duration: 2000 });
+      Taro.showToast({ title: '请输入安全问题答案', icon: 'none', duration: 2000 });
       return;
     }
 

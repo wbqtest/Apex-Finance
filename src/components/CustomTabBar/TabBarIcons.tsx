@@ -1,4 +1,11 @@
-import { View } from '@tarojs/components';
+/**
+ * TabBarIcons - 跨端兼容的 TabBar 图标组件
+ * 
+ * H5/小程序：SVG 图标
+ * RN：Text/emoji 图标（Taro RN 不支持 SVG 标签）
+ */
+import { View, Text } from '@tarojs/components';
+import { IS_RN } from '../../utils/platform';
 
 interface TabBarIconsProps {
   name: 'index' | 'mortgage' | 'auto' | 'prepay' | 'mine';
@@ -8,6 +15,16 @@ interface TabBarIconsProps {
 
 const iconSize = 24;
 
+// RN 环境下使用 Text 图标，避免 SVG 不兼容
+const RN_ICONS: Record<string, { emoji: string; style: React.CSSProperties }> = {
+  index: { emoji: '🏠', style: { fontSize: `${iconSize}rpx`, lineHeight: `${iconSize}rpx` } },
+  mortgage: { emoji: '🏡', style: { fontSize: `${iconSize}rpx`, lineHeight: `${iconSize}rpx` } },
+  auto: { emoji: '🚗', style: { fontSize: `${iconSize}rpx`, lineHeight: `${iconSize}rpx` } },
+  prepay: { emoji: '💰', style: { fontSize: `${iconSize}rpx`, lineHeight: `${iconSize}rpx` } },
+  mine: { emoji: '👤', style: { fontSize: `${iconSize}rpx`, lineHeight: `${iconSize}rpx` } },
+};
+
+// H5/小程序：使用 SVG 图标
 const IndexIcon = ({ color, size }: { color: string; size: number }) => (
   <svg t="1783827211314" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width={size} height={size}>
     <path d="M343.52 364.1a722.66 722.66 0 0 1-75.86 47.63l-12.94-41.16q105.26-55.87 152.9-127.03l35.28 16.47q-22.36 35.89-57.63 69.4v142.9h-41.75v-108.21zM541.11 564.63q-12.35 114.67-53.51 154.07-45.87 49.4-205.24 61.75l-17.05-38.23q141.13-7.06 187.59-48.81 40.58-38.81 47.63-132.31zM704.59 497l-0.01 177.01h-43.52V535.8H418.08v143.49h-42.93V496.97zM746.93 300.58l6.47 38.23-167.6 29.4q10.41 11.17 17.06 22.35 42.34 44.69 92.91 45.87 10 0 17.64-9.41 8.24-13.51 15.29-51.16l40.58 17.05q-12.94 51.16-26.46 67.04-14.12 15.88-36.46 15.88-70.57 0-125.85-52.34-20.58-18.8-37.64-47.63l-124.08 21.76-6.47-37.64 111.73-19.99q-18.24-38.23-32.93-91.15l45.28-4.12q12.95 53.52 29.4 88.21zM555.81 669.3q114.67 33.52 208.17 79.39l-23.52 35.87a1042.99 1042.99 0 0 0-205.82-82.92zM620.5 239.42a487.39 487.39 0 0 1 68.21 46.46l-25.28 24.7q-25.86-23.52-67.63-47.05z" fill={color} p-id="1370"/>
@@ -46,6 +63,17 @@ const MineIcon = ({ color, size }: { color: string; size: number }) => (
 );
 
 export default function TabBarIcons({ name, color, size = iconSize }: TabBarIconsProps) {
+  // RN 环境：使用 emoji Text 图标（SVG 标签在 Taro RN 中不支持）
+  if (IS_RN) {
+    const rnIcon = RN_ICONS[name] || RN_ICONS.index;
+    return (
+      <View className="tab-icon-svg" style={{ width: `${size}rpx`, height: `${size}rpx` }}>
+        <Text style={{ color, ...rnIcon.style }}>{rnIcon.emoji}</Text>
+      </View>
+    );
+  }
+
+  // H5 / 小程序：使用 SVG 图标
   return (
     <View className="tab-icon-svg" style={{ width: `${size}rpx`, height: `${size}rpx` }}>
       {name === 'index' && <IndexIcon color={color} size={size} />}

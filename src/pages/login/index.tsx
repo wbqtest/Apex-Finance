@@ -1,7 +1,7 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro from '@tarojs/taro';
-import { Input, Button, Toast } from '@nutui/nutui-react-taro';
+import { Input, Button } from '@nutui/nutui-react-taro';
 import { login } from '../../services/api';
 import NavBar from '../../components/NavBar';
 import './index.less';
@@ -14,19 +14,19 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!phone || !password) {
-      Toast.show('', { content: '请填写完整信息', duration: 2000 });
+      Taro.showToast({ title: '请填写完整信息', icon: 'none', duration: 2000 });
       return;
     }
 
     if (!/^1[3-9]\d{9}$/.test(phone)) {
-      Toast.show('', { content: '请输入正确的手机号', duration: 2000 });
+      Taro.showToast({ title: '请输入正确的手机号', icon: 'none', duration: 2000 });
       return;
     }
 
     setLoading(true);
     try {
       await login({ phone, password });
-      Toast.show('', { content: '登录成功', duration: 2000 });
+      Taro.showToast({ title: '登录成功', icon: 'none', duration: 2000 });
       setTimeout(() => {
         Taro.switchTab({ url: '/pages/mine' });
       }, 1500);

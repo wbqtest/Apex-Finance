@@ -1,7 +1,9 @@
 import { View, Text, ScrollView } from '@tarojs/components';
 import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
-import { Button, Cell, CellGroup, Tag, Toast, Empty } from '@nutui/nutui-react-taro';
+import { Button, Cell, CellGroup, Tag, Empty } from '@nutui/nutui-react-taro';
+import { SafeToast } from '../../components/SafeToast';
+
 import CarChart from '../../components/CarChart';
 import { REPAYMENT_LABELS } from '../../utils/carFinance';
 import { formatCurrency, formatRate } from '../../utils/finance';
@@ -102,7 +104,7 @@ export default function AutoComparePage() {
         )}
       </ScrollView>
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
     </View>
   );
 }

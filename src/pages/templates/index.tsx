@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { View, Text, Button, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import { Popup, Tabs, TabPane } from '@nutui/nutui-react-taro';
+import { Tabs, TabPane } from '@nutui/nutui-react-taro';
+import { SafePopup } from '../../components/SafePopup';
+
 import { TEMPLATES_DATA, TemplateCase } from '../../data/templates';
 import './index.less';
 
@@ -182,7 +184,7 @@ export default function TemplateList() {
         </View>
       </ScrollView>
 
-      <Popup
+      <SafePopup
         visible={showDetail}
         onClose={() => setShowDetail(false)}
         position="bottom"
@@ -337,7 +339,7 @@ export default function TemplateList() {
             </View>
           </View>
         )}
-      </Popup>
+      </SafePopup>
     </View>
   );
 }

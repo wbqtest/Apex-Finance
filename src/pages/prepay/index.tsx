@@ -1,6 +1,8 @@
 import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import { useState, useMemo } from 'react';
-import { InputNumber, Button, Toast } from '@nutui/nutui-react-taro';
+import { InputNumber, Button } from '@nutui/nutui-react-taro';
+import { SafeToast } from '../../components/SafeToast';
+
 import Taro from '@tarojs/taro';
 import {
   PrepayInput,
@@ -395,7 +397,7 @@ export default function PrepayCalcPage() {
         </View>
       )}
 
-      <Toast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
+      <SafeToast visible={toast.show} content={toast.msg} onClose={() => setToast({ show: false, msg: '' })} />
       <CustomTabBar />
     </View>
   );

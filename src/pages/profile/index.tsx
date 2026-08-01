@@ -1,7 +1,10 @@
 import { View, Text } from '@tarojs/components';
 import { useState } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
-import { Input, Button, Cell, CellGroup, Dialog, Toast } from '@nutui/nutui-react-taro';
+import { Input, Button, Cell, CellGroup } from '@nutui/nutui-react-taro';
+import { SafeDialog } from '../../components/SafeDialog';
+import { SafeToast } from '../../components/SafeToast';
+
 import { getUserInfo, updateNickname, changePassword, logout, UserInfo } from '../../services/api';
 import { getToken, getUserInfo as getStorageUserInfo, setUserInfo, clearLoginInfo } from '../../utils/storage';
 import { GRADIENTS } from '../../data/templates';
@@ -52,11 +55,11 @@ export default function Profile() {
 
   const handleEditNickname = async () => {
     if (!newNickname.trim()) {
-      Toast.show('', { content: '请输入昵称', duration: 2000 });
+      Taro.showToast({ title: '请输入昵称', icon: 'none', duration: 2000 });
       return;
     }
     if (newNickname.length > 20) {
-      Toast.show('', { content: '昵称不能超过20个字符', duration: 2000 });
+      Taro.showToast({ title: '昵称不能超过20个字符', icon: 'none', duration: 2000 });
       return;
     }
     setLoading(true);
@@ -65,7 +68,7 @@ export default function Profile() {
       setUserInfoState({ ...userInfo!, nickname: newNickname });
       setShowEditNickname(false);
       setNewNickname('');
-      Toast.show('', { content: '修改成功', duration: 2000 });
+      Taro.showToast({ title: '修改成功', icon: 'none', duration: 2000 });
     } catch {
     } finally {
       setLoading(false);
@@ -74,15 +77,15 @@ export default function Profile() {
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      Toast.show('', { content: '请填写完整信息', duration: 2000 });
+      Taro.showToast({ title: '请填写完整信息', icon: 'none', duration: 2000 });
       return;
     }
     if (newPassword.length < 6) {
-      Toast.show('', { content: '新密码至少6位', duration: 2000 });
+      Taro.showToast({ title: '新密码至少6位', icon: 'none', duration: 2000 });
       return;
     }
     if (newPassword !== confirmPassword) {
-      Toast.show('', { content: '两次密码输入不一致', duration: 2000 });
+      Taro.showToast({ title: '两次密码输入不一致', icon: 'none', duration: 2000 });
       return;
     }
     setLoading(true);
@@ -92,7 +95,7 @@ export default function Profile() {
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      Toast.show('', { content: '修改成功', duration: 2000 });
+      Taro.showToast({ title: '修改成功', icon: 'none', duration: 2000 });
     } catch {
     } finally {
       setLoading(false);
@@ -106,7 +109,7 @@ export default function Profile() {
   const handleLogoutConfirm = async () => {
     try {
       await logout();
-      Toast.show('', { content: '已退出登录', duration: 2000 });
+      Taro.showToast({ title: '已退出登录', icon: 'none', duration: 2000 });
       setTimeout(() => {
         Taro.redirectTo({ url: '/pages/login' });
       }, 1500);
@@ -175,7 +178,7 @@ export default function Profile() {
         </CellGroup>
       </View>
 
-      <Dialog
+      <SafeDialog
         visible={showEditNickname}
         title="编辑昵称"
         onClose={() => { setShowEditNickname(false); setNewNickname(''); }}
@@ -192,9 +195,9 @@ export default function Profile() {
             maxlength={20}
           />
         </Cell>
-      </Dialog>
+      </SafeDialog>
 
-      <Dialog
+      <SafeDialog
         visible={showChangePassword}
         title="修改密码"
         onClose={() => { setShowChangePassword(false); setOldPassword(''); setNewPassword(''); setConfirmPassword(''); }}
@@ -228,9 +231,9 @@ export default function Profile() {
             />
           </Cell>
         </View>
-      </Dialog>
+      </SafeDialog>
 
-      <Dialog
+      <SafeDialog
         visible={showLogoutDialog}
         title="提示"
         content="确定要退出登录吗？"
