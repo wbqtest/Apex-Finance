@@ -65,6 +65,12 @@ jobs:
           sed -i "s/android:label=\"[^\"]*\"/android:label=\"${{ env.APP_NAME }}\"/" android/app/src/main/AndroidManifest.xml || true
           # 确保 assets 目录存在 (build:rn 会写入此处)
           mkdir -p android/app/src/main/assets
+
+          # Taro 分离模式要求：注释 RN 自带打包脚本，因为 bundle 由 Taro 打包
+          sed -i 's|^apply from: "../../node_modules/react-native/react.gradle"|// apply from: "../../node_modules/react-native/react.gradle"|' android/app/build.gradle
+          echo "=== app/build.gradle react.gradle 行 ==="
+          grep -n "react.gradle" android/app/build.gradle || echo "未找到 react.gradle 引用"
+
           # 安装壳工程依赖 (RN 0.73)
           npm install || true
 
