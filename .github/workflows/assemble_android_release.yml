@@ -112,7 +112,10 @@ jobs:
           # 1. 在壳工程 android/build.gradle 中定义 ext.kotlinVersion
           cd android
           if ! grep -q "kotlinVersion" build.gradle; then
-            printf 'ext { kotlinVersion = \"1.9.22\" }\n\n' > build.gradle.tmp
+            cat > build.gradle.tmp << 'GRADLEEOF'
+          ext { kotlinVersion = '1.9.22' }
+
+          GRADLEEOF
             cat build.gradle >> build.gradle.tmp
             mv build.gradle.tmp build.gradle
             echo "✅ build.gradle 已添加 ext.kotlinVersion"
@@ -144,6 +147,8 @@ jobs:
         working-directory: ../taro-native-shell/android
         run: |
           # 设置 Gradle 属性 (RN 0.73 使用 AGP 8.x, JDK 17 原生兼容)
+          # 先确保文件末尾有换行，避免 cat >> 拼接到末尾行
+          printf '\n' >> gradle.properties
           cat >> gradle.properties << 'PROPS'
           android.useAndroidX=true
           android.enableJetifier=true
