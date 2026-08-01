@@ -112,20 +112,20 @@ jobs:
             echo "✅ build.gradle 已添加 ext.kotlinVersion"
           fi
 
-          # 2. 直接修改 expo 的 build.gradle，替换 kotlinVersion() 方法调用
+          # 2. 直接修改 expo 的 build.gradle
+          #    sed 必须匹配完整表达式整体替换，否则残留 rootProject.ext. 会变成 rootProject.ext."1.9.22"
           cd ../node_modules/expo/android
-          if grep -q "kotlinVersion()" build.gradle; then
-            sed -i 's/kotlinVersion()/"1.9.22"/g' build.gradle
-            echo "✅ expo/build.gradle 中的 kotlinVersion() 已替换为固定版本"
-          fi
+          echo "=== expo build.gradle 完整内容 (patch 前) ==="
+          cat build.gradle
+          echo "=== END ==="
 
-          if grep -q "project.kotlinVersion" build.gradle; then
-            sed -i 's/project.kotlinVersion/"1.9.22"/g' build.gradle
-            echo "✅ expo/build.gradle 中的 project.kotlinVersion 已替换为固定版本"
-          fi
+          sed -i 's/rootProject\.ext\.kotlinVersion()/"1.9.22"/g' build.gradle
+          sed -i 's/project\.ext\.kotlinVersion()/"1.9.22"/g' build.gradle
+          sed -i 's/project\.kotlinVersion\b/"1.9.22"/g' build.gradle
 
-          echo "=== 修复完成 ==="
-          grep -n "kotlinVersion" build.gradle | head -5 || echo "无 kotlinVersion 引用"
+          echo "=== expo build.gradle 完整内容 (patch 后) ==="
+          cat build.gradle
+          echo "=== END ==="
 
       # ========== 6. 打包 Debug APK ==========
       - name: Build Debug APK
