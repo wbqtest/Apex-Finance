@@ -122,22 +122,38 @@ jobs:
           echo "=== 修改后的 build.gradle (前30行) ==="
           head -30 build.gradle
 
+      # ========== 5.5. 修复 expo 模块依赖 ==========
+      - name: Fix expo module build
+        working-directory: ../taro-native-shell/android
+        run: |
+          BUILD_FILE="build.gradle"
+          cp $BUILD_FILE $BUILD_FILE.bak
+
+          # 确保 ext 块存在且包含 kotlinVersion (expo 从 rootProject.ext 读取)
+          if ! grep -q "^ext {" $BUILD_FILE; then
+            # 没有 ext 块则在文件开头创建
+            printf 'ext {\n    kotlinVersion = "1.9.22"\n}\n\n' > temp.gradle
+            cat $BUILD_FILE >> temp.gradle
+            mv temp.gradle $BUILD_FILE
+          elif ! grep -q "kotlinVersion" $BUILD_FILE; then
+            # ext 块存在但缺少 kotlinVersion，追加到 ext { 下一行
+            sed -i '/^ext {/a\    kotlinVersion = "1.9.22"' $BUILD_FILE
+          fi
+
+          echo "=== fix 后的 build.gradle (前30行) ==="
+          head -30 $BUILD_FILE
+
       # ========== 6. 打包 Debug APK ==========
       - name: Build Debug APK
         working-directory: ../taro-native-shell/android
         run: |
           # 设置 Gradle 属性 (RN 0.73 使用 AGP 8.x, JDK 17 原生兼容)
-          echo "" >> gradle.properties
-          echo "android.useAndroidX=true" >> gradle.properties
-          echo "android.enableJetifier=true" >> gradle.properties
-          # 统一 Kotlin 版本 (react-native-screens/expo 需要 1.9.x)
-          echo "kotlinVersion=1.9.22" >> gradle.properties
-          # expo 从 rootProject.ext 读取 kotlinVersion，需注入 build.gradle ext{}
-          sed -i '/^ext {/a\    kotlinVersion = "1.9.22"' build.gradle || true
-          echo "=== kotlinVersion 验证 ==="
-          grep -n 'kotlinVersion' build.gradle || true
-          # 允许 JVM target 兼容
-          echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
+          cat >> gradle.properties << 'PROPS'
+          android.useAndroidX=true
+          android.enableJetifier=true
+          kotlinVersion=1.9.22
+          kotlin.jvm.target.validation.mode=warning
+          PROPS
 
           chmod +x gradlew
           # 捕获完整构建日志，失败时打印 Kotlin 具体编译错误
