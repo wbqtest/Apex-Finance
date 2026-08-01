@@ -107,9 +107,15 @@ jobs:
           echo "" >> gradle.properties
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
+          # 修复 Kotlin JVM target 不一致问题 (各依赖包可能 target 不同版本)
+          echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
+
+          # 在根 build.gradle 中设置统一 Kotlin 版本，解决 react-native-screens 等编译问题
+          sed -i '/buildscript {/a\    ext { kotlin_version = "1.9.22" }' build.gradle || true
+          sed -i 's/org\.jetbrains\.kotlin:kotlin-gradle-plugin:[0-9][0-9.]*/org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version/g' build.gradle || true
 
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace --info
 
       # ========== 6. 上传 APK ==========
       - name: Upload APK artifact
