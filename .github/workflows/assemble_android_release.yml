@@ -13,8 +13,8 @@ on:
         default: "自动构建的 APK 版本"
 
 env:
-  NODE_VERSION: "18"
-  JAVA_VERSION: "11"
+  NODE_VERSION: "20"
+  JAVA_VERSION: "17"
   APP_NAME: "ApexFinance"
   SHELL_REPO: "NervJS/taro-native-shell"
   SHELL_BRANCH: "master"
@@ -46,10 +46,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 34
-          target-sdk: 34
-          build-tools: "34.0.0"
-          ndk: "26.1.10909125"
+          packages: "platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125"
 
       # ========== 2. 构建 JS Bundle ==========
       - name: Install JS dependencies
