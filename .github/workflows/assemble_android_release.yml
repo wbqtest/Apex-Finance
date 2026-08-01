@@ -17,7 +17,7 @@ env:
   JAVA_VERSION: "17"
   APP_NAME: "ApexFinance"
   SHELL_REPO: "NervJS/taro-native-shell"
-  SHELL_BRANCH: "0.73.2"
+  SHELL_BRANCH: "master"
 
 jobs:
   assemble:
