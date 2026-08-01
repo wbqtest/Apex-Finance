@@ -131,6 +131,13 @@ jobs:
             sed -i 's/kotlinVersion()/kotlinVersion/g' "$f" 2>/dev/null || true
           done
 
+          # 更新 react-native-screens 到 Kotlin 1.9 兼容版本
+          echo "📦 Updating react-native-screens..."
+          npm install react-native-screens@3.29.0
+
+          # 清理 Kotlin 编译缓存
+          rm -rf android/.gradle
+
       # ========== 8. 打包 Debug APK ==========
       - name: Build Debug APK
         working-directory: ../taro-native-shell/android
