@@ -58,6 +58,7 @@ jobs:
       # ========== 3. 准备壳工程 ==========
       - name: Clone Taro Native Shell
         run: |
+          rm -rf ../taro-native-shell
           git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
 
       - name: Copy bundle and assets to shell
