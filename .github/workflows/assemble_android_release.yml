@@ -98,27 +98,34 @@ jobs:
           head -30 build.gradle
 
       # ========== 5.5. 修复 expo 模块依赖 ==========
-      - name: Fix expo module build
-        working-directory: ../taro-native-shell/android
-        run: |
-          # 在 build.gradle 最顶部注入 ext.kotlinVersion (expo 读 rootProject.ext)
-          sed -i '1i\ext.kotlinVersion = "1.9.22"' build.gradle
-          echo "=== build.gradle 前 8 行 ==="
-          head -8 build.gradle
-
-      - name: Patch expo build.gradle
+      - name: 🔧 Fix expo module issue
         working-directory: ../taro-native-shell
         run: |
-          EXPO_FILE="node_modules/expo/android/build.gradle"
-          if [ -f "$EXPO_FILE" ]; then
-            echo "=== expo build.gradle 55-65 行 (patch 前) ==="
-            sed -n '55,65p' "$EXPO_FILE"
-            # expo 用 rootProject.ext.kotlinVersion() 方法调用语法取值
-            # Groovy ext 不支持此写法，需替换为字符串字面量
-            sed -i 's/rootProject\.ext\.kotlinVersion()/"1.9.22"/g' "$EXPO_FILE"
-            echo "=== expo build.gradle 55-65 行 (patch 后) ==="
-            sed -n '55,65p' "$EXPO_FILE"
+          echo "📦 修复 expo 模块的 kotlinVersion 问题..."
+
+          # 1. 在壳工程根目录 android/build.gradle 中定义 ext.kotlinVersion
+          cd android
+          if ! grep -q "kotlinVersion" build.gradle; then
+            printf 'ext { kotlinVersion = \"1.9.22\" }\n\n' > build.gradle.tmp
+            cat build.gradle >> build.gradle.tmp
+            mv build.gradle.tmp build.gradle
+            echo "✅ build.gradle 已添加 ext.kotlinVersion"
           fi
+
+          # 2. 直接修改 expo 的 build.gradle，替换 kotlinVersion() 方法调用
+          cd ../node_modules/expo/android
+          if grep -q "kotlinVersion()" build.gradle; then
+            sed -i 's/kotlinVersion()/"1.9.22"/g' build.gradle
+            echo "✅ expo/build.gradle 中的 kotlinVersion() 已替换为固定版本"
+          fi
+
+          if grep -q "project.kotlinVersion" build.gradle; then
+            sed -i 's/project.kotlinVersion/"1.9.22"/g' build.gradle
+            echo "✅ expo/build.gradle 中的 project.kotlinVersion 已替换为固定版本"
+          fi
+
+          echo "=== 修复完成 ==="
+          grep -n "kotlinVersion" build.gradle | head -5 || echo "无 kotlinVersion 引用"
 
       # ========== 6. 打包 Debug APK ==========
       - name: Build Debug APK
