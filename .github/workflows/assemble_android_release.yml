@@ -114,13 +114,16 @@ jobs:
 
           chmod +x gradlew
           # 捕获完整构建日志，失败时打印 Kotlin 具体编译错误
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee /tmp/gradle.log || {
+          set -o pipefail
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee /tmp/gradle.log
+          GRADLE_EXIT=${PIPESTATUS[0]}
+          if [ $GRADLE_EXIT -ne 0 ]; then
             echo ""
             echo "========== Kotlin 编译错误详情 =========="
             grep -E '^(e:|w:)' /tmp/gradle.log | head -50 || true
             echo "==========================================="
-            exit 1
-          }
+            exit $GRADLE_EXIT
+          fi
 
       # ========== 6. 上传 APK ==========
       - name: Copy APK to workspace
