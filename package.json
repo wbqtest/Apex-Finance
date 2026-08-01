@@ -61,6 +61,7 @@
     "@tarojs/rn-runner": "^4.2.1",
     "@tarojs/rn-supporter": "^4.2.1",
     "@tarojs/runtime": "4.2.0",
+    "@tarojs/router-rn": "^4.2.1",
     "@tarojs/runtime-rn": "^4.2.1",
     "@tarojs/shared": "4.2.0",
     "@tarojs/taro": "4.2.0",
