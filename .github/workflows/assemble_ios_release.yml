@@ -87,6 +87,10 @@ jobs:
         run: |
           cd ios
 
+          # 列出目录内容以便调试
+          echo "=== iOS 目录内容 ==="
+          ls -la
+
           # 确定项目文件
           if [ -d taroDemo.xcworkspace ]; then
             PROJECT_FLAG="-workspace taroDemo.xcworkspace"
@@ -119,10 +123,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            2>&1 | tee build_log.txt
+            PROVISIONING_PROFILE_SPECIFIER=""
 
-          echo "Archive completed: build/${SCHEME}.xcarchive"
+          # 检查 archive 是否生成
+          if [ -d build/${SCHEME}.xcarchive ]; then
+            echo "Archive completed: build/${SCHEME}.xcarchive"
+          else
+            echo "ERROR: Archive 构建失败"
+            ls -la build/ 2>/dev/null || echo "build 目录不存在"
+            exit 1
+          fi
 
       # ========== 6. 导出 IPA ==========
       - name: Export IPA
