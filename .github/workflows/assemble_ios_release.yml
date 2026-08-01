@@ -72,8 +72,10 @@ jobs:
           pod install || true
 
           # 修改应用名
-          if [ -f tnsDemo/Info.plist ]; then
-            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ env.APP_NAME }}" tnsDemo/Info.plist 2>/dev/null || true
+          if [ -f taroDemo/Info.plist ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ env.APP_NAME }}" taroDemo/Info.plist 2>/dev/null || true
+          elif [ -f ApexFinance/Info.plist ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ env.APP_NAME }}" ApexFinance/Info.plist 2>/dev/null || true
           fi
 
       # ========== 5. 构建 iOS 应用 ==========
@@ -83,12 +85,12 @@ jobs:
           cd ios
 
           # 确定项目文件
-          if [ -d tnsDemo.xcworkspace ]; then
-            PROJECT_FLAG="-workspace tnsDemo.xcworkspace"
-            SCHEME="tnsDemo"
-          elif [ -d tnsDemo.xcodeproj ]; then
-            PROJECT_FLAG="-project tnsDemo.xcodeproj"
-            SCHEME="tnsDemo"
+          if [ -d taroDemo.xcworkspace ]; then
+            PROJECT_FLAG="-workspace taroDemo.xcworkspace"
+            SCHEME="taroDemo"
+          elif [ -d taroDemo.xcodeproj ]; then
+            PROJECT_FLAG="-project taroDemo.xcodeproj"
+            SCHEME="taroDemo"
           elif [ -d ApexFinance.xcworkspace ]; then
             PROJECT_FLAG="-workspace ApexFinance.xcworkspace"
             SCHEME="ApexFinance"
