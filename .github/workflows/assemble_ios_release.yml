@@ -13,7 +13,7 @@ on:
         default: "自动构建的 iOS 版本"
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
   APP_NAME: "ApexFinance"
   SHELL_REPO: "NervJS/taro-native-shell"
   SHELL_BRANCH: "master"
@@ -74,8 +74,33 @@ jobs:
           gem install cocoapods
 
           cd ios
-          # 安装 CocoaPods 依赖
-          pod install --verbose
+
+          # === 修复 armv7 架构兼容性 ===
+          # Xcode 26+/iOS 26+ SDK 已移除 armv7 (32位) 支持
+          # glog 等旧 Pod 的 prepare_command 会选择无效的 armv7 架构导致 configure 失败
+
+          # 1. 在 Podfile 中添加 armv7 排除 + 最低部署目标（仅 arm64）
+          if [ -f Podfile ]; then
+            # 设置部署目标为 iOS 13+，仅 arm64
+            sed -i '' "s/platform :ios, '[0-9.]*'/platform :ios, '13.0'/g" Podfile || true
+            # 添加 post_install hook 排除 armv7
+            if ! grep -q "EXCLUDED_ARCHS" Podfile; then
+              cat >> Podfile << 'PODFILE_EOF'
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphoneos*]'] = 'armv7'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+    end
+  end
+end
+PODFILE_EOF
+            fi
+          fi
+
+          # 2. 安装 CocoaPods 依赖（强制仅 arm64 架构）
+          ARCHS=arm64 ONLY_ACTIVE_ARCH=NO pod install --verbose
 
           # 修改应用名
           if [ -f taroDemo/Info.plist ]; then
@@ -122,6 +147,10 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/${SCHEME}.xcarchive \
+            ONLY_ACTIVE_ARCH=NO \
+            ARCHS=arm64 \
+            EXCLUDED_ARCHS=armv7 \
+            IPHONEOS_DEPLOYMENT_TARGET=13.0 \
             clean archive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
