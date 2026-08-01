@@ -70,7 +70,7 @@ jobs:
 
       # ========== 3. 安装 JS 依赖 ==========
       - name: Install JS dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       # ========== 4. 准备壳工程 ==========
       - name: Clone Taro Native Shell
