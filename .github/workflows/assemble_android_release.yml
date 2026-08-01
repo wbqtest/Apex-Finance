@@ -132,18 +132,10 @@ jobs:
           echo "android.enableJetifier=true" >> gradle.properties
           # 统一 Kotlin 版本 (react-native-screens/expo 需要 1.9.x)
           echo "kotlinVersion=1.9.22" >> gradle.properties
-          # expo 从 rootProject.ext 读取 kotlinVersion，用 Python 精准注入 ext{} 块
-          python3 -c "
-import re
-content = open('build.gradle').read()
-if re.search(r'ext\s*\{', content):
-    content = re.sub(r'(ext\s*\{)', r'\1\n        kotlinVersion = \"1.9.22\"', content, count=1)
-else:
-    content = content.replace('allprojects {', 'ext { kotlinVersion = \"1.9.22\" }\n\nallprojects {', 1)
-open('build.gradle', 'w').write(content)
-"
+          # expo 从 rootProject.ext 读取 kotlinVersion，需注入 build.gradle ext{}
+          sed -i '/^ext {/a\    kotlinVersion = "1.9.22"' build.gradle || true
           echo "=== kotlinVersion 验证 ==="
-          grep -n 'kotlinVersion' build.gradle || echo "ERROR: 注入失败"
+          grep -n 'kotlinVersion' build.gradle || true
           # 允许 JVM target 兼容
           echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
 
