@@ -107,8 +107,10 @@ jobs:
           echo "" >> gradle.properties
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
-          # 统一 Kotlin 版本 (react-native-screens 需要 1.9.x)
+          # 统一 Kotlin 版本 (react-native-screens/expo 需要 1.9.x)
           echo "kotlinVersion=1.9.22" >> gradle.properties
+          # expo 从 rootProject.ext 读取 kotlinVersion，需在 build.gradle ext{} 中注入
+          sed -i '/^ext {/a\    kotlinVersion = "1.9.22"' build.gradle || true
           # 允许 JVM target 兼容
           echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
 
