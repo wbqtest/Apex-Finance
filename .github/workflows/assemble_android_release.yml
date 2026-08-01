@@ -111,6 +111,10 @@ jobs:
           echo "kotlinVersion=1.9.22" >> gradle.properties
           # expo 从 rootProject.ext 读取 kotlinVersion，需在 build.gradle ext{} 中注入
           sed -i '/^ext {/a\    kotlinVersion = "1.9.22"' build.gradle || true
+          # 替换阿里云 Maven 镜像 → 官方源（GitHub Actions 境外 runner 访问阿里云 502）
+          sed -i 's|https://maven\.aliyun\.com/repository/public|https://repo1.maven.org/maven2|g' build.gradle settings.gradle 2>/dev/null || true
+          sed -i 's|https://maven\.aliyun\.com/repository/google|https://dl.google.com/dl/android/maven2|g' build.gradle settings.gradle 2>/dev/null || true
+          sed -i 's|https://maven\.aliyun\.com/nexus/content/groups/public|https://repo1.maven.org/maven2|g' build.gradle settings.gradle 2>/dev/null || true
           # 允许 JVM target 兼容
           echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
 
