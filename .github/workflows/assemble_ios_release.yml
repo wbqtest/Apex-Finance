@@ -1,5 +1,4 @@
 # iOS Debug IPA 自动打包工作流
-# 手动触发，使用自动签名
 name: Build iOS Debug IPA
 
 on:
@@ -17,12 +16,16 @@ env:
 
 jobs:
   build-ios:
+    name: Build iOS IPA
     runs-on: macos-latest
+    timeout-minutes: 45
+
     steps:
-      - name: Checkout
+      # ========== 1. 环境准备 ==========
+      - name: Checkout JS 工程代码
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -30,28 +33,62 @@ jobs:
       - name: Setup pnpm
         run: npm install -g pnpm@8
 
-      - name: Install JS deps
+      # ========== 2. 缓存 ==========
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-pods-${{ hashFiles('../taro-native-shell/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+            ${{ runner.os }}-pods-v1-
+
+      # ========== 3. 安装 JS 依赖 ==========
+      - name: Install JS dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build JS bundle
+      # ========== 4. 准备壳工程 ==========
+      - name: Clone Taro Native Shell
+        run: |
+          rm -rf ../taro-native-shell
+          git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
+
+      - name: Configure shell project
+        working-directory: ../taro-native-shell
+        run: |
+          # 安装壳工程依赖（CocoaPods 需要）
+          npm install || true
+
+          # 更新 react-native-screens 到 Kotlin 1.9 兼容版本
+          echo "📦 Updating react-native-screens..."
+          npm install react-native-screens@3.29.0
+
+      # ========== 5. 构建 JS Bundle ==========
+      - name: Build JS bundle for iOS
         run: pnpm run build:rn -- --platform ios
 
-      - name: Clone shell
-        run: |
-          git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} \
-            https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
-
-      - name: Copy bundle
+      # ========== 6. 拷贝 Bundle ==========
+      - name: Copy bundle to shell
         run: |
           SHELL_DIR=../taro-native-shell/ios
+          mkdir -p $SHELL_DIR
           cp dist/index.bundle $SHELL_DIR/main.jsbundle
 
+      # ========== 7. 安装 CocoaPods ==========
       - name: Install CocoaPods
         working-directory: ../taro-native-shell/ios
         run: |
           gem install cocoapods
           pod install --verbose
 
+      # ========== 8. 打包 Debug IPA ==========
       - name: Build Debug IPA
         working-directory: ../taro-native-shell/ios
         run: |
@@ -69,7 +106,7 @@ jobs:
             DEVELOPMENT_TEAM=$TEAM_ID
 
           # 导出配置
-          cat > exportOptions.plist << EOF
+          cat > exportOptions.plist << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
           <dict>
@@ -83,6 +120,9 @@ jobs:
           </plist>
           EOF
 
+          # 替换 teamID
+          /usr/libexec/PlistBuddy -c "Set :teamID $TEAM_ID" exportOptions.plist
+
           # 导出 IPA
           xcodebuild -exportArchive \
             -archivePath build/${SCHEME}.xcarchive \
@@ -90,6 +130,7 @@ jobs:
             -exportOptionsPlist exportOptions.plist \
             -allowProvisioningUpdates
 
+      # ========== 9. 上传 IPA ==========
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
