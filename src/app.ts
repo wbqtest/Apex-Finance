@@ -3,6 +3,7 @@ import { useLaunch } from '@tarojs/taro';
 import './app.less';
 import { initTheme } from './utils/theme';
 import { initCarConfig } from './services/carConfig';
+import { ThemeProvider } from './context/ThemeContext';
 
 // NutUI 样式在各平台下由组件自动处理，无需手动导入 style.css
 
@@ -14,7 +15,11 @@ function App({ children }: PropsWithChildren<any>) {
     initCarConfig().catch((e) => console.warn('[App] 车贷配置预热失败:', e));
   });
 
-  return children;
+  return (
+    <ThemeProvider>
+      {children}
+    </ThemeProvider>
+  );
 }
 
 export default App;

@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import type { ThemeContextValue } from '../context/ThemeContext'
 
 export type ThemeName = 'finance-blue' | 'dark-green' | 'deep-space' | 'vibrant-orange' | 'vibrant-purple' | 'coral-pink' | 'cyan'
 
@@ -140,11 +141,30 @@ export const themes: Record<ThemeName, ThemeConfig> = {
 
 export const THEME_KEY = 'theme_name'
 
+// 跨端主题变更监听器（供 RN 等无 document 平台使用）
+type ThemeChangeListener = (themeName: ThemeName, theme: ThemeConfig) => void
+const listeners: ThemeChangeListener[] = []
+
+export function onThemeChange(listener: ThemeChangeListener) {
+  listeners.push(listener)
+  return () => {
+    const index = listeners.indexOf(listener)
+    if (index > -1) listeners.splice(index, 1)
+  }
+}
+
+export function notifyThemeChange(themeName: ThemeName, theme: ThemeConfig) {
+  listeners.forEach((listener) => listener(themeName, theme))
+}
+
 export const applyTheme = (themeName: ThemeName): void => {
   const theme = themes[themeName]
   if (!theme) return
 
-  // 只在 H5 环境操作 DOM CSS 变量；小程序 / RN 没有 document，改用 JS 常量
+  // 通知 RN 等无 document 平台更新主题
+  notifyThemeChange(themeName, theme)
+
+  // H5 / 小程序通过 DOM CSS 变量生效；RN 跳过此步
   if (typeof document === 'undefined') return
 
   const root = document.documentElement
@@ -189,6 +209,7 @@ export const applyTheme = (themeName: ThemeName): void => {
 export const saveTheme = (themeName: ThemeName): void => {
   try {
     Taro.setStorageSync(THEME_KEY, themeName)
+    applyTheme(themeName)
   } catch (error) {
     console.error('保存主题失败:', error)
   }

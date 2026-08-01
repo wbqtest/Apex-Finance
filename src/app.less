@@ -57,7 +57,7 @@ button {
   }
 }
 
-:deep(.nut-button-primary-solid) {
+::deep(.nut-button-primary-solid) {
   background: linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%) !important;
   color: var(--text-on-primary) !important;
   border-color: transparent !important;
@@ -67,7 +67,7 @@ button {
   }
 }
 
-:deep(.nut-button-primary) {
+::deep(.nut-button-primary) {
   color: var(--text-on-primary) !important;
 
   &:active {
@@ -76,9 +76,9 @@ button {
   }
 }
 
-:deep(.nut-button-primary-disabled),
-:deep(.nut-button-primary-solid-disabled),
-:deep(.nut-button--disabled) {
+::deep(.nut-button-primary-disabled),
+::deep(.nut-button-primary-solid-disabled),
+::deep(.nut-button--disabled) {
   background: var(--brand-primary-muted, #CBD5E1) !important;
   border-color: var(--brand-primary-muted, #CBD5E1) !important;
   color: #A0916B !important;
