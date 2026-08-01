@@ -120,6 +120,11 @@ jobs:
           # 设置 Gradle 属性
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
+          # JDK 17+ 兼容：开放 Gradle 4.x 内部 JAXB 反射所需的模块
+          echo 'org.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.prefs/java.util.prefs=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED' >> gradle.properties
+
+          # 指向我们通过 setup-android 安装的 NDK，而非系统预装的旧版
+          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125
 
           # 执行打包
           chmod +x gradlew
