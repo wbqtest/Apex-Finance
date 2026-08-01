@@ -112,18 +112,17 @@ jobs:
             echo "✅ build.gradle 已添加 ext.kotlinVersion"
           fi
 
-          # 2. 直接修改 expo 的 build.gradle
-          #    sed 必须匹配完整表达式整体替换，否则残留 rootProject.ext. 会变成 rootProject.ext."1.9.22"
+          # 2. 去除 expo 中 kotlinVersion() 的方法括号
+          #    ext.foo 是属性访问 (OK), ext.foo() 是方法调用 (不OK)
+          #    把 () 去掉即可转为属性访问，配合 init 脚本的 ext 属性生效
           cd ../node_modules/expo/android
-          echo "=== expo build.gradle 完整内容 (patch 前) ==="
+          echo "=== expo build.gradle 全文 (patch 前) ==="
           cat build.gradle
           echo "=== END ==="
 
-          sed -i 's/rootProject\.ext\.kotlinVersion()/"1.9.22"/g' build.gradle
-          sed -i 's/project\.ext\.kotlinVersion()/"1.9.22"/g' build.gradle
-          sed -i 's/project\.kotlinVersion\b/"1.9.22"/g' build.gradle
+          sed -i 's/\.kotlinVersion()/.kotlinVersion/g' build.gradle
 
-          echo "=== expo build.gradle 完整内容 (patch 后) ==="
+          echo "=== expo build.gradle 全文 (patch 后) ==="
           cat build.gradle
           echo "=== END ==="
 
@@ -141,10 +140,10 @@ jobs:
 
           chmod +x gradlew
 
-          # 创建 init 脚本，projectsLoaded 在所有项目评估前运行
+          # 创建 init 脚本，将 kotlinVersion 设为 Closure (支持 .kotlinVersion() 方法调用语法)
           cat > /tmp/init.gradle << 'INIT'
           gradle.projectsLoaded { g ->
-            g.rootProject.ext.kotlinVersion = "1.9.22"
+            g.rootProject.ext.kotlinVersion = { "1.9.22" }
           }
           INIT
 
