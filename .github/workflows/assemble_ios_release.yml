@@ -68,11 +68,14 @@ jobs:
         working-directory: ../taro-native-shell
         run: |
           # 安装壳工程依赖
-          npm install || true
+          npm install
+
+          # 安装 CocoaPods
+          gem install cocoapods
 
           cd ios
           # 安装 CocoaPods 依赖
-          pod install || true
+          pod install --verbose
 
           # 修改应用名
           if [ -f taroDemo/Info.plist ]; then
