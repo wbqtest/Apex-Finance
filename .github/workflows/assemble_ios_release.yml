@@ -1,0 +1,188 @@
+# iOS IPA 自动打包工作流
+# 触发条件：推送到 main 分支或手动触发
+name: Assemble iOS Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: '发布说明'
+        required: false
+        default: '自动构建的 iOS 版本'
+
+env:
+  NODE_VERSION: '18'
+  APP_NAME: 'ApexFinance'
+  SHELL_REPO: 'NervJS/taro-native-shell'
+  SHELL_BRANCH: '0.73.2'
+
+jobs:
+  assemble:
+    name: Build iOS IPA
+    runs-on: macos-latest
+
+    steps:
+      # ========== 1. 环境准备 ==========
+      - name: Checkout JS 工程代码
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      # ========== 2. 构建 JS Bundle ==========
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Build JS bundle for iOS
+        run: npm run build:rn -- --platform ios
+
+      # ========== 3. 准备壳工程 ==========
+      - name: Clone Taro Native Shell
+        run: |
+          git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
+
+      - name: Copy bundle to shell
+        run: |
+          SHELL_DIR=../taro-native-shell
+          IOS_DIR=$SHELL_DIR/ios
+          IOS_ASSETS=$IOS_DIR/ApexFinance
+
+          # 创建应用目录
+          mkdir -p $IOS_ASSETS
+
+          # 复制 JS bundle
+          cp dist/index.bundle $IOS_DIR/main.jsbundle
+
+          # 复制资源文件
+          if [ -d dist/raw ]; then
+            cp -r dist/raw $IOS_ASSETS/
+          fi
+
+          # 创建 Info.plist 资源目录 (如需要)
+          if [ -d dist/drawable-mdpi ]; then
+            # 将 drawable 资源转换为 iOS 可用的格式
+            # 这里简化处理，实际项目可能需要调整
+            true
+          fi
+
+      # ========== 4. 配置壳工程 ==========
+      - name: Configure shell project
+        working-directory: ../taro-native-shell
+        run: |
+          # 如果使用 Taro 提供的壳工程，需要执行 pod install
+          cd ios
+          pod install || pod install --repo-update || true
+
+          # 修改应用名
+          if [ -f ApexFinance/Info.plist ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ env.APP_NAME }}" ApexFinance/Info.plist 2>/dev/null || true
+          fi
+
+      # ========== 5. 构建 iOS 应用 ==========
+      - name: Build IPA (Release)
+        working-directory: ../taro-native-shell
+        run: |
+          cd ios
+
+          # 检查是否有 workspace 文件
+          if [ -d ApexFinance.xcworkspace ]; then
+            PROJECT_FLAG="-workspace ApexFinance.xcworkspace"
+          elif [ -d ApexFinance.xcodeproj ]; then
+            PROJECT_FLAG="-project ApexFinance.xcodeproj"
+          else
+            # 使用 tns 项目文件
+            if [ -d tnsDemo.xcworkspace ]; then
+              PROJECT_FLAG="-workspace tnsDemo.xcworkspace"
+            elif [ -d tnsDemo.xcodeproj ]; then
+              PROJECT_FLAG="-project tnsDemo.xcodeproj"
+            else
+              echo "使用默认项目配置"
+              PROJECT_FLAG="-project tnsDemo.xcodeproj"
+            fi
+          fi
+
+          # 归档构建 (Release 模式)
+          xcodebuild $PROJECT_FLAG \
+            -scheme ApexFinance \
+            -sdk iphoneos \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/ApexFinance.xcarchive \
+            clean archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            2>&1 | tee build_log.txt
+
+          echo "Archive completed: build/ApexFinance.xcarchive"
+
+      # ========== 6. 导出 IPA ==========
+      - name: Export IPA
+        working-directory: ../taro-native-shell
+        run: |
+          cd ios
+
+          # 创建导出配置
+          cat > exportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>development</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>teamID</key>
+            <string>${{ secrets.APPLE_TEAM_ID || 'DEVELOPMENT' }}</string>
+            <key>skipInstall</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+
+          # 导出 IPA (Ad-hoc 签名，可在非越狱设备安装)
+          xcodebuild -exportArchive \
+            -archivePath build/ApexFinance.xcarchive \
+            -exportPath build/output \
+            -exportOptionsPlist exportOptions.plist \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee export_log.txt
+
+          echo "Export completed!"
+          ls -la build/output/
+
+      # ========== 7. 上传产物 ==========
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-IPA
+          path: ../taro-native-shell/ios/build/output/*.ipa
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body: |
+            ## ${{ github.event.tag_name }}
+
+            ${{ github.event.inputs.release_notes || '自动构建版本' }}
+
+            ### 下载 IPA
+            请查看 Artifacts 中的 `${{ env.APP_NAME }}-IPA` 下载安装包。
+
+            ### 安装说明
+            1. 使用 iTunes 或 Apple Configurator 导入到设备
+            2. 或使用 IPA Installer 等工具安装
+            3. 开发证书签名的 IPA 仅限开发者测试使用
+
+            ### 版本信息
+            - 构建时间: ${{ github.event.head_commit.timestamp }}
+            - 提交: ${{ github.sha }}

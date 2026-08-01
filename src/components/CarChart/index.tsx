@@ -1,11 +1,15 @@
 // 车贷精算师 - uCharts 图表封装（跨端：H5 + 小程序）
 import { useEffect, useRef, useCallback, useState } from 'react';
 import Taro from '@tarojs/taro';
-import { View, Canvas } from '@tarojs/components';
+import { View } from '@tarojs/components';
 import UCharts from '@qiun/ucharts';
 import './index.less';
 
 const IS_H5 = Taro.getEnv() === Taro.ENV_TYPE.WEB;
+const IS_RN = Taro.getEnv() === Taro.ENV_TYPE.RN;
+
+// Canvas 组件在 RN 环境下不可用，需要条件导入
+const CanvasComponent = IS_RN ? null : (require('@tarojs/components').Canvas);
 
 export type ChartKind = 'pie' | 'ring' | 'line' | 'area' | 'bar';
 
@@ -279,6 +283,8 @@ export default function CarChart(props: CarChartProps) {
 
     const init = async () => {
       if (destroyed) return;
+      // RN 环境下不初始化图表
+      if (IS_RN) return;
 
       try {
         let ctx: CanvasRenderingContext2D | any;
@@ -458,6 +464,15 @@ export default function CarChart(props: CarChartProps) {
 
   console.log('🔍 [CarChart] 渲染中, kind:', props.kind, 'data长度:', props.data.length, 'data首条:', JSON.parse(JSON.stringify(props.data[0])));
 
+  // RN 环境下 Canvas 不可用，显示占位提示
+  if (IS_RN) {
+    return (
+      <View className="car-chart car-chart-rn-placeholder">
+        图表功能暂不支持 React Native 环境
+      </View>
+    );
+  }
+
   return (
     <View className="car-chart" style={{ position: 'relative' }}>
       {IS_H5 ? (
@@ -469,14 +484,16 @@ export default function CarChart(props: CarChartProps) {
           onClick={handleTouch}
         />
       ) : (
-        <Canvas
-          canvasId={chartId}
-          id={chartId}
-          style={{ width: '100%', height: `${chartHeight}px` }}
-          onTouchStart={handleTouch}
-          onTouchMove={handleTouch}
-          onTouchEnd={handleTouch}
-        />
+        CanvasComponent ? (
+          <CanvasComponent
+            canvasId={chartId}
+            id={chartId}
+            style={{ width: '100%', height: `${chartHeight}px` }}
+            onTouchStart={handleTouch}
+            onTouchMove={handleTouch}
+            onTouchEnd={handleTouch}
+          />
+        ) : null
       )}
     </View>
   );

@@ -1,0 +1,159 @@
+# Android APK 自动打包工作流
+# 触发条件：推送到 main 分支或手动触发
+name: Assemble Android Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: "发布说明"
+        required: false
+        default: "自动构建的 APK 版本"
+
+env:
+  NODE_VERSION: "18"
+  JAVA_VERSION: "17"
+  APP_NAME: "ApexFinance"
+  SHELL_REPO: "NervJS/taro-native-shell"
+  SHELL_BRANCH: "0.73.2"
+
+jobs:
+  assemble:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ========== 1. 环境准备 ==========
+      - name: Checkout JS 工程代码
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: "zulu"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          target-sdk: 34
+          build-tools: "34.0.0"
+          ndk: "26.1.10909125"
+
+      - name: Configure Gradle
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      # ========== 2. 构建 JS Bundle ==========
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Build JS bundle for Android
+        run: npm run build:rn -- --platform android
+
+      # ========== 3. 准备壳工程 ==========
+      - name: Clone Taro Native Shell
+        run: |
+          git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
+
+      - name: Copy bundle and assets to shell
+        run: |
+          SHELL_DIR=../taro-native-shell
+          ANDROID_ASSETS=$SHELL_DIR/android/app/src/main/assets
+          ANDROID_RES=$SHELL_DIR/android/app/src/main/res
+
+          # 复制 JS bundle
+          mkdir -p $ANDROID_ASSETS
+          cp dist/index.bundle $ANDROID_ASSETS/index.android.bundle
+
+          # 复制资源文件 (drawable-* 目录)
+          if ls dist/drawable-* 1> /dev/null 2>&1; then
+            for dir in dist/drawable-*; do
+              dirname=$(basename "$dir")
+              rm -rf $ANDROID_RES/$dirname
+              cp -r "$dir" $ANDROID_RES/$dirname
+            done
+          fi
+
+          # 复制 raw 资源 (如需要)
+          if [ -d dist/raw ]; then
+            rm -rf $ANDROID_RES/raw
+            cp -r dist/raw $ANDROID_RES/raw
+          fi
+
+      # ========== 4. 配置壳工程 ==========
+      - name: Configure shell project
+        working-directory: ../taro-native-shell
+        run: |
+          # 修改应用名
+          sed -i "s/android:label=\"taroDemo\"/android:label=\"${{ env.APP_NAME }}\"/" android/app/src/main/AndroidManifest.xml || true
+
+          # 创建 assets 目录
+          mkdir -p android/app/src/main/assets
+
+          # 确保 MainApplication 使用壳工程的 Application 类
+          echo "android:name=\".MainApplication\"" >> android/app/src/main/AndroidManifest.xml
+
+      # ========== 5. 生成签名密钥 ==========
+      - name: Generate debug keystore
+        run: |
+          keytool -genkeypair -v \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storetype JKS \
+            -keystore $HOME/.android/debug.keystore \
+            -dname "CN=Debug, OU=Debug, O=Debug, L=Debug, ST=Debug, C=CN"
+
+      # ========== 6. 打包 APK ==========
+      - name: Build Release APK
+        working-directory: ../taro-native-shell/android
+        run: |
+          # 设置 Gradle 属性
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "android.enableJetifier=true" >> gradle.properties
+
+          # 执行打包
+          chmod +x gradlew
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$HOME/.android/debug.keystore \
+            -Pandroid.injected.signing.store.password=android \
+            -Pandroid.injected.key.alias=androiddebugkey \
+            -Pandroid.injected.key.password=android \
+            --stacktrace
+
+      # ========== 7. 上传 APK ==========
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-APK
+          path: ../taro-native-shell/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body: |
+            ## ${{ github.event.tag_name }}
+
+            ${{ github.event.inputs.release_notes || '自动构建版本' }}
+
+            ### 下载 APK
+            请查看 Artifacts 中的 `${{ env.APP_NAME }}-APK` 下载安装包。
+
+            ### 版本信息
+            - 构建时间: ${{ github.event.head_commit.timestamp }}
+            - 提交: ${{ github.sha }}

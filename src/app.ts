@@ -1,9 +1,10 @@
 import { PropsWithChildren } from 'react';
 import { useLaunch } from '@tarojs/taro';
-import '@nutui/nutui-react-taro/dist/style.css';
 import './app.less';
 import { initTheme } from './utils/theme';
 import { initCarConfig } from './services/carConfig';
+
+// NutUI 样式在各平台下由组件自动处理，无需手动导入 style.css
 
 function App({ children }: PropsWithChildren<any>) {
   useLaunch(() => {
