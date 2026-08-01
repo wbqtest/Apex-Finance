@@ -1,3 +1,0 @@
-allowBuilds:
-  '@nutui/nutui-react-taro': set this to true or false
-  '@tarojs/cli': set this to true or false
