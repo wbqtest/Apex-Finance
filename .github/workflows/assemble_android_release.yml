@@ -48,12 +48,9 @@ jobs:
         with:
           packages: "platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125"
 
-      # ========== 2. 构建 JS Bundle ==========
+      # ========== 2. 安装 JS 依赖 ==========
       - name: Install JS dependencies
         run: pnpm install --no-frozen-lockfile
-
-      - name: Build JS bundle for Android
-        run: pnpm run build:rn -- --platform android
 
       # ========== 3. 准备壳工程 ==========
       - name: Clone Taro Native Shell
@@ -61,43 +58,20 @@ jobs:
           rm -rf ../taro-native-shell
           git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
 
-      - name: Copy bundle and assets to shell
-        run: |
-          SHELL_DIR=../taro-native-shell
-          ANDROID_ASSETS=$SHELL_DIR/android/app/src/main/assets
-          ANDROID_RES=$SHELL_DIR/android/app/src/main/res
-
-          # 复制 JS bundle
-          mkdir -p $ANDROID_ASSETS
-          cp dist/index.bundle $ANDROID_ASSETS/index.android.bundle
-
-          # 复制资源文件 (drawable-* 目录)
-          if ls dist/drawable-* 1> /dev/null 2>&1; then
-            for dir in dist/drawable-*; do
-              dirname=$(basename "$dir")
-              rm -rf $ANDROID_RES/$dirname
-              cp -r "$dir" $ANDROID_RES/$dirname
-            done
-          fi
-
-          # 复制 raw 资源
-          if [ -d dist/raw ]; then
-            rm -rf $ANDROID_RES/raw
-            cp -r dist/raw $ANDROID_RES/raw
-          fi
-
-      # ========== 4. 配置壳工程 ==========
       - name: Configure shell project
         working-directory: ../taro-native-shell
         run: |
           # 修改应用名
           sed -i "s/android:label=\"[^\"]*\"/android:label=\"${{ env.APP_NAME }}\"/" android/app/src/main/AndroidManifest.xml || true
-
-          # 创建 assets 目录
+          # 确保 assets 目录存在 (build:rn 会写入此处)
           mkdir -p android/app/src/main/assets
-
-          # 安装壳工程依赖 (RN 0.73, 无 jcenter 遗留问题)
+          # 安装壳工程依赖 (RN 0.73)
           npm install || true
+
+      # ========== 4. 构建 JS Bundle ==========
+      # rn.output 已配置指向壳工程，产物直接输出到 ../taro-native-shell/android/
+      - name: Build JS bundle for Android
+        run: pnpm run build:rn -- --platform android
 
       # ========== 5. 修复仓库源 ==========
       - name: Fix repository for Gradle
