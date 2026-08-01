@@ -1,5 +1,8 @@
 @import './styles/theme.less';
 
+/* NutUI 全局样式在 app.tsx 中通过 JS import 引入（先于此文件），
+   此处的 :root 变量可覆盖 NutUI 默认值 */
+
 page {
   background-color: @bg-page;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -35,14 +38,86 @@ page {
   --nutui-button-primary-color: var(--text-on-primary);
   --nutui-button-primary-border-color: var(--brand-primary);
   --nutui-button-primary-disabled: var(--brand-primary);
-}
 
-/* NutUI 全局样式：H5/小程序需要显式引入，RN 走 app.rn.less */
-@import (inline) '@nutui/nutui-react-taro/dist/style.css';
+  /* NutUI 字体大小系统：覆盖默认 px 为 rpx（1px ≈ 2rpx @375px width） */
+  --nutui-font-size-8: 16rpx;
+  --nutui-font-size-9: 18rpx;
+  --nutui-font-size-10: 20rpx;
+  --nutui-font-size-11: 22rpx;
+  --nutui-font-size-12: 24rpx;
+  --nutui-font-size-13: 26rpx;
+  --nutui-font-size-14: 28rpx;
+  --nutui-font-size-15: 30rpx;
+  --nutui-font-size-16: 32rpx;
+  --nutui-font-size-17: 34rpx;
+  --nutui-font-size-18: 36rpx;
+  --nutui-font-size-19: 38rpx;
+  --nutui-font-size-20: 40rpx;
+  --nutui-font-size-24: 48rpx;
+  --nutui-font-size-26: 52rpx;
+
+  /* NutUI 语义化字体变量 */
+  --nutui-font-size-xxxs: 18rpx;
+  --nutui-font-size-xxs: 20rpx;
+  --nutui-font-size-xs: 22rpx;
+  --nutui-font-size-s: 24rpx;
+  --nutui-font-size-base: 28rpx;
+  --nutui-font-size-l: 30rpx;
+  --nutui-font-size-icon: 32rpx;
+  --nutui-font-size-xl: 36rpx;
+  --nutui-font-size-xxl: 48rpx;
+  --nutui-font-size-xxxl: 52rpx;
+
+  /* NutUI Button 尺寸变量 */
+  --nutui-button-default-font-size: 28rpx;
+  --nutui-button-default-height: 72rpx;
+  --nutui-button-default-padding: 0 24rpx;
+  --nutui-button-small-font-size: 24rpx;
+  --nutui-button-small-height: 60rpx;
+  --nutui-button-small-padding: 0 20rpx;
+  --nutui-button-small-border-radius: 30rpx;
+  --nutui-button-large-font-size: 30rpx;
+  --nutui-button-large-height: 80rpx;
+  --nutui-button-large-padding: 0 32rpx;
+
+  /* NutUI Input 变量 */
+  --nutui-input-font-size: 28rpx;
+  --nutui-input-color: var(--text-primary);
+
+  /* NutUI InputNumber 变量（+/- 数字输入器） */
+  --nutui-inputnumber-input-font-size: 28rpx;
+  --nutui-inputnumber-input-height: 56rpx;
+  --nutui-inputnumber-input-width: 80rpx;
+  --nutui-inputnumber-button-width: 56rpx;
+  --nutui-inputnumber-button-height: 56rpx;
+  --nutui-inputnumber-icon-size: 16rpx;
+
+  /* NutUI Cell 变量 */
+  --nutui-cell-line-height: 40rpx;
+  --nutui-cell-padding: 24rpx 32rpx;
+}
 
 view,
 text {
   box-sizing: border-box;
+}
+
+/* NutUI Cell 竖向居中修复 */
+:deep(.nut-cell) {
+  align-items: center !important;
+}
+
+/* NutUI Input 容器高度修复（默认 38px 硬编码） */
+:deep(.nut-input-container) {
+  height: auto !important;
+  padding: 16rpx 24rpx !important;
+}
+
+/* NutUI Input 图标尺寸修复 */
+:deep(.nut-input .nut-icon) {
+  width: 32rpx !important;
+  height: 32rpx !important;
+  font-size: 32rpx !important;
 }
 
 .taro-scroll-view-core {

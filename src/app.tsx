@@ -1,5 +1,8 @@
 import { PropsWithChildren } from 'react';
 import { useLaunch } from '@tarojs/taro';
+// NutUI 全局样式必须先于 app.less 引入，确保 app.less 中的 :root 变量覆盖 NutUI 默认值
+// H5/小程序由 Vite 注入 CSS；RN 由 metro.config.js assetExts 当静态资源跳过
+import '@nutui/nutui-react-taro/dist/style.css';
 import './app.less';
 import { initTheme } from './utils/theme';
 import { initCarConfig } from './services/carConfig';
