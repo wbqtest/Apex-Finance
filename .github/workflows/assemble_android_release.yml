@@ -158,10 +158,10 @@ jobs:
 
           chmod +x gradlew
 
-          # 创建 init 脚本，将 kotlinVersion 设为 Closure (支持 .kotlinVersion() 方法调用语法)
+          # 创建 init 脚本，projectsLoaded 在所有项目评估前运行
           cat > /tmp/init.gradle << 'INIT'
           gradle.projectsLoaded { g ->
-            g.rootProject.ext.kotlinVersion = { "1.9.22" }
+            g.rootProject.ext.kotlinVersion = "1.9.22"
           }
           INIT
 
@@ -171,8 +171,10 @@ jobs:
           GRADLE_EXIT=${PIPESTATUS[0]}
           if [ $GRADLE_EXIT -ne 0 ]; then
             echo ""
-            echo "========== Kotlin 编译错误详情 =========="
-            grep -E '^(e:|w:)' /tmp/gradle.log | head -50 || true
+            echo "========== 构建失败，最后 150 行日志 =========="
+            tail -150 /tmp/gradle.log
+            echo "========== Kotlin 编译错误 =========="
+            grep -E '^(e:|w:)' /tmp/gradle.log | head -80 || true
             echo "==========================================="
             exit $GRADLE_EXIT
           fi
