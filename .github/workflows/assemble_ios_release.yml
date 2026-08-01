@@ -1,16 +1,13 @@
-# iOS IPA 自动打包工作流
-# 触发条件：推送到 main 分支或手动触发
-name: Assemble iOS Release
+# iOS Debug IPA 自动打包工作流
+# 手动触发，使用自动签名
+name: Build iOS Debug IPA
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       release_notes:
         description: "发布说明"
         required: false
-        default: "自动构建的 iOS 版本"
 
 env:
   NODE_VERSION: "22"
@@ -19,16 +16,13 @@ env:
   SHELL_BRANCH: "0.73.0"
 
 jobs:
-  assemble:
-    name: Build iOS IPA
+  build-ios:
     runs-on: macos-latest
-
     steps:
-      # ========== 1. 环境准备 ==========
-      - name: Checkout JS 工程代码
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -36,183 +30,68 @@ jobs:
       - name: Setup pnpm
         run: npm install -g pnpm@8
 
-      # ========== 2. 构建 JS Bundle ==========
-      - name: Install JS dependencies
-        run: pnpm install --no-frozen-lockfile
+      - name: Install JS deps
+        run: pnpm install --frozen-lockfile
 
-      - name: Build JS bundle for iOS
+      - name: Build JS bundle
         run: pnpm run build:rn -- --platform ios
 
-      # ========== 3. 准备壳工程 ==========
-      - name: Clone Taro Native Shell
+      - name: Clone shell
         run: |
-          git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
+          git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} \
+            https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
 
-      - name: Copy bundle to shell
+      - name: Copy bundle
         run: |
-          SHELL_DIR=../taro-native-shell
-          IOS_DIR=$SHELL_DIR/ios
+          SHELL_DIR=../taro-native-shell/ios
+          cp dist/index.bundle $SHELL_DIR/main.jsbundle
 
-          # 复制 JS bundle
-          cp dist/index.bundle $IOS_DIR/main.jsbundle
-
-          # 复制资源文件
-          if [ -d dist/raw ]; then
-            IOS_ASSETS=$IOS_DIR/ApexFinance
-            mkdir -p $IOS_ASSETS
-            cp -r dist/raw/* $IOS_ASSETS/ 2>/dev/null || true
-          fi
-
-      # ========== 4. 配置壳工程 ==========
-      - name: Configure shell project
-        working-directory: ../taro-native-shell
+      - name: Install CocoaPods
+        working-directory: ../taro-native-shell/ios
         run: |
-          # 安装壳工程依赖
-          npm install
-
-          # 安装 CocoaPods
           gem install cocoapods
-
-          cd ios
-
-          # RN 0.73 原生兼容现代 iOS SDK，无需 armv7 修复
           pod install --verbose
 
-          # 修改应用名
-          if [ -f taroDemo/Info.plist ]; then
-            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ env.APP_NAME }}" taroDemo/Info.plist 2>/dev/null || true
-          elif [ -f ApexFinance/Info.plist ]; then
-            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${{ env.APP_NAME }}" ApexFinance/Info.plist 2>/dev/null || true
-          fi
-
-      # ========== 5. 构建 iOS 应用 ==========
-      - name: Build IPA (Release)
-        working-directory: ../taro-native-shell
+      - name: Build Debug IPA
+        working-directory: ../taro-native-shell/ios
         run: |
-          cd ios
+          SCHEME="taroDemo"
+          TEAM_ID="${{ secrets.IOS_TEAM_ID }}"
 
-          # 列出目录内容以便调试
-          echo "=== iOS 目录内容 ==="
-          ls -la
-
-          # 确定项目文件
-          if [ -d taroDemo.xcworkspace ]; then
-            PROJECT_FLAG="-workspace taroDemo.xcworkspace"
-            SCHEME="taroDemo"
-          elif [ -d taroDemo.xcodeproj ]; then
-            PROJECT_FLAG="-project taroDemo.xcodeproj"
-            SCHEME="taroDemo"
-          elif [ -d ApexFinance.xcworkspace ]; then
-            PROJECT_FLAG="-workspace ApexFinance.xcworkspace"
-            SCHEME="ApexFinance"
-          elif [ -d ApexFinance.xcodeproj ]; then
-            PROJECT_FLAG="-project ApexFinance.xcodeproj"
-            SCHEME="ApexFinance"
-          else
-            echo "ERROR: 未找到 iOS 项目文件"
-            ls -la
-            exit 1
-          fi
-
-          echo "Using $PROJECT_FLAG with scheme $SCHEME"
-
-          # 归档构建 (Release 模式, RN 0.73 不需要特殊架构约束)
-          xcodebuild $PROJECT_FLAG \
+          # 归档
+          xcodebuild -workspace ${SCHEME}.xcworkspace \
             -scheme $SCHEME \
+            -configuration Debug \
             -sdk iphoneos \
-            -configuration Release \
-            -destination 'generic/platform=iOS' \
             -archivePath build/${SCHEME}.xcarchive \
-            ONLY_ACTIVE_ARCH=NO \
             clean archive \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER=""
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM=$TEAM_ID
 
-          # 检查 archive 是否生成
-          if [ -d build/${SCHEME}.xcarchive ]; then
-            echo "Archive completed: build/${SCHEME}.xcarchive"
-          else
-            echo "ERROR: Archive 构建失败"
-            ls -la build/ 2>/dev/null || echo "build 目录不存在"
-            exit 1
-          fi
-
-      # ========== 6. 导出 IPA ==========
-      - name: Export IPA
-        working-directory: ../taro-native-shell
-        run: |
-          cd ios
-
-          # 确定 archive 路径
-          if [ -d build/taroDemo.xcarchive ]; then
-            ARCHIVE_PATH="build/taroDemo.xcarchive"
-          elif [ -d build/ApexFinance.xcarchive ]; then
-            ARCHIVE_PATH="build/ApexFinance.xcarchive"
-          else
-            echo "ERROR: 未找到 archive 文件"
-            ls -la build/ 2>/dev/null || echo "build 目录不存在"
-            exit 1
-          fi
-
-          echo "Using archive: $ARCHIVE_PATH"
-
-          # 创建导出配置
-          cat > exportOptions.plist << 'EOF'
+          # 导出配置
+          cat > exportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
             <string>development</string>
             <key>signingStyle</key>
-            <string>manual</string>
+            <string>automatic</string>
             <key>teamID</key>
-            <string>DEVELOPMENT</string>
-            <key>skipInstall</key>
-            <false/>
+            <string>$TEAM_ID</string>
           </dict>
           </plist>
           EOF
 
           # 导出 IPA
           xcodebuild -exportArchive \
-            -archivePath $ARCHIVE_PATH \
+            -archivePath build/${SCHEME}.xcarchive \
             -exportPath build/output \
             -exportOptionsPlist exportOptions.plist \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            2>&1 | tee export_log.txt
+            -allowProvisioningUpdates
 
-          echo "Export completed!"
-          ls -la build/output/
-
-      # ========== 7. 上传产物 ==========
-      - name: Upload IPA artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-IPA
           path: ../taro-native-shell/ios/build/output/*.ipa
-          retention-days: 30
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          body: |
-            ## ${{ github.event.tag_name }}
-
-            ${{ github.event.inputs.release_notes || '自动构建版本' }}
-
-            ### 下载 IPA
-            请查看 Artifacts 中的 `${{ env.APP_NAME }}-IPA` 下载安装包。
-
-            ### 安装说明
-            1. 使用 iTunes 或 Apple Configurator 导入到设备
-            2. 或使用 IPA Installer 等工具安装
-            3. 开发证书签名的 IPA 仅限开发者测试使用
-
-            ### 版本信息
-            - 构建时间: ${{ github.event.head_commit.timestamp }}
-            - 提交: ${{ github.sha }}
