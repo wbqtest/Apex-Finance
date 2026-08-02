@@ -1,7 +1,14 @@
 packages:
-  - '.'
+  - "."
 onlyBuiltDependencies:
-  - '@swc/core'
+  - "@nutui/nutui-react-taro"
+  - "@parcel/watcher"
+  - "@swc/core"
+  - "@tarojs/binding"
+  - "@tarojs/cli"
+  - core-js-pure
+  - core-js
+  - esbuild
   - less
   - protobufjs
 patchedDependencies:
