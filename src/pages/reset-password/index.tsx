@@ -84,72 +84,71 @@ export default function ResetPassword() {
   };
 
   return (
-    <View className="reset-password-container">
-      <View className="bg-gradient" />
+    <View className='reset-password-container'>
+      <View className='bg-gradient' />
 
-      <View className="reset-card">
-        <View className="card-header">
-          <Text className="back-btn" onClick={goBack}>‹</Text>
-          <View className="header-content">
-            <Text className="title">重置密码</Text>
-            <Text className="subtitle">设置新的登录密码</Text>
+      <View className='reset-card'>
+        <View className='card-header'>
+          <Text className='back-btn' onClick={goBack}>‹</Text>
+          <View className='header-content'>
+            <Text className='title'>重置密码</Text>
           </View>
-          <View className="header-placeholder" />
+          <View className='header-placeholder' />
         </View>
 
-        <View className="reset-form">
-          <View className="form-group">
-            <Text className="label">新密码</Text>
-            <View className="input-wrapper">
-              <Text className="input-icon">🔒</Text>
+        <View className='reset-form'>
+          <View className='form-group'>
+            <Text className='label'>新密码</Text>
+            <View className='input-wrapper'>
+              <Text className='input-icon'>🔒</Text>
               <Input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="请输入新密码（至少6位）"
+                placeholder='请输入新密码（至少6位）'
                 value={newPassword}
                 onChange={(value) => setNewPassword(value)}
-                className="reset-input"
+                className='reset-input'
               />
-              <Text className="toggle-password" onClick={() => setShowPassword(!showPassword)}>{showPassword ? '👁️' : '🙈'}</Text>
+              <Text className='toggle-password' onClick={() => setShowPassword(!showPassword)}>{showPassword ? '👁️' : '🙈'}</Text>
             </View>
           </View>
 
-          <View className="form-group">
-            <Text className="label">确认密码</Text>
-            <View className="input-wrapper">
-              <Text className="input-icon">🔑</Text>
+          <View className='form-group'>
+            <Text className='label'>确认密码</Text>
+            <View className='input-wrapper'>
+              <Text className='input-icon'>🔑</Text>
               <Input
                 type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="请再次输入新密码"
+                placeholder='请再次输入新密码'
                 value={confirmPassword}
                 onChange={(value) => setConfirmPassword(value)}
-                className="reset-input"
+                className='reset-input'
               />
-              <Text className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? '👁️' : '🙈'}</Text>
+              <Text className='toggle-password' onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? '👁️' : '🙈'}</Text>
             </View>
           </View>
 
           <Button
-            type="primary"
-            size="large"
+            type='primary'
+            size='large'
             loading={loading}
             disabled={loading}
             onClick={handleReset}
-            className="reset-btn"
+            className='reset-btn'
           >
             {loading ? '重置中...' : '确认重置'}
           </Button>
 
-          <View className="password-tips">
-            <Text className="tips-title">💡 密码安全提示</Text>
-            <Text className="tips-item">• 建议使用8位以上的复杂密码</Text>
-            <Text className="tips-item">• 包含字母、数字和特殊字符</Text>
-            <Text className="tips-item">• 不要使用生日、手机号等容易猜测的信息</Text>
+          <View className='password-tips'>
+            <Text className='tips-title'>💡 密码安全提示</Text>
+            <Text className='tips-item'>• 建议使用8位以上的复杂密码</Text>
+            <Text className='tips-item'>• 包含字母、数字和特殊字符</Text>
+            <Text className='tips-item'>• 不要使用生日、手机号等容易猜测的信息</Text>
           </View>
         </View>
       </View>
 
-      <View className="footer">
-        <Text className="copyright">© 2026 Taro多端应用</Text>
+      <View className='footer'>
+        <Text className='copyright'>© 2026 Taro多端应用</Text>
       </View>
     </View>
   );

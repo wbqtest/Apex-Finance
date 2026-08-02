@@ -5,7 +5,7 @@
   background: @bg-page;
   position: relative;
   overflow: hidden;
-  padding: 60px 32px;
+  padding: 120rpx 64rpx;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -15,20 +15,20 @@
 
 .bg-gradient {
   position: absolute;
-  top: -100px;
-  right: -100px;
-  width: 400px;
-  height: 400px;
+  top: -200rpx;
+  right: -200rpx;
+  width: 800rpx;
+  height: 800rpx;
   background: radial-gradient(circle, rgba(212, 160, 23, 0.15) 0%, transparent 70%);
   border-radius: 50%;
 }
 
 .reset-card {
   width: 100%;
-  max-width: 560px;
+  max-width: 1120rpx;
   background: @bg-card;
   border-radius: @radius-card;
-  padding: 48px 40px;
+  padding: 96rpx 80rpx;
   box-shadow: @shadow-lg;
   position: relative;
   z-index: 10;
@@ -61,16 +61,16 @@
 
 .title {
   display: block;
-  font-size: 38px;
+  font-size: 38rpx;
   font-weight: 700;
   color: @text-primary;
-  margin-bottom: 8px;
-  letter-spacing: -0.5px;
+  margin-bottom: 16rpx;
+  letter-spacing: -0.5rpx;
 }
 
 .subtitle {
   display: block;
-  font-size: 26px;
+  font-size: 26rpx;
   color: @text-secondary;
 }
 
@@ -91,7 +91,7 @@
     display: flex;
     align-items: center;
     background: @bg-input;
-    border: 2px solid @border-color;
+    border: 4rpx solid @border-color;
     border-radius: @radius-input;
     padding: 0 24rpx;
     height: 88rpx;
@@ -164,10 +164,10 @@
 
 .error-card {
   width: 100%;
-  max-width: 560px;
+  max-width: 1120rpx;
   background: @bg-card;
   border-radius: @radius-card;
-  padding: 64px 40px;
+  padding: 128rpx 80rpx;
   box-shadow: @shadow-lg;
   text-align: center;
   position: relative;
