@@ -98,6 +98,49 @@ export const removeUserInfo = () => {
 export const clearLoginInfo = () => {
   removeToken()
   removeUserInfo()
+  removeSavedCredentials()
+}
+
+// 记住的账号密码（用于自动登录）
+export const SAVED_CREDENTIALS_KEY = 'saved_credentials'
+
+export interface SavedCredentials {
+  phone: string
+  password: string
+  timestamp: number
+}
+
+// 保存账号密码（登录成功后调用，用于下次自动登录）
+export const setSavedCredentials = (phone: string, password: string) => {
+  try {
+    const credentials: SavedCredentials = {
+      phone,
+      password,
+      timestamp: Date.now(),
+    }
+    Taro.setStorageSync(SAVED_CREDENTIALS_KEY, credentials)
+  } catch (error) {
+    console.error('保存账号密码失败:', error)
+  }
+}
+
+// 获取保存的账号密码
+export const getSavedCredentials = (): SavedCredentials | null => {
+  try {
+    return Taro.getStorageSync(SAVED_CREDENTIALS_KEY) || null
+  } catch (error) {
+    console.error('获取账号密码失败:', error)
+    return null
+  }
+}
+
+// 清除保存的账号密码
+export const removeSavedCredentials = () => {
+  try {
+    Taro.removeStorageSync(SAVED_CREDENTIALS_KEY)
+  } catch (error) {
+    console.error('删除账号密码失败:', error)
+  }
 }
 
 // 检查是否已登录

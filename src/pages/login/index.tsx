@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Taro from '@tarojs/taro';
 import { Input, Button } from '@nutui/nutui-react-taro';
 import { login } from '../../services/api';
+import { setSavedCredentials } from '../../utils/storage';
 import NavBar from '../../components/NavBar';
 import './index.less';
 
@@ -26,6 +27,8 @@ export default function Login() {
     setLoading(true);
     try {
       await login({ phone, password });
+      // 登录成功后保存账号密码，用于下次自动登录
+      setSavedCredentials(phone, password);
       Taro.showToast({ title: '登录成功', icon: 'none', duration: 2000 });
       setTimeout(() => {
         Taro.switchTab({ url: '/pages/mine' });
