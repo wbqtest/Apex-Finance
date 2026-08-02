@@ -84,7 +84,7 @@ export default defineConfig<'vite'>(async (merge, { command, mode }) => {
         port: 10086,
         proxy: {
           '/api': {
-            target: 'http://8.130.134.16:9001',
+            target: 'http://127.0.0.1:9001',
             changeOrigin: true,
             secure: false
           }

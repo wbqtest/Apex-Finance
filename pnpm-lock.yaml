@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  postcss-pxtransform@4.2.1: 8ba3fb8dda2d12aad3464b34f60e945d6c03020f7786215e3ea54c2203c766d9
+
 importers:
 
   .:
@@ -16729,7 +16732,7 @@ snapshots:
       postcss: 8.5.15
       postcss-css-variables: 0.19.0(postcss@8.5.15)
       postcss-import: 16.1.1(postcss@8.5.15)
-      postcss-pxtransform: 4.2.1(postcss@8.5.15)
+      postcss-pxtransform: 4.2.1(patch_hash=8ba3fb8dda2d12aad3464b34f60e945d6c03020f7786215e3ea54c2203c766d9)(postcss@8.5.15)
       postcss-reporter: 7.1.0(postcss@8.5.15)
       prop-types: 15.8.1
       resolve: 1.22.12
@@ -23969,7 +23972,7 @@ snapshots:
     dependencies:
       postcss: 8.5.15
 
-  postcss-pxtransform@4.2.1(postcss@8.5.15):
+  postcss-pxtransform@4.2.1(patch_hash=8ba3fb8dda2d12aad3464b34f60e945d6c03020f7786215e3ea54c2203c766d9)(postcss@8.5.15):
     dependencies:
       postcss: 8.5.15
 

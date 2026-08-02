@@ -1,6 +1,6 @@
 /**
  * SafeDialog - 跨端兼容的弹窗组件
- * 
+ *
  * H5/小程序：封装 NutUI Dialog 组件（完整保留样式和行为）
  * RN：使用 Taro.showModal()（简单文案）或 View 遮罩层（含自定义子元素）
  * NutUI Dialog 依赖 Popup -> react-dom createPortal + document.body，RN 不可用
@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text } from '@tarojs/components';
 import { Dialog as NutuiDialog } from '@nutui/nutui-react-taro';
+import Taro from '@tarojs/taro';
 import { IS_RN } from '../../utils/platform';
 import './index.less';
 
@@ -72,7 +73,6 @@ export const SafeDialog: React.FC<SafeDialogProps> = (props) => {
     if (!hasComplexChildren) {
       useEffect(() => {
         if (!visible) return;
-        const Taro = require('@tarojs/taro').default;
         Taro.showModal({
           title: title || '提示',
           content: textContent,

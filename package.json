@@ -107,5 +107,10 @@
     "terser": "^5.30.4",
     "typescript": "^5.4.5",
     "vite": "^4.2.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "postcss-pxtransform@4.2.1": "patches/postcss-pxtransform@4.2.1.patch"
+    }
   }
 }

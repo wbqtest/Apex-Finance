@@ -1,0 +1,13 @@
+diff --git a/index.js b/index.js
+index d6f954fc810b96a2dc5da5d0308984bd377669f3..e2a3e233dc6b174c5a8d069655262eae2abb01f8 100644
+--- a/index.js
++++ b/index.js
+@@ -79,6 +79,8 @@ module.exports = (options = {}) => {
+     case 'rn': {
+       options.rootValue = (input) => (1 / options.deviceRatio[designWidth(input)]) * 2
+       targetUnit = 'px'
++      // FIX: RN 端也需要转换 rpx（Taro 4.2.x bug，默认 transUnits 只有 ['px']）
++      transUnits.push('rpx')
+       break
+     }
+     case 'quickapp': {
