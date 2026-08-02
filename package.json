@@ -33,7 +33,9 @@
     "upgradePeerdeps": "taro upgrade-peerdeps",
     "start": "react-native start",
     "ios": "react-native run-ios",
-    "android": "react-native run-android"
+    "android": "react-native run-android",
+    "dev:rn:qr": "taro build --type rn --platform android --qr",
+    "dev:rn:server": "react-native start --port 8081"
   },
   "browserslist": [
     "defaults and fully supports es6-module",
