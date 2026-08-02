@@ -33,7 +33,8 @@ const request = async <T = any>(
   url: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   data?: any,
-  needAuth: boolean = false
+  needAuth: boolean = false,
+  silent: boolean = false
 ): Promise<ApiResponse<T>> => {
   try {
     // 获取token和用户信息
@@ -82,13 +83,15 @@ const request = async <T = any>(
     return result
   } catch (error: any) {
     console.error('API请求错误:', error)
-    const errorMessage = error.message || '请求失败，请稍后重试'
-    Taro.showToast({
-      title: errorMessage,
-      icon: 'none',
-      duration: 2500,
-      mask: true
-    })
+    if (!silent) {
+      const errorMessage = error.message || '请求失败，请稍后重试'
+      Taro.showToast({
+        title: errorMessage,
+        icon: 'none',
+        duration: 2000,
+        mask: false
+      })
+    }
     throw error
   }
 }
@@ -297,7 +300,7 @@ export interface HistoryItem {
 }
 
 export const fetchHistory = async (limit: number = 50, offset: number = 0): Promise<ApiResponse<HistoryItem[]>> => {
-  return request<HistoryItem[]>(`/api/calculator/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false)
+  return request<HistoryItem[]>(`/api/calculator/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false, true)
 }
 
 export const deleteHistoryRecord = async (id: number): Promise<ApiResponse<null>> => {
@@ -328,7 +331,7 @@ export interface MortgageHistoryItem {
 }
 
 export const fetchMortgageHistory = async (limit: number = 50, offset: number = 0): Promise<ApiResponse<MortgageHistoryItem[]>> => {
-  return request<MortgageHistoryItem[]>(`/api/calculator/mortgage/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false)
+  return request<MortgageHistoryItem[]>(`/api/calculator/mortgage/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false, true)
 }
 
 export const deleteMortgageRecord = async (id: number): Promise<ApiResponse<null>> => {
@@ -359,7 +362,7 @@ export interface AutoLoanHistoryItem {
 }
 
 export const fetchAutoLoanHistory = async (limit: number = 50, offset: number = 0): Promise<ApiResponse<AutoLoanHistoryItem[]>> => {
-  return request<AutoLoanHistoryItem[]>(`/api/calculator/auto/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false)
+  return request<AutoLoanHistoryItem[]>(`/api/calculator/auto/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false, true)
 }
 
 export const deleteAutoLoanRecord = async (id: number): Promise<ApiResponse<null>> => {
@@ -394,7 +397,7 @@ export interface PrepayHistoryItem {
 }
 
 export const fetchPrepayHistory = async (limit: number = 50, offset: number = 0): Promise<ApiResponse<PrepayHistoryItem[]>> => {
-  return request<PrepayHistoryItem[]>(`/api/calculator/prepay/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false)
+  return request<PrepayHistoryItem[]>(`/api/calculator/prepay/history?limit=${limit}&offset=${offset}`, 'GET', undefined, false, true)
 }
 
 export const deletePrepayRecord = async (id: number): Promise<ApiResponse<null>> => {

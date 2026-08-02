@@ -3,4 +3,5 @@ allowBuilds:
   less: set this to true or false
   protobufjs: set this to true or false
 patchedDependencies:
+  postcss-pxtransform@4.2.0: patches/postcss-pxtransform@4.2.0.patch
   postcss-pxtransform@4.2.1: patches/postcss-pxtransform@4.2.1.patch

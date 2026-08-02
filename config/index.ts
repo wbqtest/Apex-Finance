@@ -102,6 +102,11 @@ export default defineConfig<'vite'>(async (merge, { command, mode }) => {
       postcss: {
         cssModules: {
           enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
+        },
+        // 修复 Taro 4.2.x RN 端 rpx 不转换的 bug
+        // 把 rpx 转成 px，避免 taro-css-to-react-native 报 "Unexpected token type: word"
+        'rn-rpx-transform': {
+          enable: true,
         }
       }
     }
