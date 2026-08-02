@@ -6,3 +6,6 @@ node_modules/
 .DS_Store
 .swc
 *.local
+
+# 微信小程序上传密钥（由 CI 或开发者本地放入，禁止入库）
+key/

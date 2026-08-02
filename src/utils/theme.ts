@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { IS_H5 } from './platform'
 import type { ThemeContextValue } from '../context/ThemeContext'
 
 export type ThemeName = 'finance-blue' | 'dark-green' | 'deep-space' | 'vibrant-orange' | 'vibrant-purple' | 'coral-pink' | 'cyan'
@@ -161,11 +162,11 @@ export const applyTheme = (themeName: ThemeName): void => {
   const theme = themes[themeName]
   if (!theme) return
 
-  // 通知 RN 等无 document 平台更新主题
+  // 通知 RN / 小程序等无 document 平台更新主题（通过 React Context 兜底）
   notifyThemeChange(themeName, theme)
 
-  // H5 / 小程序通过 DOM CSS 变量生效；RN 跳过此步
-  if (typeof document === 'undefined') return
+  // 仅 H5 能通过 DOM CSS 变量生效；RN / 小程序跳过此步
+  if (!IS_H5) return
 
   const root = document.documentElement
 

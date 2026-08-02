@@ -1,3 +1,4 @@
+/* login/index.rn.less - RN 专属样式（自动生成） */
 @import '../../styles/theme.less';
 
 .login-container {
@@ -21,7 +22,7 @@
   height: 400px;
   /* RN 不支持 radial-gradient，降级为纯色（见 app.rn.less） */
   /* #ifndef RN */
-  background: radial-gradient(circle, rgba(212, 160, 23, 0.15) 0%, transparent 70%);
+  background: rgba(212, 160, 23, 0.15);
   /* #endif */
   border-radius: 50%;
 }
@@ -32,7 +33,7 @@
   background: @bg-card;
   border-radius: @radius-card;
   padding: 56px 40px;
-  box-shadow: @shadow-lg;
+
   position: relative;
   z-index: 10;
 }
@@ -51,7 +52,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: @shadow-primary;
+
 }
 
 .logo-icon {
@@ -88,7 +89,7 @@
     border-radius: @radius-input;
     padding: 0 24px;
     height: 88px;
-    transition: border-color 0.2s;
+
 
     &:focus-within {
       border-color: @border-focus;
@@ -177,7 +178,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+
 
   &:active {
     transform: scale(0.92);

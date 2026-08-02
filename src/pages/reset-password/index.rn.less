@@ -1,0 +1,225 @@
+/* reset-password/index.rn.less - RN 专属样式（自动生成） */
+@import '../../styles/theme.less';
+
+.reset-password-container {
+  min-height: 100vh;
+  background: @bg-page;
+  position: relative;
+  overflow: hidden;
+  padding: 60px 32px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-gradient {
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: rgba(212, 160, 23, 0.15);
+  border-radius: 50%;
+}
+
+.reset-card {
+  width: 100%;
+  max-width: 560px;
+  background: @bg-card;
+  border-radius: @radius-card;
+  padding: 48px 40px;
+
+  position: relative;
+  z-index: 10;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40rpx;
+}
+
+.back-btn {
+  font-size: 56rpx;
+  color: @text-primary;
+  width: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-content {
+  flex: 1;
+  text-align: center;
+}
+
+.header-placeholder {
+  width: 60rpx;
+}
+
+.title {
+  display: block;
+  font-size: 38px;
+  font-weight: 700;
+  color: @text-primary;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  display: block;
+  font-size: 26px;
+  color: @text-secondary;
+}
+
+.reset-form {
+  .form-group {
+    margin-bottom: 24rpx;
+  }
+
+  .label {
+    display: block;
+    font-size: 28rpx;
+    font-weight: 600;
+    color: @text-primary;
+    margin-bottom: 16rpx;
+  }
+
+  .input-wrapper {
+    display: flex;
+    align-items: center;
+    background: @bg-input;
+    border: 2px solid @border-color;
+    border-radius: @radius-input;
+    padding: 0 24rpx;
+    height: 88rpx;
+
+
+    &:focus-within {
+      border-color: @border-focus;
+    }
+  }
+
+  .input-icon {
+    font-size: 32rpx;
+    margin-right: 16rpx;
+  }
+
+  .reset-input {
+    flex: 1;
+    height: 100%;
+    font-size: 30rpx;
+    color: @text-primary;
+    background: transparent;
+  }
+
+  .toggle-password {
+    font-size: 28rpx;
+    cursor: pointer;
+    margin-left: 16rpx;
+    color: @text-placeholder;
+  }
+
+  .reset-btn {
+    width: 100%;
+    height: 96rpx;
+    font-size: 32rpx;
+    font-weight: 600;
+    margin-top: 8rpx;
+    background: @brand-primary;
+    color: @text-on-primary;
+    border-radius: @radius-button;
+    border: none;
+
+    &:active {
+      background: @brand-primary-dark;
+    }
+  }
+}
+
+.password-tips {
+  margin-top: 32rpx;
+  padding: 24rpx;
+  background: rgba(212, 160, 23, 0.08);
+  border-radius: @radius-card;
+  border-left: 6rpx solid @brand-primary;
+}
+
+.tips-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: @text-primary;
+  margin-bottom: 16rpx;
+}
+
+.tips-item {
+  display: block;
+  font-size: 24rpx;
+  color: @text-secondary;
+  line-height: 1.8;
+}
+
+.error-card {
+  width: 100%;
+  max-width: 560px;
+  background: @bg-card;
+  border-radius: @radius-card;
+  padding: 64px 40px;
+
+  text-align: center;
+  position: relative;
+  z-index: 10;
+}
+
+.error-icon {
+  display: block;
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.error-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: @text-primary;
+  margin-bottom: 16rpx;
+}
+
+.error-desc {
+  display: block;
+  font-size: 28rpx;
+  color: @text-secondary;
+  line-height: 1.6;
+  margin-bottom: 40rpx;
+}
+
+.error-btn {
+  width: 100%;
+  height: 96rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  background: @brand-primary;
+  color: @text-on-primary;
+  border-radius: @radius-button;
+  border: none;
+
+  &:active {
+    background: @brand-primary-dark;
+  }
+}
+
+.footer {
+  margin-top: 40rpx;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+}
+
+.copyright {
+  font-size: 24rpx;
+  color: @text-placeholder;
+}

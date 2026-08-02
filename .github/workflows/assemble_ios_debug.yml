@@ -1,0 +1,141 @@
+# iOS Debug IPA 自动打包工作流
+name: Build iOS Debug IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: "发布说明"
+        required: false
+
+env:
+  NODE_VERSION: "22"
+  APP_NAME: "ApexFinance"
+  SHELL_REPO: "NervJS/taro-native-shell"
+  SHELL_BRANCH: "0.73.0"
+
+jobs:
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      # ========== 1. 环境准备 ==========
+      - name: Checkout JS 工程代码
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        run: npm install -g pnpm@8
+
+      # ========== 2. 缓存 ==========
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/CocoaPods
+          # 基于 pnpm-lock.yaml 做 key，避免每个 commit 的 sha 导致缓存永不命中
+          key: ${{ runner.os }}-pods-v1-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-v1-
+
+      # ========== 3. 安装 JS 依赖 ==========
+      - name: Install JS dependencies
+        # frozen-lockfile 保证 CI 构建可复现，lockfile 过期时显式报错
+        run: pnpm install --frozen-lockfile
+
+      # ========== 4. 准备壳工程 ==========
+      - name: Clone Taro Native Shell
+        run: |
+          rm -rf ../taro-native-shell
+          git clone --depth 1 --branch ${{ env.SHELL_BRANCH }} https://github.com/${{ env.SHELL_REPO }}.git ../taro-native-shell
+
+      - name: Configure shell project
+        working-directory: ../taro-native-shell
+        run: |
+          # 安装壳工程依赖（CocoaPods 需要）
+          npm install || true
+
+          # 更新 react-native-screens 到 Kotlin 1.9 兼容版本
+          echo "📦 Updating react-native-screens..."
+          npm install react-native-screens@3.29.0
+
+      # ========== 5. 构建 JS Bundle ==========
+      - name: Build JS bundle for iOS
+        run: pnpm run build:rn -- --platform ios
+
+      # ========== 6. 拷贝 Bundle ==========
+      - name: Copy bundle to shell
+        run: |
+          SHELL_DIR=../taro-native-shell/ios
+          mkdir -p $SHELL_DIR
+          cp dist/index.bundle $SHELL_DIR/main.jsbundle
+
+      # ========== 7. 安装 CocoaPods ==========
+      - name: Install CocoaPods
+        working-directory: ../taro-native-shell/ios
+        run: |
+          # 锁定版本：RN 0.73 的 react_native_pods.rb 依赖 CocoaPods 1.x
+          gem install cocoapods -v 1.15.2
+          pod install --verbose
+
+      # ========== 8. 打包 Debug IPA ==========
+      - name: Build Debug IPA
+        working-directory: ../taro-native-shell/ios
+        run: |
+          SCHEME="taroDemo"
+          TEAM_ID="${{ secrets.IOS_TEAM_ID }}"
+
+          # 归档
+          xcodebuild -workspace ${SCHEME}.xcworkspace \
+            -scheme $SCHEME \
+            -configuration Debug \
+            -sdk iphoneos \
+            -archivePath build/${SCHEME}.xcarchive \
+            clean archive \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM=$TEAM_ID
+
+          # 导出配置
+          cat > exportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>development</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>teamID</key>
+            <string>$TEAM_ID</string>
+          </dict>
+          </plist>
+          EOF
+
+          # 替换 teamID
+          /usr/libexec/PlistBuddy -c "Set :teamID $TEAM_ID" exportOptions.plist
+
+          # 导出 IPA
+          xcodebuild -exportArchive \
+            -archivePath build/${SCHEME}.xcarchive \
+            -exportPath build/output \
+            -exportOptionsPlist exportOptions.plist \
+            -allowProvisioningUpdates
+
+      # ========== 9. 上传 IPA ==========
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-IPA
+          path: ../taro-native-shell/ios/build/output/*.ipa
+          retention-days: 30

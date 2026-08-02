@@ -1,0 +1,68 @@
+# 微信小程序 CI 上传工作流
+# 移植自 wuba/taro-playground 的 assemble_weapp_release.yml，适配 Apex-Finance：
+#   - 使用 pnpm（原为 yarn）
+#   - 依赖 @tarojs/plugin-mini-ci 实现 --upload 上传（见 package.json / config/index.ts）
+#
+# 需要在 GitHub Secrets 配置：
+#   WEAPP_ID   - 微信小程序 AppID
+#   WEAPP_KEY  - 微信小程序上传密钥（私钥 .key 文件的 base64 编码，
+#                从 https://developers.weixin.qq.com/miniprogram/dev/devtools/ci.html 获取）
+#
+# 触发方式：推送 v*/w* 开头的 tag，或手动运行（Actions → Run workflow）
+
+name: Assemble Weapp Release
+
+on:
+  push:
+    tags: [ 'v*', 'w*' ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout JS 工程代码
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        run: npm install -g pnpm@8
+
+      # ========== 缓存 ==========
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      # ========== 安装依赖 ==========
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ========== 导入微信上传密钥 ==========
+      - name: Import Weapp Key
+        run: |
+          if [ -z "$WEAPP_KEY" ]; then
+            echo "❌ 缺少 Secrets.WEAPP_KEY，请先在 GitHub 仓库配置 Secrets"
+            exit 1
+          fi
+          mkdir -p key
+          echo "$WEAPP_KEY" | base64 --decode > key/private.appid.key
+        env:
+          WEAPP_KEY: ${{ secrets.WEAPP_KEY }}
+
+      # ========== 构建并上传 ==========
+      - name: Build Taro ApexFinance Weapp
+        run: pnpm run build:weapp -- --upload
+        env:
+          WEAPP_ID: ${{ secrets.WEAPP_ID }}

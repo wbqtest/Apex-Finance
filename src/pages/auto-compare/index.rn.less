@@ -1,0 +1,106 @@
+/* auto-compare/index.rn.less - RN 专属样式（自动生成） */
+@import '../../styles/theme.less';
+
+.auto-compare {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: @bg-page;
+}
+
+/* ===== 顶部 ===== */
+.cmp-header {
+  padding: 24rpx 24rpx 24rpx;
+  background: @brand-primary;
+  color: @text-on-primary;
+}
+
+.cmp-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.cmp-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  opacity: 0.85;
+}
+
+/* ===== 滚动区域 ===== */
+.cmp-body {
+  flex: 1;
+  max-width: 750rpx;
+  margin: 0 auto;
+  padding: 24rpx 32rpx 160rpx;
+  box-sizing: border-box;
+}
+
+/* 图表卡片 */
+.chart-card {
+  background: @bg-card;
+  border-radius: @radius-card;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.chart-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+  color: @text-primary;
+}
+
+/* 方案标题 */
+.cmp-scheme-title {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: @text-primary;
+}
+
+/* 方案指标 */
+.cmp-cell-right {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24rpx;
+  width: 100%;
+}
+
+.cmp-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: @text-secondary;
+}
+
+.cmp-metrics .irr {
+  color: @color-negative;
+  font-weight: 600;
+}
+
+.cmp-del {
+  flex-shrink: 0;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+}
+
+/* 操作按钮 */
+.cmp-actions {
+  padding: 16rpx 0;
+}
+
+.cmp-actions .nut-button {
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: @radius-button;
+}

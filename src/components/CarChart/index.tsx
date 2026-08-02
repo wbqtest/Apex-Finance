@@ -35,7 +35,8 @@ type UChartsInstance = {
 export default function CarChart(props: CarChartProps) {
   const chartId = useRef(`uchart_${Math.random().toString(36).slice(2, 8)}`).current;
   const instanceRef = useRef<UChartsInstance | null>(null);
-  const canvasElRef = useRef<HTMLCanvasElement | null>(null);
+  // 仅 H5 使用原生 canvas，类型用 any 兼容 RN（RN 端该 ref 从不被使用）
+  const canvasElRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   const chartHeight = props.height || 220;

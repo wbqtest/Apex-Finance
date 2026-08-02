@@ -1,0 +1,86 @@
+/* auto-schedule/index.rn.less - RN 专属样式（自动生成） */
+@import '../../styles/theme.less';
+
+.auto-schedule {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: @bg-page;
+  padding-top: 100rpx;
+}
+
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @text-secondary;
+  font-size: 28rpx;
+}
+
+.schedule-header {
+  padding: 24rpx 24rpx 20rpx;
+  background: @brand-primary;
+  color: @text-on-primary;
+}
+
+.schedule-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.schedule-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  opacity: 0.85;
+}
+
+.schedule-body {
+  flex: 1;
+  min-height: 0;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.schedule-table {
+  background: @bg-card;
+  border-radius: @radius-card;
+  overflow: hidden;
+}
+
+.schedule-head,
+.schedule-row {
+  display: flex;
+  padding: 18rpx 16rpx;
+  border-bottom: 1rpx solid @border-color;
+  font-size: 24rpx;
+}
+
+.schedule-head {
+  position: sticky;
+  top: 0;
+  font-weight: 700;
+  color: @text-secondary;
+  background: @brand-primary-pale;
+  z-index: 2;
+}
+
+.schedule-row:last-child {
+  border-bottom: none;
+}
+
+.col {
+  flex: 1;
+  text-align: right;
+}
+
+.col-period {
+  text-align: left;
+  flex: 0 0 10%;
+}
+
+.bottom-spacer {
+  height: 40rpx;
+}

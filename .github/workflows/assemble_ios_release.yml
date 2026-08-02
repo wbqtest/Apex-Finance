@@ -1,9 +1,22 @@
-# iOS Debug IPA 自动打包工作流
-name: Build iOS Debug IPA
+# iOS Release IPA 自动打包工作流
+# 移植自 wuba/taro-playground 的 assemble_ios_release.yml，适配 Apex-Finance：
+#   - 使用 pnpm（原为 yarn）
+#   - 复用本项目的 taro-native-shell 壳工程方案（原为仓库内 ios/ 原生目录 + fastlane）
+#   - 签名沿用现有 automatic signing（DEVELOPMENT_TEAM + -allowProvisioningUpdates）
+#   - 可选：配置 RELEASE_SIGNING_CERTIFICATE_P12_DATA 等 Secrets 时，走
+#     .github/scripts/import-certificate.sh / import-profile.sh 手动导入签名
+
+name: Assemble Ios Release
 
 on:
+  push:
+    tags: [ 'v*', 'r*', 'i*' ]
   workflow_dispatch:
     inputs:
+      version_number:
+        description: "版本号 (CFBundleShortVersionString)"
+        required: false
+        default: "1.0.0"
       release_notes:
         description: "发布说明"
         required: false
@@ -13,12 +26,19 @@ env:
   APP_NAME: "ApexFinance"
   SHELL_REPO: "NervJS/taro-native-shell"
   SHELL_BRANCH: "0.73.0"
+  SCHEME: "taroDemo"
 
 jobs:
   build-ios:
-    name: Build iOS IPA
+    name: Build iOS Release IPA
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    # secrets context 不能直接用于 if: 条件（GitHub Actions 限制），
+    # 因此在 job 级 env 中引用，再用 if: 判断 env 变量
+    env:
+      HAS_CERT: ${{ secrets.RELEASE_SIGNING_CERTIFICATE_P12_DATA != '' }}
+      HAS_PROFILE: ${{ secrets.RELEASE_PROVISIONING_PROFILE_DATA != '' }}
+      HAS_ASC: ${{ secrets.APP_STORE_CONNECT_USERNAME != '' }}
 
     steps:
       # ========== 1. 环境准备 ==========
@@ -52,7 +72,7 @@ jobs:
 
       # ========== 3. 安装 JS 依赖 ==========
       - name: Install JS dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       # ========== 4. 准备壳工程 ==========
       - name: Clone Taro Native Shell
@@ -85,42 +105,66 @@ jobs:
       - name: Install CocoaPods
         working-directory: ../taro-native-shell/ios
         run: |
-          gem install cocoapods
+          # 锁定版本：RN 0.73 的 react_native_pods.rb 依赖 CocoaPods 1.x
+          gem install cocoapods -v 1.15.2
           pod install --verbose
 
-      # ========== 8. 打包 Debug IPA ==========
-      - name: Build Debug IPA
+      # ========== 8. 可选：手动导入签名证书/描述文件 ==========
+      # 若配置了 P12 证书 Secrets 则走手动签名；否则使用 automatic signing
+      # 注意：签名脚本位于主仓库 .github/scripts/，使用 ${{ github.workspace }} 绝对路径
+      - name: Import signing certificate
+        if: ${{ env.HAS_CERT == 'true' }}
+        env:
+          SIGNING_CERTIFICATE_P12_DATA: ${{ secrets.RELEASE_SIGNING_CERTIFICATE_P12_DATA }}
+          SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.RELEASE_SIGNING_CERTIFICATE_PASSWORD }}
+        run: |
+          exec ${{ github.workspace }}/.github/scripts/import-certificate.sh
+
+      - name: Import provisioning profile
+        if: ${{ env.HAS_PROFILE == 'true' }}
+        env:
+          PROVISIONING_PROFILE_DATA: ${{ secrets.RELEASE_PROVISIONING_PROFILE_DATA }}
+        run: |
+          exec ${{ github.workspace }}/.github/scripts/import-profile.sh
+
+      # ========== 9. 打包 Release IPA ==========
+      - name: Build Release IPA
         working-directory: ../taro-native-shell/ios
         run: |
-          SCHEME="taroDemo"
           TEAM_ID="${{ secrets.IOS_TEAM_ID }}"
+          VERSION_NUMBER="${{ inputs.version_number || '1.0.0' }}"
 
-          # 归档
+          # 更新版本号
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_NUMBER" ${SCHEME}/Info.plist || true
+
+          # 归档（automatic signing）
           xcodebuild -workspace ${SCHEME}.xcworkspace \
             -scheme $SCHEME \
-            -configuration Debug \
+            -configuration Release \
             -sdk iphoneos \
             -archivePath build/${SCHEME}.xcarchive \
             clean archive \
             -allowProvisioningUpdates \
             DEVELOPMENT_TEAM=$TEAM_ID
 
-          # 导出配置
-          cat > exportOptions.plist << 'EOF'
+          # 导出配置（App Store 上传包）
+          cat > exportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>development</string>
+            <string>app-store</string>
             <key>signingStyle</key>
             <string>automatic</string>
             <key>teamID</key>
             <string>$TEAM_ID</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
           </dict>
           </plist>
           EOF
-
-          # 替换 teamID
           /usr/libexec/PlistBuddy -c "Set :teamID $TEAM_ID" exportOptions.plist
 
           # 导出 IPA
@@ -130,10 +174,32 @@ jobs:
             -exportOptionsPlist exportOptions.plist \
             -allowProvisioningUpdates
 
-      # ========== 9. 上传 IPA ==========
+      # ========== 10. 可选：上传 App Store Connect ==========
+      - name: Upload app to App Store Connect
+        if: ${{ env.HAS_ASC == 'true' }}
+        working-directory: ../taro-native-shell/ios
+        env:
+          APP_STORE_CONNECT_USERNAME: ${{ secrets.APP_STORE_CONNECT_USERNAME }}
+          APP_STORE_CONNECT_PASSWORD: ${{ secrets.APP_STORE_CONNECT_PASSWORD }}
+        run: |
+          IPA=$(find build/output -name "*.ipa" | head -1)
+          xcrun altool --upload-app -t ios -f "$IPA" -u "$APP_STORE_CONNECT_USERNAME" -p "$APP_STORE_CONNECT_PASSWORD"
+
+      # ========== 11. 上传产物 ==========
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-IPA
+          name: ${{ env.APP_NAME }}-Release-IPA
           path: ../taro-native-shell/ios/build/output/*.ipa
           retention-days: 30
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: ApexFinance ${{ inputs.version_number || '1.0.0' }}
+          body: ${{ inputs.release_notes }}
+          files: |
+            ../taro-native-shell/ios/build/output/*.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

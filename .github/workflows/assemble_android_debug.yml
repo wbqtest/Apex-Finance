@@ -1,28 +1,15 @@
-# Android Release APK 自动打包工作流
-# 移植自 wuba/taro-playground 的 assemble_android_release.yml，适配 Apex-Finance：
-#   - 使用 pnpm（原为 yarn）
-#   - 复用本项目的 taro-native-shell 壳工程方案（原为仓库内 android/ 原生目录 + fastlane）
-#   - 通过 GitHub Secrets 注入签名信息，产物上传 GitHub Release
-
-name: Assemble Android Release
+# Android Debug APK 自动打包工作流
+name: Assemble Android Debug
 
 on:
   push:
-    tags: [ 'v*', 'r*', 'a*' ]
+    branches: [main]
   workflow_dispatch:
     inputs:
-      version_name:
-        description: "版本名称 (versionName)"
-        required: false
-        default: "1.0.0"
-      version_code:
-        description: "版本号 (versionCode)"
-        required: false
-        default: "100000"
       release_notes:
         description: "发布说明"
         required: false
-        default: "自动构建的 Release APK 版本"
+        default: "自动构建的 APK 版本"
 
 env:
   NODE_VERSION: "22"
@@ -33,7 +20,7 @@ env:
 
 jobs:
   assemble:
-    name: Build Release APK
+    name: Build Android APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -75,7 +62,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper/dists
-          # 基于 pnpm-lock.yaml 做 key，避免每个 commit 的 sha 导致缓存永不命中
+          # 基于 gradle wrapper 属性做 key，避免每个 commit 的 sha 导致缓存永不命中
           key: ${{ runner.os }}-gradle-v1-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-gradle-v1-
@@ -156,31 +143,8 @@ jobs:
           # 清理 Kotlin 编译缓存
           rm -rf android/.gradle
 
-      # ========== 8. 配置 Release 签名 ==========
-      - name: Configure Release Signing
-        working-directory: ../taro-native-shell/android
-        run: |
-          # 解码签名密钥库（GitHub Secrets: ANDROID_KEYSTORE_BASE64）
-          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            echo "❌ 缺少 Secrets.ANDROID_KEYSTORE_BASE64，请先在 GitHub 仓库配置 Secrets"
-            exit 1
-          fi
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
-          ls -lh app/release.keystore
-
-          # RN 模板默认 release 使用 debug 签名，这里移除 release 块的 debug 引用，
-          # 改由 Gradle 注入属性 android.injected.signing.* 完成签名（与 fastlane 方式一致）
-          awk '
-            /buildTypes[[:space:]]*\{/ { in_bt = 1 }
-            in_bt && /release[[:space:]]*\{/ { in_rel = 1 }
-            in_rel && /^[[:space:]]*\}/ { in_rel = 0 }
-            !(in_rel && /signingConfig signingConfigs\.debug/) { print }
-          ' app/build.gradle > app/build.gradle.tmp && mv app/build.gradle.tmp app/build.gradle
-
-          echo "✅ 签名配置完成"
-
-      # ========== 9. 打包 Release APK ==========
-      - name: Build Release APK
+      # ========== 8. 打包 Debug APK ==========
+      - name: Build Debug APK
         working-directory: ../taro-native-shell/android
         run: |
           printf '\n' >> gradle.properties
@@ -206,17 +170,8 @@ jobs:
           }
           INIT
 
-          # Gradle 注入签名信息 + 版本号
           set -o pipefail
-          ./gradlew assembleRelease \
-            -I /tmp/init.gradle \
-            -Pandroid.injected.signing.store.file="$(pwd)/app/release.keystore" \
-            -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
-            -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}" \
-            -Pandroid.injected.version.code="${{ inputs.version_code || '100000' }}" \
-            -Pandroid.injected.version.name="${{ inputs.version_name || '1.0.0' }}" \
-            --stacktrace 2>&1 | tee /tmp/gradle.log
+          ./gradlew assembleDebug -I /tmp/init.gradle --stacktrace 2>&1 | tee /tmp/gradle.log
           GRADLE_EXIT=${PIPESTATUS[0]}
           if [ $GRADLE_EXIT -ne 0 ]; then
             echo ""
@@ -227,11 +182,11 @@ jobs:
             exit $GRADLE_EXIT
           fi
 
-      # ========== 10. 上传 APK ==========
+      # ========== 9. 上传 APK ==========
       - name: Copy APK to workspace
         run: |
           mkdir -p artifacts
-          APK_PATH="../taro-native-shell/android/app/build/outputs/apk/release/app-release.apk"
+          APK_PATH="../taro-native-shell/android/app/build/outputs/apk/debug/app-debug.apk"
           if [ -f "$APK_PATH" ]; then
             cp "$APK_PATH" artifacts/
             echo "✅ APK 已复制到 artifacts/"
@@ -246,17 +201,6 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-Release-APK
-          path: artifacts/app-release.apk
+          name: ${{ env.APP_NAME }}-APK
+          path: artifacts/app-debug.apk
           retention-days: 30
-
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          name: ApexFinance ${{ inputs.version_name || '1.0.0' }}
-          body: ${{ inputs.release_notes }}
-          files: |
-            artifacts/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -17,8 +17,19 @@ export default defineConfig<'vite'>(async (merge, { command, mode }) => {
     },
     sourceRoot: 'src',
     outputRoot: 'dist',
+    // 小程序上传插件（@tarojs/plugin-mini-ci）
+    // 仅在构建 weapp 端时注册，CI 通过 --upload 触发上传
+    // 见 .github/workflows/assemble_weapp_release.yml
     plugins: [
-      "@tarojs/plugin-generator"
+      "@tarojs/plugin-generator",
+      ["@tarojs/plugin-mini-ci", {
+        weapp: {
+          appid: process.env.WEAPP_ID || 'touristappid',
+          privateKeyPath: 'key/private.appid.key'
+        },
+        version: '1.0.0',
+        desc: 'ApexFinance 自动上传'
+      }]
     ],
     defineConstants: {
     },
@@ -83,6 +94,8 @@ export default defineConfig<'vite'>(async (merge, { command, mode }) => {
     rn: {
       appName: 'taroDemo',
       output: {
+        ios: '../taro-native-shell/ios/main.jsbundle',
+        iosAssetsDest: '../taro-native-shell/ios',
         android: '../taro-native-shell/android/app/src/main/assets/index.android.bundle',
         androidAssetsDest: '../taro-native-shell/android/app/src/main/res',
       },

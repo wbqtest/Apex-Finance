@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Textarea } from '@tarojs/components';
 import { useState, useEffect, useRef } from 'react';
 import Taro, { useDidShow } from '@tarojs/taro';
 import { Input, Button, Radio, RadioGroup, Tabs, TabPane, Cell, CellGroup, DatePicker } from '@nutui/nutui-react-taro';
@@ -1315,11 +1315,11 @@ function BatchFillContent({ currentCount, currentPayments, onConfirm, onClose }:
         <Cell title="手动导入" subTitle="粘贴数据" onClick={() => setFillMode('paste')} className={fillMode === 'paste' ? 'active' : ''} />
         {fillMode === 'paste' && (
           <Cell title="" border={false}>
-            <textarea
+            <Textarea
               className="batch-fill-textarea"
               placeholder="支持多种格式：逗号、空格、换行分隔、表格数据等"
               value={pasteText}
-              onChange={(e: any) => { setPasteText(e.detail.value); updatePreview(); }}
+              onInput={(e: any) => { setPasteText(e.detail.value); updatePreview(); }}
             />
           </Cell>
         )}

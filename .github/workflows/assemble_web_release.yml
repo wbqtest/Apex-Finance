@@ -1,0 +1,62 @@
+# H5 构建并部署 GitHub Pages 工作流
+# 移植自 wuba/taro-playground 的 assemble_web_release.yml，适配 Apex-Finance：
+#   - 使用 pnpm（原为 yarn）
+#   - 产物从 dist/ 部署到 GitHub Pages
+#
+# 注意：config/index.ts 中 h5.publicPath 目前为 '/'。
+#   - 若部署到「项目页面」(https://<user>.github.io/<repo>/)，
+#     需要把 publicPath 改为 '/<repo>/'，否则资源路径会 404。
+#   - 若部署到「用户/组织主页」(<user>.github.io) 则无需改动。
+#
+# 触发方式：推送 v*/h* 开头的 tag，或手动运行
+
+name: Assemble Web Release
+
+on:
+  push:
+    tags: [ 'v*', 'h*' ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout JS 工程代码
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        run: npm install -g pnpm@8
+
+      # ========== 缓存 ==========
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      # ========== 安装依赖 ==========
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ========== 构建 H5 ==========
+      - name: Build Taro ApexFinance Web
+        run: pnpm run build:h5
+
+      # ========== 部署 GitHub Pages ==========
+      - name: Deploy github pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
