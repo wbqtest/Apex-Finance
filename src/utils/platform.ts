@@ -72,3 +72,58 @@ export function getPageParams(): Record<string, any> {
   }
   return {};
 }
+
+/**
+ * 判断 H5 是否在 App（原生 webview）中打开
+ *
+ * 判断顺序：
+ * 1. URL 参数：from=app / inapp=1 / source=native（App 端打开 webview 时附带）
+ * 2. User-Agent：包含常见 App 标识或自定义标识 ApexFinance
+ * 3. document.referrer：来自 App 内部 scheme
+ *
+ * @returns true 表示在 App 中打开，需要隐藏头部返回栏
+ */
+export function isInApp(): boolean {
+  // RN 环境本身就是 App，不算"H5 在 App 中打开"
+  if (IS_RN) return false;
+
+  // 非 H5 环境（小程序等）不处理
+  if (!IS_H5) return false;
+
+  try {
+    // 1. URL 参数判断（最可靠，App 端可控）
+    const url = (typeof window !== 'undefined' && window.location?.search) || '';
+    const params = new URLSearchParams(url);
+    if (
+      params.get('from') === 'app' ||
+      params.get('inapp') === '1' ||
+      params.get('source') === 'native'
+    ) {
+      return true;
+    }
+
+    // 2. User-Agent 判断
+    const ua =
+      (typeof navigator !== 'undefined' && navigator.userAgent) || '';
+
+    // 自定义 App 标识（App 端打包时在 WebView 中注入自定义 UA）
+    if (/ApexFinance/i.test(ua)) return true;
+
+    // 常见第三方 App 标识
+    if (
+      /MicroMessenger/i.test(ua) || // 微信
+      /AlipayClient/i.test(ua) ||   // 支付宝
+      /QQ\//i.test(ua) ||            // QQ
+      /DingTalk/i.test(ua) ||        // 钉钉
+      /baiduboxapp/i.test(ua) ||    // 百度
+      /weibo/i.test(ua) ||           // 微博
+      /Instagram/i.test(ua)          // Instagram
+    ) {
+      return true;
+    }
+  } catch (e) {
+    console.error('isInApp error:', e);
+  }
+
+  return false;
+}
