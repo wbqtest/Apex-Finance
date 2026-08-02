@@ -112,6 +112,11 @@
     "patchedDependencies": {
       "postcss-pxtransform@4.2.0": "patches/postcss-pxtransform@4.2.0.patch",
       "postcss-pxtransform@4.2.1": "patches/postcss-pxtransform@4.2.1.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "less",
+      "protobufjs"
+    ]
   }
 }
