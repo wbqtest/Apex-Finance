@@ -1,16 +1,5 @@
 packages:
   - "."
-onlyBuiltDependencies:
-  - "@nutui/nutui-react-taro"
-  - "@parcel/watcher"
-  - "@swc/core"
-  - "@tarojs/binding"
-  - "@tarojs/cli"
-  - core-js-pure
-  - core-js
-  - esbuild
-  - less
-  - protobufjs
 patchedDependencies:
   postcss-pxtransform@4.2.0: patches/postcss-pxtransform@4.2.0.patch
   postcss-pxtransform@4.2.1: patches/postcss-pxtransform@4.2.1.patch

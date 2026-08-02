@@ -31,7 +31,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
-        run: npm install -g pnpm@11
+        run: npm install -g pnpm@8
 
       # ========== 2. 缓存 ==========
       - name: Cache pnpm store
