@@ -442,3 +442,70 @@ export interface SaveCalcRecordPayload {
 export const saveCalcRecord = async (payload: SaveCalcRecordPayload): Promise<ApiResponse<null>> => {
   return request<null>('/api/calculator/save-record', 'POST', payload, false)
 }
+
+// ============ 智能家居设备相关 ============
+
+// 获取设备列表（silent=true：接口不可用时页面可静默回退到演示数据）
+export const getDevices = async (): Promise<ApiResponse<any[]>> => {
+  return request<any[]>('/api/devices', 'GET', undefined, false, true)
+}
+
+// 创建设备
+export const createDevice = async (data: {
+  deviceType: 'aircon' | 'fan' | 'light'
+  deviceName?: string
+  room?: string
+}): Promise<ApiResponse<any>> => {
+  return request<any>('/api/devices', 'POST', data, false)
+}
+
+// 更新设备（重命名、修改房间）
+export const updateDevice = async (deviceId: string, data: {
+  deviceName?: string
+  room?: string
+}): Promise<ApiResponse<any>> => {
+  return request<any>(`/api/devices/${deviceId}`, 'PUT', data, false)
+}
+
+// 删除设备
+export const deleteDevice = async (deviceId: string): Promise<ApiResponse<any>> => {
+  return request<any>(`/api/devices/${deviceId}`, 'DELETE', undefined, false)
+}
+
+// 获取设备详情
+export const getDeviceDetail = async (deviceId: string): Promise<ApiResponse<any>> => {
+  return request<any>(`/api/devices/${deviceId}`, 'GET', undefined, false)
+}
+
+// 获取设备操作日志
+export const getDeviceLogs = async (deviceId: string): Promise<ApiResponse<any[]>> => {
+  return request<any[]>(`/api/devices/${deviceId}/logs`, 'GET', undefined, false)
+}
+
+// HTTP 备用控制（WebSocket 不可用时使用）
+export const controlDeviceHttp = async (data: {
+  deviceId: string
+  action: string
+  value?: any
+}): Promise<ApiResponse<any>> => {
+  return request<any>('/api/devices/control', 'POST', data, false)
+}
+
+// 语音指令解析（DeepSeek 大模型）
+export const sendVoiceCommand = async (data: {
+  text: string
+  sessionId?: string
+}): Promise<ApiResponse<{
+  commands: Array<{
+    deviceId: string
+    deviceType: string
+    action: string
+    value: any
+    success: boolean
+    message?: string
+  }>
+  reply: string
+  sessionId?: string
+}>> => {
+  return request<any>('/api/voice/command', 'POST', data, false)
+}

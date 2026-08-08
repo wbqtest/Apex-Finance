@@ -24,7 +24,8 @@ export default defineAppConfig({
     'pages/prepay-schedule',
     'pages/mortgage',
     'pages/mortgage-result',
-    'pages/history-detail'
+    'pages/history-detail',
+    'pages/devices'
   ],
   window: {
     backgroundTextStyle: 'light',

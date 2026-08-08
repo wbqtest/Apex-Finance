@@ -1,0 +1,1405 @@
+// 智能家居页面样式 - 使用项目动态主题变量
+// 统一使用 rpx 单位
+
+@import '../../styles/theme.less';
+
+.sh-page {
+  min-height: 100vh;
+  background: @bg-page;
+  display: flex;
+  flex-direction: column;
+}
+
+// ============ 顶部信息区 ============
+.sh-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 100rpx 32rpx 24rpx;
+  padding: 32rpx;
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFF3C4 100%);
+  border-radius: @radius-card;
+}
+
+.sh-header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.sh-header-room {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #F57F17;
+  margin-bottom: 8rpx;
+}
+
+.sh-header-count {
+  font-size: 26rpx;
+  color: rgba(245, 127, 23, 0.7);
+}
+
+.sh-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.sh-header-stats {
+  display: flex;
+  gap: 32rpx;
+  margin-top: 24rpx;
+  width: 100%;
+}
+
+.sh-header-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sh-header-stat-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #F57F17;
+  line-height: 1.1;
+}
+
+.sh-header-stat-label {
+  font-size: 22rpx;
+  color: rgba(245, 127, 23, 0.6);
+  margin-top: 4rpx;
+}
+
+.sh-conn-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  margin-right: 12rpx;
+
+  &.on {
+    background: @color-positive;
+    box-shadow: 0 0 8rpx rgba(5, 150, 105, 0.6);
+  }
+
+  &.off {
+    background: @text-placeholder;
+  }
+}
+
+.sh-conn-text {
+  font-size: 24rpx;
+
+  &.on {
+    color: @color-positive;
+  }
+
+  &.off {
+    color: @text-placeholder;
+  }
+}
+
+// ============ 房间筛选 Tab ============
+.sh-room-tabs {
+  display: flex;
+  padding: 24rpx 32rpx;
+  gap: 16rpx;
+  overflow-x: auto;
+  white-space: nowrap;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sh-room-tab {
+  flex-shrink: 0;
+  padding: 12rpx 28rpx;
+  background: @bg-page;
+  font-size: 26rpx;
+  color: @text-secondary;
+  border-radius: 40rpx;
+  line-height: 1.2;
+
+  &.active {
+    background: @brand-primary;
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+// ============ 设备列表 ============
+.sh-list {
+  flex: 1;
+  box-sizing: border-box;
+}
+
+.sh-list-bottom {
+  height: 200rpx;
+}
+
+.sh-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+  text-align: center;
+}
+
+.sh-empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 24rpx;
+  line-height: 1;
+}
+
+.sh-empty-text {
+  font-size: 30rpx;
+  color: @text-placeholder;
+  margin-bottom: 32rpx;
+}
+
+.sh-empty-btn {
+  padding: 20rpx 48rpx;
+  background: @brand-primary;
+  color: #FFFFFF;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+// ============ 设备卡片 ============
+.sh-card {
+  background: @bg-card;
+  border-radius: @radius-card;
+  margin: 0 32rpx 20rpx;
+  overflow: hidden;
+  box-shadow: @shadow-sm;
+  position: relative;
+
+  &.offline {
+    opacity: 0.6;
+  }
+}
+
+// 运行中设备卡片左侧彩条（按设备类型区分颜色）
+.sh-card.active-aircon::before,
+.sh-card.active-fan::before,
+.sh-card.active-light::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6rpx;
+  z-index: 1;
+}
+
+.sh-card.active-aircon::before {
+  background: #4FC3F7;
+}
+
+.sh-card.active-fan::before {
+  background: #66BB6A;
+}
+
+.sh-card.active-light::before {
+  background: #FFD93D;
+}
+
+.sh-card-header {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 28rpx;
+
+  &:active {
+    background: @brand-primary-pale;
+  }
+}
+
+.sh-card-icon-wrap {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: @brand-primary-pale;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.sh-card-icon {
+  font-size: 44rpx;
+}
+
+.sh-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sh-card-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: @text-primary;
+  margin-bottom: 8rpx;
+}
+
+.sh-card-summary {
+  font-size: 24rpx;
+  color: @text-secondary;
+}
+
+.sh-card-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-shrink: 0;
+}
+
+.sh-status-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+
+  &.online {
+    background: @color-positive;
+  }
+
+  &.offline {
+    background: @text-placeholder;
+  }
+}
+
+.sh-status-text {
+  font-size: 24rpx;
+
+  &.online {
+    color: @color-positive;
+  }
+
+  &.offline {
+    color: @text-placeholder;
+  }
+}
+
+.sh-card-arrow {
+  font-size: 36rpx;
+  color: @text-placeholder;
+  margin-left: 12rpx;
+  transition: transform 0.2s;
+
+  &.expanded {
+    transform: rotate(90deg);
+  }
+}
+
+// 卡片头部快捷开关按钮（空调/风扇/灯光）
+.sh-card-quick-toggle {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  flex-shrink: 0;
+  transition: background 0.2s;
+
+  &.on {
+    background: @brand-primary;
+    color: @text-on-primary;
+  }
+
+  &.off {
+    background: @bg-page;
+    color: @text-placeholder;
+  }
+
+  // 灯光开启态：暖黄光 + 微光晕
+  &.light.on {
+    background: #FFD93D;
+    color: #FFFFFF;
+    box-shadow: 0 0 16rpx rgba(255, 217, 61, 0.6);
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-card-body {
+  padding: 8rpx 28rpx 32rpx;
+  border-top: 2rpx solid @border-color;
+}
+
+// ============ 控制面板 ============
+.sh-panel {
+  padding-top: 24rpx;
+}
+
+// 开关机大按钮
+.sh-power-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background: @brand-primary-pale;
+  border-radius: @radius-card;
+  margin-bottom: 32rpx;
+}
+
+.sh-power-btn {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: @brand-primary-muted;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-right: 32rpx;
+  flex-shrink: 0;
+  transition: background 0.2s;
+
+  &.on {
+    background: @brand-primary;
+    box-shadow: @shadow-primary;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-power-btn.sending {
+  opacity: 0.6;
+}
+
+.sh-power-icon {
+  font-size: 56rpx;
+  color: @text-on-primary;
+  margin-bottom: 8rpx;
+}
+
+.sh-power-label {
+  font-size: 22rpx;
+  color: @text-on-primary;
+}
+
+.sh-power-status {
+  display: flex;
+  flex-direction: column;
+}
+
+.sh-power-temp {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: @brand-primary;
+  line-height: 1.1;
+}
+
+.sh-power-mode {
+  font-size: 24rpx;
+  color: @text-secondary;
+  margin-top: 8rpx;
+}
+
+// 通用 section
+.sh-section {
+  margin-bottom: 32rpx;
+}
+
+.sh-section-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: @text-secondary;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+// 模式选项卡
+.sh-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.sh-tab {
+  flex: 1;
+  min-width: 120rpx;
+  padding: 20rpx 12rpx;
+  border-radius: @radius-button;
+  background: @brand-primary-pale;
+  border: 2rpx solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &.active {
+    background: @brand-primary-light;
+    border-color: @brand-primary;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-tab-icon {
+  font-size: 36rpx;
+  margin-bottom: 8rpx;
+}
+
+.sh-tab-label {
+  font-size: 24rpx;
+  color: @text-primary;
+}
+
+// 温度调节
+.sh-temp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16rpx;
+}
+
+.sh-step-btn {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: @brand-primary-pale;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.disabled {
+    opacity: 0.4;
+  }
+
+  &.loading {
+    background: @brand-primary-light;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-step-symbol {
+  font-size: 48rpx;
+  color: @text-primary;
+  font-weight: 600;
+}
+
+.sh-temp-value {
+  display: flex;
+  align-items: baseline;
+}
+
+.sh-temp-num {
+  font-size: 80rpx;
+  font-weight: 700;
+  color: @brand-primary;
+}
+
+.sh-temp-unit {
+  font-size: 32rpx;
+  color: @brand-primary;
+  margin-left: 4rpx;
+}
+
+// 选项按钮（风速/模式）
+.sh-option-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.sh-option {
+  flex: 1;
+  height: 88rpx;
+  border-radius: @radius-button;
+  background: @brand-primary-pale;
+  border: 2rpx solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.active {
+    background: @brand-primary;
+    border-color: @brand-primary;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-option-label {
+  font-size: 28rpx;
+  color: @text-primary;
+
+  .sh-option.active & {
+    color: @text-on-primary;
+    font-weight: 600;
+  }
+}
+
+// 行内 section（摆风/定时）
+.sh-row-section {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.sh-inline-item {
+  flex: 1;
+}
+
+.sh-timer-row {
+  display: flex;
+  gap: 12rpx;
+}
+
+.sh-timer-btn {
+  flex: 1;
+  height: 72rpx;
+  border-radius: @radius-button;
+  background: @brand-primary-pale;
+  border: 2rpx solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.active {
+    background: @brand-primary;
+    border-color: @brand-primary;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-timer-label {
+  font-size: 26rpx;
+  color: @text-primary;
+  font-weight: 600;
+
+  .sh-timer-btn.active & {
+    color: @text-on-primary;
+  }
+}
+
+// ============ 自定义开关 ============
+.sh-toggle {
+  width: 88rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  background: @brand-primary-muted;
+  position: relative;
+  transition: background 0.2s;
+
+  &.on {
+    background: @brand-primary;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+.sh-toggle-thumb {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: @bg-card;
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  transition: transform 0.2s;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.15);
+}
+
+.sh-toggle-thumb.on {
+  transform: translateX(40rpx);
+}
+
+// ============ 底部快捷操作 ============
+.sh-footer {
+  display: flex;
+  gap: 20rpx;
+  padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
+  background: @bg-card;
+  border-top: 2rpx solid @border-color;
+}
+
+.sh-footer-btn {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 40rpx !important;
+  font-size: 28rpx !important;
+  font-weight: 600 !important;
+}
+
+.sh-footer-off {
+  background: #E53935 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+
+  &:active {
+    background: #C62828 !important;
+  }
+}
+
+.sh-footer-refresh {
+  background: @bg-card !important;
+  color: @text-primary !important;
+  border: 2rpx solid @border-color !important;
+
+  &:active {
+    background: @brand-primary-pale !important;
+  }
+}
+
+.sh-footer-add {
+  background: @brand-primary !important;
+  color: @text-on-primary !important;
+  border: none !important;
+
+  &:active {
+    background: @brand-primary-dark !important;
+  }
+}
+
+// ============ 语音浮动按钮 ============
+.sh-voice-fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: 200rpx;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background: @brand-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: @shadow-primary;
+  z-index: 100;
+
+  &:active {
+    opacity: 0.85;
+  }
+
+  &.listening {
+    background: @color-negative;
+    animation: sh-pulse 1.2s infinite;
+  }
+
+  &.processing {
+    background: @brand-primary;
+    opacity: 0.7;
+  }
+}
+
+.sh-voice-fab-icon {
+  font-size: 56rpx;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+}
+
+// ============ 添加按钮 ============
+.sh-add-btn {
+  display: flex;
+  align-items: center;
+  margin-left: 24rpx;
+  padding: 12rpx 24rpx;
+  background: @brand-primary;
+  border-radius: @radius-button;
+  color: @text-on-primary;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-add-btn-icon {
+  font-size: 32rpx;
+  font-weight: 700;
+  margin-right: 8rpx;
+  color: @text-on-primary;
+}
+
+.sh-add-btn-label {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: @text-on-primary;
+}
+
+// ============ 设备卡片操作栏 ============
+.sh-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16rpx 28rpx;
+  gap: 24rpx;
+  border-top: 2rpx solid @border-color;
+}
+
+.sh-card-action {
+  display: flex;
+  align-items: center;
+  color: @text-secondary;
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  border-radius: @radius-button;
+  background: @bg-page;
+
+  &:active {
+    opacity: 0.7;
+  }
+
+  &.sh-card-action-danger {
+    color: @color-negative;
+  }
+}
+
+.sh-card-action-icon {
+  font-size: 26rpx;
+  margin-right: 6rpx;
+}
+
+.sh-card-action-label {
+  font-size: 24rpx;
+}
+
+// ============ 模态框表单 ============
+.sh-form {
+  padding: 8rpx 0;
+}
+
+.sh-form-item {
+  margin-bottom: 32rpx;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.sh-form-label {
+  font-size: 28rpx;
+  color: @text-secondary;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.sh-form-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: @bg-page;
+  border: 2rpx solid @border-color;
+  border-radius: @radius-button;
+  font-size: 30rpx;
+  color: @text-primary;
+  box-sizing: border-box;
+}
+
+// ============ 设备类型选择器 ============
+.sh-type-selector {
+  display: flex;
+  gap: 24rpx;
+}
+
+.sh-type-option {
+  flex: 1;
+  height: 120rpx;
+  border-radius: @radius-card;
+  background: @brand-primary-pale;
+  border: 2rpx solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  &.active {
+    background: @brand-primary-light;
+    border-color: @brand-primary;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-type-icon {
+  font-size: 44rpx;
+  margin-bottom: 8rpx;
+}
+
+.sh-type-label {
+  font-size: 28rpx;
+  color: @text-primary;
+  font-weight: 500;
+}
+
+// ============ 灯光控制面板 ============
+.sh-light-power-row {
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFF3C4 100%);
+}
+
+.sh-light-power-btn {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: @brand-primary-muted;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-right: 32rpx;
+  flex-shrink: 0;
+  transition: all 0.3s;
+
+  &.on {
+    background: #FFD93D;
+    box-shadow: 0 0 24rpx rgba(255, 217, 61, 0.6);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+
+  &.sending {
+    opacity: 0.6;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-light-power-icon {
+  font-size: 56rpx;
+  margin-bottom: 8rpx;
+}
+
+.sh-light-power-label {
+  font-size: 22rpx;
+  color: @text-primary;
+}
+
+.sh-light-brightness-num {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #F59E0B;
+  line-height: 1.1;
+}
+
+// section 标题行（带右侧值）
+.sh-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.sh-section-value {
+  font-size: 26rpx;
+  color: @text-primary;
+  font-weight: 600;
+}
+
+// 滑块行
+.sh-slider-row {
+  padding: 0 8rpx;
+}
+
+.sh-slider {
+  width: 100% !important;
+
+  &.disabled {
+    opacity: 0.4;
+  }
+}
+
+// 色温标签
+.sh-temp-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12rpx;
+}
+
+.sh-temp-label {
+  font-size: 22rpx;
+  color: @text-placeholder;
+}
+
+// 灯光场景按钮
+.sh-light-scenes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.sh-light-scene {
+  flex: 1;
+  min-width: 140rpx;
+  padding: 24rpx 12rpx;
+  border-radius: @radius-button;
+  background: @brand-primary-pale;
+  border: 2rpx solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &.disabled {
+    opacity: 0.5;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-light-scene-icon {
+  font-size: 36rpx;
+  margin-bottom: 8rpx;
+}
+
+.sh-light-scene-label {
+  font-size: 24rpx;
+  color: @text-primary;
+}
+
+// 颜色选择圆
+.sh-color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx;
+  padding: 8rpx 0;
+}
+
+.sh-color-circle {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4rpx solid transparent;
+  box-shadow: @shadow-sm;
+
+  &.active {
+    border-color: @brand-primary;
+    box-shadow: 0 0 12rpx rgba(0, 0, 0, 0.2);
+  }
+
+  &.disabled {
+    opacity: 0.4;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-color-check {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  font-weight: 700;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.3);
+}
+
+@keyframes sh-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
+  }
+
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 20rpx rgba(220, 38, 38, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+// ============ 语音控制面板 ============
+.sh-voice-panel {
+  position: fixed;
+  right: 40rpx;
+  bottom: 340rpx;
+  width: 640rpx;
+  background: @bg-card;
+  border-radius: @radius-card;
+  box-shadow: @shadow-lg;
+  z-index: 101;
+  overflow: hidden;
+}
+
+.sh-voice-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 28rpx;
+  border-bottom: 2rpx solid @border-color;
+}
+
+.sh-voice-panel-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: @text-primary;
+}
+
+.sh-voice-panel-close {
+  font-size: 32rpx;
+  color: @text-placeholder;
+  padding: 8rpx 16rpx;
+}
+
+// 录音状态
+.sh-voice-recording {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 28rpx;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFF0F0 100%);
+}
+
+.sh-voice-pulse {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  background: @color-negative;
+  margin-right: 20rpx;
+  animation: sh-pulse-dot 1s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes sh-pulse-dot {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(1.3);
+  }
+}
+
+.sh-voice-recording-text {
+  font-size: 28rpx;
+  color: @text-primary;
+  flex: 1;
+}
+
+// 处理中状态
+.sh-voice-processing {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 28rpx;
+  background: linear-gradient(135deg, #F0F7FF 0%, #E6F0FF 100%);
+}
+
+.sh-voice-spinner {
+  width: 32rpx;
+  height: 32rpx;
+  border: 4rpx solid @border-color;
+  border-top-color: @brand-primary;
+  border-radius: 50%;
+  margin-right: 20rpx;
+  animation: sh-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes sh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sh-voice-processing-text {
+  font-size: 28rpx;
+  color: @brand-primary;
+}
+
+// 输入区域
+.sh-voice-input-area {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  gap: 16rpx;
+}
+
+.sh-voice-input {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 20rpx;
+  background: @bg-page;
+  border: 2rpx solid @border-color;
+  border-radius: @radius-button;
+  font-size: 28rpx;
+  color: @text-primary;
+  box-sizing: border-box;
+}
+
+.sh-voice-send-btn {
+  padding: 0 28rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: @brand-primary;
+  border-radius: @radius-button;
+  flex-shrink: 0;
+
+  &.disabled {
+    opacity: 0.4;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-voice-send-text {
+  font-size: 28rpx;
+  color: @text-on-primary;
+  font-weight: 600;
+}
+
+// AI 回复
+.sh-voice-reply {
+  padding: 20rpx 28rpx;
+  background: @brand-primary-pale;
+  margin: 0 28rpx 16rpx;
+  border-radius: @radius-button;
+}
+
+.sh-voice-reply-text {
+  font-size: 26rpx;
+  color: @text-primary;
+  line-height: 1.5;
+}
+
+// 快捷指令
+.sh-voice-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 16rpx 28rpx 28rpx;
+}
+
+.sh-voice-quick-item {
+  padding: 12rpx 24rpx;
+  background: @bg-page;
+  border-radius: @radius-button;
+  border: 2rpx solid @border-color;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.sh-voice-quick-text {
+  font-size: 24rpx;
+  color: @text-secondary;
+}
+
+// ============ Hero 概览卡片（TSX 使用 sh-hero* 而非 sh-header*） ============
+.sh-hero {
+  margin: 100rpx 32rpx 24rpx;
+  padding: 32rpx;
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFF3C4 100%);
+  border-radius: @radius-card;
+}
+
+.sh-hero-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.sh-hero-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.sh-hero-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #F57F17;
+  line-height: 1.2;
+}
+
+.sh-hero-sub {
+  font-size: 26rpx;
+  color: rgba(245, 127, 23, 0.7);
+  margin-top: 8rpx;
+}
+
+.sh-hero-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sh-hero-running {
+  display: flex;
+  align-items: baseline;
+  margin-top: 24rpx;
+  gap: 8rpx;
+}
+
+.sh-hero-running-icon {
+  font-size: 32rpx;
+}
+
+.sh-hero-running-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #F57F17;
+  line-height: 1;
+}
+
+.sh-hero-running-label {
+  font-size: 24rpx;
+  color: rgba(245, 127, 23, 0.6);
+}
+
+// ============ 房间 Tab 文字 ============
+.sh-room-tab-text {
+  font-size: 26rpx;
+  line-height: 1.2;
+}
+
+// ============ 房间 Tab 滚动容器 ============
+.sh-room-tabs-scroll {
+  display: flex;
+  gap: 16rpx;
+  white-space: nowrap;
+}
+
+// ============ 卡片快捷开关按钮 ============
+.sh-quick-toggle {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: @bg-page;
+  flex-shrink: 0;
+  transition: all 0.2s;
+
+  &.on {
+    background: @brand-primary;
+  }
+
+  &.off {
+    background: @bg-page;
+  }
+
+  &.disabled {
+    opacity: 0.4;
+  }
+
+  &.sh-quick-light.on {
+    background: #FFD93D;
+    box-shadow: 0 0 16rpx rgba(255, 217, 61, 0.5);
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-quick-toggle-icon {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+// ============ 空状态（TSX 使用的额外 class） ============
+.sh-empty-home {
+  padding: 160rpx 0;
+}
+
+.sh-empty-title {
+  font-size: 30rpx;
+  color: @text-placeholder;
+  margin-bottom: 32rpx;
+}
+
+.sh-empty-add-btn {
+  padding: 20rpx 48rpx;
+  background: @brand-primary;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.sh-empty-add-text {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+// ============ 设备卡片运行态彩条 ============
+.sh-card.running {
+  border-left: 6rpx solid transparent;
+}
+
+.sh-card.active-aircon {
+  border-left: 6rpx solid #4FC3F7;
+}
+
+.sh-card.active-fan {
+  border-left: 6rpx solid #66BB6A;
+}
+
+.sh-card.active-light {
+  border-left: 6rpx solid #FFD93D;
+}

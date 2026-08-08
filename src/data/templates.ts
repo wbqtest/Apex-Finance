@@ -412,4 +412,5 @@ export const MENU_ITEMS: MenuItem[] = [
   { icon: '📋', title: '查看模板', url: '/pages/templates' },
   { icon: '🎨', title: '主题切换', url: '', action: 'theme' },
   { icon: '📝', title: '用户协议', url: '/pages/agreement' },
+  { icon: '🏡', title: '智能家居', url: '/pages/devices' },
 ];

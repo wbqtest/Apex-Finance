@@ -1,0 +1,507 @@
+// 智能家居页面样式 - RN 端
+// 与 index.less 保持一致，但移除 RN 不支持的 CSS 特性：
+// - 不使用 :active 伪类（RN 不支持，按压反馈由组件自身处理）
+// - 不使用 transition / Animation / @keyframes
+// - 不使用 env()，改用固定 padding
+// - 不使用后代选择器覆盖子元素颜色，改为直接类
+
+@import '../../styles/theme.less';
+
+.sh-page {
+  min-height: 100vh;
+  background: @bg-page;
+  display: flex;
+  flex-direction: column;
+}
+
+// ============ 顶部信息区 ============
+.sh-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  margin-top: 100rpx;
+  background: @bg-card;
+  border-bottom: 2rpx solid @border-color;
+}
+
+.sh-header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.sh-header-room {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: @text-primary;
+  margin-bottom: 8rpx;
+}
+
+.sh-header-count {
+  font-size: 24rpx;
+  color: @text-secondary;
+}
+
+.sh-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.sh-conn-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  margin-right: 12rpx;
+  background: @text-placeholder;
+}
+
+.sh-conn-dot.on {
+  background: @color-positive;
+}
+
+.sh-conn-text {
+  font-size: 24rpx;
+  color: @text-placeholder;
+}
+
+.sh-conn-text.on {
+  color: @color-positive;
+}
+
+// ============ 设备列表 ============
+.sh-list {
+  flex: 1;
+  padding: 24rpx 24rpx 0;
+}
+
+.sh-list-bottom {
+  height: 200rpx;
+}
+
+.sh-empty {
+  padding: 120rpx 24rpx;
+  align-items: center;
+}
+
+.sh-empty-text {
+  font-size: 28rpx;
+  color: @text-placeholder;
+}
+
+// ============ 设备卡片 ============
+.sh-card {
+  background: @bg-card;
+  border-radius: @radius-card;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+}
+
+.sh-card.offline {
+  opacity: 0.6;
+}
+
+.sh-card-header {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 28rpx;
+}
+
+.sh-card-icon-wrap {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: @brand-primary-pale;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+
+.sh-card-icon {
+  font-size: 44rpx;
+}
+
+.sh-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sh-card-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: @text-primary;
+  margin-bottom: 8rpx;
+}
+
+.sh-card-summary {
+  font-size: 24rpx;
+  color: @text-secondary;
+}
+
+.sh-card-right {
+  display: flex;
+  align-items: center;
+}
+
+.sh-status-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+  background: @text-placeholder;
+}
+
+.sh-status-dot.online {
+  background: @color-positive;
+}
+
+.sh-status-text {
+  font-size: 24rpx;
+  color: @text-placeholder;
+}
+
+.sh-status-text.online {
+  color: @color-positive;
+}
+
+.sh-card-arrow {
+  font-size: 36rpx;
+  color: @text-placeholder;
+  margin-left: 12rpx;
+}
+
+.sh-card-body {
+  padding: 8rpx 28rpx 32rpx;
+  border-top: 2rpx solid @border-color;
+}
+
+// ============ 控制面板 ============
+.sh-panel {
+  padding-top: 24rpx;
+}
+
+.sh-power-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background: @brand-primary-pale;
+  border-radius: @radius-card;
+  margin-bottom: 32rpx;
+}
+
+.sh-power-btn {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: @brand-primary-muted;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-right: 32rpx;
+}
+
+.sh-power-btn.on {
+  background: @brand-primary;
+}
+
+.sh-power-btn.disabled {
+  opacity: 0.5;
+}
+
+.sh-power-btn.sending {
+  opacity: 0.6;
+}
+
+.sh-power-icon {
+  font-size: 56rpx;
+  color: @text-on-primary;
+  margin-bottom: 8rpx;
+}
+
+.sh-power-label {
+  font-size: 22rpx;
+  color: @text-on-primary;
+}
+
+.sh-power-status {
+  display: flex;
+  flex-direction: column;
+}
+
+.sh-power-temp {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: @brand-primary;
+}
+
+.sh-power-mode {
+  font-size: 24rpx;
+  color: @text-secondary;
+  margin-top: 8rpx;
+}
+
+.sh-section {
+  margin-bottom: 32rpx;
+}
+
+.sh-section-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: @text-secondary;
+  margin-bottom: 20rpx;
+}
+
+// 模式选项卡
+.sh-tabs {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.sh-tab {
+  flex: 1;
+  margin-right: 16rpx;
+  margin-bottom: 16rpx;
+  padding: 20rpx 12rpx;
+  border-radius: @radius-button;
+  background: @brand-primary-pale;
+  border: 2rpx solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sh-tab.active {
+  background: @brand-primary-light;
+  border-color: @brand-primary;
+}
+
+.sh-tab.disabled {
+  opacity: 0.5;
+}
+
+.sh-tab-icon {
+  font-size: 36rpx;
+  margin-bottom: 8rpx;
+}
+
+.sh-tab-label {
+  font-size: 24rpx;
+  color: @text-primary;
+}
+
+// 温度调节
+.sh-temp-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16rpx;
+}
+
+.sh-step-btn {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: @brand-primary-pale;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sh-step-btn.disabled {
+  opacity: 0.4;
+}
+
+.sh-step-btn.loading {
+  background: @brand-primary-light;
+}
+
+.sh-step-symbol {
+  font-size: 48rpx;
+  color: @text-primary;
+  font-weight: 600;
+}
+
+.sh-temp-value {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.sh-temp-num {
+  font-size: 80rpx;
+  font-weight: 700;
+  color: @brand-primary;
+}
+
+.sh-temp-unit {
+  font-size: 32rpx;
+  color: @brand-primary;
+  margin-left: 4rpx;
+}
+
+// 选项按钮
+.sh-option-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.sh-option {
+  flex: 1;
+  margin-right: 16rpx;
+  height: 88rpx;
+  border-radius: @radius-button;
+  background: @brand-primary-pale;
+  border: 2rpx solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sh-option.active {
+  background: @brand-primary;
+  border-color: @brand-primary;
+}
+
+.sh-option.disabled {
+  opacity: 0.5;
+}
+
+.sh-option-label {
+  font-size: 28rpx;
+  color: @text-primary;
+}
+
+// 行内 section
+.sh-row-section {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.sh-inline-item {
+  flex: 1;
+}
+
+.sh-timer-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.sh-timer-btn {
+  flex: 1;
+  margin-right: 12rpx;
+  height: 72rpx;
+  border-radius: @radius-button;
+  background: @brand-primary-pale;
+  border: 2rpx solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sh-timer-btn.active {
+  background: @brand-primary;
+  border-color: @brand-primary;
+}
+
+.sh-timer-btn.disabled {
+  opacity: 0.5;
+}
+
+.sh-timer-label {
+  font-size: 26rpx;
+  color: @text-primary;
+  font-weight: 600;
+}
+
+// ============ 自定义开关 ============
+.sh-toggle {
+  width: 88rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  background: @brand-primary-muted;
+}
+
+.sh-toggle.on {
+  background: @brand-primary;
+}
+
+.sh-toggle.disabled {
+  opacity: 0.5;
+}
+
+.sh-toggle-thumb {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: @bg-card;
+  margin-top: 4rpx;
+  margin-left: 4rpx;
+}
+
+// RN 用固定偏移表示开启态
+.sh-toggle-thumb.on {
+  margin-left: 44rpx;
+}
+
+// ============ 底部快捷操作 ============
+.sh-footer {
+  display: flex;
+  flex-direction: row;
+  padding: 24rpx 24rpx 48rpx;
+  background: @bg-card;
+  border-top: 2rpx solid @border-color;
+}
+
+.sh-footer-btn {
+  flex: 1;
+  margin-right: 24rpx;
+  height: 96rpx;
+  border-radius: @radius-button;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.sh-footer-off {
+  background: @brand-primary;
+  color: @text-on-primary;
+  border-width: 0;
+}
+
+.sh-footer-refresh {
+  background: @bg-card;
+  color: @brand-primary;
+  border-color: @brand-primary;
+  border-width: 2rpx;
+}
+
+// ============ 语音浮动按钮 ============
+.sh-voice-fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: 200rpx;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background: @brand-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sh-voice-fab.listening {
+  background: @color-negative;
+}
+
+.sh-voice-fab-icon {
+  font-size: 56rpx;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+  text-align: center;
+}
