@@ -450,8 +450,8 @@ export default function Devices() {
   const recognitionRef = useRef<any>(null)
 
   /** 发送文本到后端 AI 解析并执行设备控制 */
-  const sendToBackend = useCallback(async (text: string) => {
-    if (!text.trim()) return
+  const sendToBackend = useCallback(async (text: string): Promise<boolean> => {
+    if (!text.trim()) return false
     setVoiceProcessing(true)
     setVoiceReply('')
     try {
@@ -483,17 +483,20 @@ export default function Devices() {
             duration: 2000,
           })
         }
+        return true
       } else {
         setVoiceReply(res.message || '解析失败，请重试')
         Taro.showToast({ title: res.message || '解析失败', icon: 'none' })
+        return false
       }
     } catch {
       setVoiceReply('网络错误，请检查后端服务是否启动')
       Taro.showToast({ title: '网络错误', icon: 'none' })
+      return false
     } finally {
       setVoiceProcessing(false)
     }
-  }, [applyOptimistic])
+  }, [applyOptimistic, loadSchedules])
 
   /** 删除定时任务 */
   const handleDeleteSchedule = useCallback((id: number) => {
@@ -550,11 +553,10 @@ export default function Devices() {
   /** 发送语音/文本指令（优先调用后端 AI，失败降级本地匹配） */
   const handleVoiceCommand = useCallback(async (text: string) => {
     setVoiceText(text)
-    // 先尝试后端 AI 解析
-    try {
-      await sendToBackend(text)
-    } catch {
-      // 降级到本地规则
+    // 先尝试后端 AI 解析（DeepSeek 大模型识别意图）
+    const ok = await sendToBackend(text)
+    if (!ok) {
+      // 后端不可用或解析失败，降级到本地规则匹配
       const matched = localParse(text)
       setVoiceReply(matched ? '已执行（本地模式）' : '未识别到有效指令')
       if (!matched) Taro.showToast({ title: '未识别到有效指令', icon: 'none' })
