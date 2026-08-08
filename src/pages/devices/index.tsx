@@ -329,14 +329,29 @@ export default function Devices() {
     }
   }, [])
 
+  /** 加载定时任务列表 */
+  const loadSchedules = useCallback(async () => {
+    try {
+      const res = await getSchedules()
+      if (res.code === 200 && res.data) {
+        setSchedules(res.data)
+      }
+    } catch {
+      // 忽略
+    }
+  }, [])
+
   // ============ 刷新 ============
-  const handleRefresh = useCallback(() => {
+  const [refreshing, setRefreshing] = useState(false)
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
     if (smartHomeWs.isConnected) {
       smartHomeWs.queryStatus()
     }
-    loadDevices()
-    Taro.showToast({ title: '正在刷新状态', icon: 'none', duration: 1200 })
-  }, [loadDevices])
+    await loadDevices()
+    await loadSchedules()
+    setRefreshing(false)
+  }, [loadDevices, loadSchedules])
 
   // ============ 一键全关 ============
   const handleAllOff = useCallback(() => {
@@ -480,18 +495,6 @@ export default function Devices() {
     }
   }, [applyOptimistic])
 
-  /** 加载定时任务列表 */
-  const loadSchedules = useCallback(async () => {
-    try {
-      const res = await getSchedules()
-      if (res.code === 200 && res.data) {
-        setSchedules(res.data)
-      }
-    } catch {
-      // 忽略
-    }
-  }, [])
-
   /** 删除定时任务 */
   const handleDeleteSchedule = useCallback((id: number) => {
     Taro.showModal({
@@ -558,6 +561,20 @@ export default function Devices() {
     }
   }, [sendToBackend, localParse])
 
+  // 语音识别兜底：onend 时如果有 interim 但没有 final，就把 interim 当作最终文本发送
+  const interimTextRef = useRef<string>('')
+  const sentRef = useRef<boolean>(false)
+  const timeoutTimerRef = useRef<any>(null)
+  // 是否当前环境不支持语音识别
+  const voiceNotSupportedRef = useRef<boolean | null>(null)
+
+  const clearVoiceTimeout = () => {
+    if (timeoutTimerRef.current) {
+      clearTimeout(timeoutTimerRef.current)
+      timeoutTimerRef.current = null
+    }
+  }
+
   const toggleVoice = useCallback(() => {
     if (!IS_H5) {
       Taro.showToast({ title: '语音控制仅支持H5', icon: 'none' })
@@ -567,23 +584,50 @@ export default function Devices() {
       (typeof window !== 'undefined' && (window as any).SpeechRecognition) ||
       (typeof window !== 'undefined' && (window as any).webkitSpeechRecognition)
     if (!SR) {
-      Taro.showToast({ title: '当前浏览器不支持语音', icon: 'none' })
-      // 不支持语音时打开手动输入面板
+      // 环境不支持语音识别：直接切换到文字输入模式，不再尝试录音
+      voiceNotSupportedRef.current = true
       setShowVoicePanel(true)
+      setVoiceText('')
+      setVoiceReply('')
+      // 给一个不打断用户的轻提示，1.5s 后自动消失
+      Taro.showToast({
+        title: '当前环境不支持语音，请手动输入',
+        icon: 'none',
+        duration: 1500,
+      })
       return
     }
+    voiceNotSupportedRef.current = false
+    // 如果正在聆听 → 手动停止（触发 onend 兜底）
     if (listening) {
       try { recognitionRef.current && recognitionRef.current.stop() } catch { }
-      setListening(false)
       return
     }
     setShowVoicePanel(true)
     setVoiceText('')
     setVoiceReply('')
+    interimTextRef.current = ''
+    sentRef.current = false
+
     const rec = new SR()
+    // 部分移动端不支持 interimResults=true，关掉反而更稳定
+    const mobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|MicroMessenger/i.test(navigator.userAgent)
     rec.lang = 'zh-CN'
     rec.interimResults = true
+    rec.continuous = mobile ? false : true
     rec.maxAlternatives = 1
+
+    rec.onstart = () => {
+      console.log('[Voice] 录音已开始')
+      setListening(true)
+      // 10 秒强制结束兜底（避免一直聆听无结果）
+      clearVoiceTimeout()
+      timeoutTimerRef.current = setTimeout(() => {
+        console.log('[Voice] 识别超时，强制结束录音')
+        try { rec.stop() } catch { /* ignore */ }
+      }, 10000)
+    }
+
     rec.onresult = (e: any) => {
       let interim = ''
       let final = ''
@@ -595,21 +639,60 @@ export default function Devices() {
         }
       }
       if (final) {
+        sentRef.current = true
+        clearVoiceTimeout()
         setVoiceText(final)
         setListening(false)
         handleVoiceCommand(final)
       } else if (interim) {
+        interimTextRef.current = interim
         setVoiceText(interim)
+        // 有 interim 但还没 final：重置超时(避免说话中途被超时打断)
+        clearVoiceTimeout()
+        timeoutTimerRef.current = setTimeout(() => {
+          console.log('[Voice] 检测到 interim 但无 final，强制结束')
+          try { rec.stop() } catch { /* ignore */ }
+        }, 3000)
       }
     }
-    rec.onerror = () => setListening(false)
-    rec.onend = () => setListening(false)
+
+    rec.onerror = (ev: any) => {
+      console.error('[Voice] 识别错误:', ev?.error, ev?.message || '')
+      clearVoiceTimeout()
+      const errMap: Record<string, string> = {
+        'no-speech': '没有检测到说话声，请重试',
+        'audio-capture': '未找到麦克风设备',
+        'not-allowed': '未授权麦克风权限，请在浏览器设置中允许',
+        'service-not-allowed': '当前浏览器禁用了语音识别服务',
+        'network': '语音识别需要联网，请检查网络',
+        'aborted': '录音已中止',
+      }
+      const msg = (ev?.error && errMap[ev.error]) || `语音识别错误:${ev?.error || 'unknown'}`
+      Taro.showToast({ title: msg, icon: 'none', duration: 2500 })
+      setListening(false)
+    }
+
+    rec.onend = () => {
+      console.log('[Voice] 录音结束，已发送:', sentRef.current, 'interim:', interimTextRef.current)
+      clearVoiceTimeout()
+      setListening(false)
+      // 关键兜底：如果 onend 触发但没有 final（移动端常见静默失败），
+      // 则把 interimText 当作最终文本发送
+      if (!sentRef.current && interimTextRef.current.trim()) {
+        sentRef.current = true
+        const text = interimTextRef.current.trim()
+        setVoiceText(text)
+        handleVoiceCommand(text)
+      }
+    }
+
     recognitionRef.current = rec
     try {
       rec.start()
-      setListening(true)
-    } catch {
+    } catch (err: any) {
+      console.error('[Voice] 启动失败:', err?.message)
       setListening(false)
+      Taro.showToast({ title: '启动录音失败，请重试', icon: 'none' })
     }
   }, [listening, handleVoiceCommand])
 
@@ -1153,7 +1236,13 @@ export default function Devices() {
       </View>
 
       {/* 设备列表 */}
-      <ScrollView scrollY className='sh-list'>
+      <ScrollView
+        scrollY
+        className='sh-list'
+        refresherEnabled
+        refresherTriggered={refreshing}
+        onRefresherRefresh={handleRefresh}
+      >
         {loadingDevices && devices.length === 0 ? (
           <View className='sh-empty'>
             <Text className='sh-empty-text'>加载设备中...</Text>
@@ -1181,7 +1270,7 @@ export default function Devices() {
         <View className='sh-list-bottom' />
       </ScrollView>
 
-      {/* 底部快捷操作（三按钮等宽胶囊） */}
+      {/* 底部：一键全关（刷新改为下拉，添加入口在 Hero 右上角） */}
       <View className='sh-footer'>
         <Button
           className='sh-footer-btn sh-footer-off'
@@ -1189,20 +1278,6 @@ export default function Devices() {
           onClick={handleAllOff}
         >
           ⏻ 一键全关
-        </Button>
-        <Button
-          className='sh-footer-btn sh-footer-refresh'
-          size='large'
-          onClick={handleRefresh}
-        >
-          ↻ 刷新
-        </Button>
-        <Button
-          className='sh-footer-btn sh-footer-add'
-          size='large'
-          onClick={() => setShowAddModal(true)}
-        >
-          + 添加设备
         </Button>
       </View>
 
@@ -1230,12 +1305,44 @@ export default function Devices() {
             >✕</Text>
           </View>
 
+          {/* 环境不支持语音 → 文字输入模式提示 banner */}
+          {voiceNotSupportedRef.current && !voiceProcessing && (
+            <View className='sh-voice-mode-tip'>
+              <Text className='sh-voice-mode-tip-icon'>✎</Text>
+              <Text className='sh-voice-mode-tip-text'>
+                当前环境无法语音识别，请在下方输入指令或点击快捷标签
+              </Text>
+            </View>
+          )}
+
           {/* 录音状态指示 */}
           {listening && (
-            <View className='sh-voice-recording'>
-              <View className='sh-voice-pulse' />
-              <Text className='sh-voice-recording-text'>正在聆听... {voiceText || '请说话'}</Text>
-            </View>
+            <>
+              <View className='sh-voice-recording'>
+                <View className='sh-voice-pulse' />
+                <Text className='sh-voice-recording-text'>正在聆听... {voiceText || '请说话'}</Text>
+              </View>
+              <View className='sh-voice-manual-stop'>
+                <View
+                  className='sh-voice-finish-btn'
+                  onClick={() => {
+                    try { recognitionRef.current?.stop() } catch { /* ignore */ }
+                  }}
+                >
+                  <Text className='sh-voice-finish-text'>✓ 我说完了</Text>
+                </View>
+                <View
+                  className='sh-voice-cancel-btn'
+                  onClick={() => {
+                    try { recognitionRef.current?.abort?.() || recognitionRef.current?.stop() } catch { /* ignore */ }
+                    interimTextRef.current = ''
+                    setListening(false)
+                  }}
+                >
+                  <Text className='sh-voice-cancel-text'>取消</Text>
+                </View>
+              </View>
+            </>
           )}
 
           {/* 处理中状态 */}

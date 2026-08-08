@@ -653,17 +653,16 @@
 // ============ 底部快捷操作 ============
 .sh-footer {
   display: flex;
-  gap: 20rpx;
-  padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
-  background: @bg-card;
-  border-top: 2rpx solid @border-color;
+  justify-content: center;
+  padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: transparent;
 }
 
 .sh-footer-btn {
-  flex: 1;
   height: 80rpx;
+  padding: 0 80rpx !important;
   border-radius: 40rpx !important;
-  font-size: 28rpx !important;
+  font-size: 30rpx !important;
   font-weight: 600 !important;
 }
 
@@ -671,29 +670,10 @@
   background: #E53935 !important;
   color: #FFFFFF !important;
   border: none !important;
+  box-shadow: 0 8rpx 24rpx rgba(229, 57, 53, 0.3);
 
   &:active {
     background: #C62828 !important;
-  }
-}
-
-.sh-footer-refresh {
-  background: @bg-card !important;
-  color: @text-primary !important;
-  border: 2rpx solid @border-color !important;
-
-  &:active {
-    background: @brand-primary-pale !important;
-  }
-}
-
-.sh-footer-add {
-  background: @brand-primary !important;
-  color: @text-on-primary !important;
-  border: none !important;
-
-  &:active {
-    background: @brand-primary-dark !important;
   }
 }
 
@@ -1319,6 +1299,68 @@
   font-size: 28rpx;
   color: @text-on-primary;
   font-weight: 600;
+}
+
+// 文字输入模式 banner
+.sh-voice-mode-tip {
+  display: flex;
+  align-items: center;
+  margin: 16rpx 28rpx;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border-radius: @radius-card;
+}
+
+.sh-voice-mode-tip-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+  color: #B45309;
+}
+
+.sh-voice-mode-tip-text {
+  font-size: 26rpx;
+  color: #78350F;
+  flex: 1;
+  line-height: 1.4;
+}
+
+// 录音中的手动结束按钮
+.sh-voice-manual-stop {
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
+  padding: 16rpx 28rpx 28rpx;
+}
+
+.sh-voice-finish-btn,
+.sh-voice-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80rpx;
+  padding: 0 40rpx;
+  border-radius: 40rpx;
+}
+
+.sh-voice-finish-btn {
+  background: @brand-primary;
+  box-shadow: 0 6rpx 20rpx rgba(229, 57, 53, 0.25);
+}
+
+.sh-voice-finish-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: @text-on-primary;
+}
+
+.sh-voice-cancel-btn {
+  background: #fff;
+  border: 2rpx solid @border-color;
+}
+
+.sh-voice-cancel-text {
+  font-size: 28rpx;
+  color: @text-secondary;
 }
 
 // AI 回复
