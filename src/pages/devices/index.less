@@ -1181,6 +1181,121 @@
   box-sizing: border-box;
 }
 
+// ============ 定时任务入口 ============
+.sh-schedule-entry {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 8rpx 20rpx;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 32rpx;
+
+  &.has {
+    background: rgba(255, 217, 61, 0.25);
+  }
+
+  .sh-schedule-entry-icon {
+    font-size: 28rpx;
+    margin-right: 6rpx;
+  }
+
+  .sh-schedule-entry-num {
+    font-size: 28rpx;
+    font-weight: 700;
+    color: @text-primary;
+    margin-right: 6rpx;
+  }
+
+  .sh-schedule-entry-label {
+    font-size: 24rpx;
+    color: @text-secondary;
+  }
+}
+
+// ============ 定时任务列表 ============
+.sh-schedule-list {
+  max-height: calc(100vh - 200px);
+  padding: 0 24rpx 24rpx;
+}
+
+.sh-schedule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  background: @bg-card;
+  border-radius: @radius-card;
+  box-shadow: @shadow-sm;
+
+  &.disabled {
+    opacity: 0.5;
+  }
+
+  .sh-schedule-item-main {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+
+  .sh-schedule-item-time {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 140rpx;
+    margin-right: 24rpx;
+    padding: 12rpx 0;
+    background: linear-gradient(135deg, #FFF8E1 0%, #FFF3C4 100%);
+    border-radius: @radius-card;
+  }
+
+  .sh-schedule-time-text {
+    font-size: 36rpx;
+    font-weight: 700;
+    color: #F59E0B;
+    line-height: 1.2;
+  }
+
+  .sh-schedule-freq-text {
+    font-size: 20rpx;
+    color: #F59E0B;
+    margin-top: 4rpx;
+  }
+
+  .sh-schedule-item-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .sh-schedule-device {
+    font-size: 30rpx;
+    font-weight: 600;
+    color: @text-primary;
+  }
+
+  .sh-schedule-action {
+    font-size: 26rpx;
+    color: @text-secondary;
+    margin-top: 6rpx;
+  }
+
+  .sh-schedule-delete {
+    padding: 16rpx;
+
+    .sh-schedule-delete-icon {
+      font-size: 36rpx;
+    }
+  }
+}
+
+.sh-empty-sub {
+  font-size: 24rpx;
+  color: @text-secondary;
+  margin-top: 12rpx;
+}
+
 .sh-voice-send-btn {
   padding: 0 28rpx;
   height: 72rpx;

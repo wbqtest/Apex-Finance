@@ -5,7 +5,7 @@ import { Button } from '@nutui/nutui-react-taro'
 import NavBar from '../../components/NavBar'
 import Modal from '../../components/Modal/modal'
 import { smartHomeWs } from '../../utils/smartHomeWs'
-import { getDevices, controlDeviceHttp, createDevice, updateDevice, deleteDevice, sendVoiceCommand } from '../../services/api'
+import { getDevices, controlDeviceHttp, createDevice, updateDevice, deleteDevice, sendVoiceCommand, getSchedules, deleteSchedule } from '../../services/api'
 import { IS_H5 } from '../../utils/platform'
 import './index.less'
 
@@ -169,6 +169,27 @@ function getDeviceSummary(device: DeviceState): string {
   return `${SPEED_LABEL[s.fanSpeed] || ''}档 ${FAN_MODE_LABEL[s.mode as FanMode] || ''}`
 }
 
+/** 描述定时任务要执行的动作 */
+function describeScheduleAction(action: string, value: any): string {
+  switch (action) {
+    case 'set_power': return value ? '开机' : '关机'
+    case 'set_mode': return `切换${MODE_LABEL[value as AirconMode] || value}模式`
+    case 'set_temperature': return `设为${value}°C`
+    case 'set_fan_speed': return `${SPEED_LABEL[value] || value}风`
+    case 'set_swing': return value ? '开启扫风' : '关闭扫风'
+    case 'set_oscillate': return value ? '开启摇头' : '关闭摇头'
+    case 'set_timer': return value ? `定时${value}小时` : '取消定时'
+    case 'turn_on': return '开灯'
+    case 'turn_off': return '关灯'
+    case 'toggle': return '切换开关'
+    case 'set_brightness': return `亮度${value}%`
+    case 'set_color_temp': return `色温${value}K`
+    case 'set_color': return `颜色${value}`
+    case 'set_scene': return `${value}场景`
+    default: return action
+  }
+}
+
 export default function Devices() {
   const [devices, setDevices] = useState<DeviceState[]>([])
   const [connected, setConnected] = useState(false)
@@ -182,6 +203,10 @@ export default function Devices() {
   const [voiceText, setVoiceText] = useState('')
   const [voiceReply, setVoiceReply] = useState('')
   const [showVoicePanel, setShowVoicePanel] = useState(false)
+
+  // 定时任务列表
+  const [schedules, setSchedules] = useState<any[]>([])
+  const [showSchedules, setShowSchedules] = useState(false)
 
   // 设备管理弹窗状态
   const [showAddModal, setShowAddModal] = useState(false)
@@ -418,13 +443,24 @@ export default function Devices() {
       const res = await sendVoiceCommand({ text: text.trim() })
       if (res.code === 200 && res.data) {
         setVoiceReply(res.data.reply || '指令已执行')
-        // 对每条指令做乐观更新（后端已通过 WS 下发，这里同步 UI）
+        // 对每条立即控制指令做乐观更新
         if (res.data.commands?.length > 0) {
           res.data.commands.forEach((cmd) => {
             if (cmd.success) {
               applyOptimistic(cmd.deviceId, cmd.action, cmd.value)
             }
           })
+        }
+        // 定时任务创建后刷新列表
+        if (res.data.schedules?.length > 0) {
+          loadSchedules()
+          const sCount = res.data.schedules.filter((s) => s.success).length
+          Taro.showToast({
+            title: `${sCount}/${res.data.schedules.length} 个定时任务已创建`,
+            icon: sCount === res.data.schedules.length ? 'success' : 'none',
+            duration: 2000,
+          })
+        } else if (res.data.commands?.length > 0) {
           const successCount = res.data.commands.filter((c) => c.success).length
           Taro.showToast({
             title: `${successCount}/${res.data.commands.length} 个指令已执行`,
@@ -443,6 +479,36 @@ export default function Devices() {
       setVoiceProcessing(false)
     }
   }, [applyOptimistic])
+
+  /** 加载定时任务列表 */
+  const loadSchedules = useCallback(async () => {
+    try {
+      const res = await getSchedules()
+      if (res.code === 200 && res.data) {
+        setSchedules(res.data)
+      }
+    } catch {
+      // 忽略
+    }
+  }, [])
+
+  /** 删除定时任务 */
+  const handleDeleteSchedule = useCallback((id: number) => {
+    Taro.showModal({
+      title: '删除定时任务',
+      content: '确定要删除这个定时任务吗？',
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          await deleteSchedule(id)
+          setSchedules((prev) => prev.filter((s) => s.id !== id))
+          Taro.showToast({ title: '已删除', icon: 'success' })
+        } catch {
+          Taro.showToast({ title: '删除失败', icon: 'none' })
+        }
+      },
+    })
+  }, [])
 
   /** 本地规则匹配（降级方案，后端不可用时使用） */
   const localParse = useCallback((text: string) => {
@@ -615,6 +681,8 @@ export default function Devices() {
 
     // 首次拉取设备列表
     loadDevices()
+    // 首次拉取定时任务
+    loadSchedules()
 
     return () => {
       offConn()
@@ -622,7 +690,7 @@ export default function Devices() {
       offResult()
       // 不主动断开 WS（单例保持长连）
     }
-  }, [loadDevices])
+  }, [loadDevices, loadSchedules])
 
   // ============ 派生数据 ============
   const onlineCount = devices.filter((d) => d.status === 1).length
@@ -1057,6 +1125,15 @@ export default function Devices() {
           <Text className='sh-hero-running-icon'>⚡</Text>
           <Text className='sh-hero-running-num'>{runningCount}</Text>
           <Text className='sh-hero-running-label'>台设备运行中</Text>
+          {/* 定时任务入口 */}
+          <View
+            className={`sh-schedule-entry ${schedules.length > 0 ? 'has' : ''}`}
+            onClick={() => { loadSchedules(); setShowSchedules(true) }}
+          >
+            <Text className='sh-schedule-entry-icon'>⏰</Text>
+            <Text className='sh-schedule-entry-num'>{schedules.filter(s => s.enabled === 1).length}</Text>
+            <Text className='sh-schedule-entry-label'>定时任务</Text>
+          </View>
         </View>
       </View>
 
@@ -1208,6 +1285,56 @@ export default function Devices() {
                 </View>
               ))}
             </View>
+          )}
+        </View>
+      )}
+
+      {/* 定时任务列表面板 */}
+      {showSchedules && (
+        <View className='sh-voice-panel'>
+          <View className='sh-voice-panel-header'>
+            <Text className='sh-voice-panel-title'>⏰ 定时任务</Text>
+            <Text
+              className='sh-voice-panel-close'
+              onClick={() => setShowSchedules(false)}
+            >✕</Text>
+          </View>
+          {schedules.length === 0 ? (
+            <View className='sh-empty'>
+              <Text className='sh-empty-text'>暂无定时任务</Text>
+              <Text className='sh-empty-sub'>试试说"每天10点打开空调"</Text>
+            </View>
+          ) : (
+            <ScrollView scrollY className='sh-schedule-list'>
+              {schedules.map((s) => {
+                const dev = devicesRef.current.find(d => d.deviceId === s.deviceId)
+                const freqText = s.scheduleType === 'once'
+                  ? `${s.executeDate || '指定日期'}`
+                  : s.scheduleType === 'daily'
+                    ? '每天'
+                    : `每周${(s.weekdays || []).map(w => '日一二三四五六'[w]).join('、')}`
+                return (
+                  <View key={s.id} className={`sh-schedule-item ${s.enabled === 0 ? 'disabled' : ''}`}>
+                    <View className='sh-schedule-item-main'>
+                      <View className='sh-schedule-item-time'>
+                        <Text className='sh-schedule-time-text'>{s.executeTime}</Text>
+                        <Text className='sh-schedule-freq-text'>{freqText}</Text>
+                      </View>
+                      <View className='sh-schedule-item-info'>
+                        <Text className='sh-schedule-device'>{dev?.deviceName || s.deviceId}</Text>
+                        <Text className='sh-schedule-action'>{describeScheduleAction(s.action, s.value)}</Text>
+                      </View>
+                    </View>
+                    <View
+                      className='sh-schedule-delete'
+                      onClick={() => handleDeleteSchedule(s.id)}
+                    >
+                      <Text className='sh-schedule-delete-icon'>🗑</Text>
+                    </View>
+                  </View>
+                )
+              })}
+            </ScrollView>
           )}
         </View>
       )}

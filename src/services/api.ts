@@ -504,8 +504,32 @@ export const sendVoiceCommand = async (data: {
     success: boolean
     message?: string
   }>
+  schedules: Array<{
+    id: number
+    deviceId: string
+    deviceType: string
+    action: string
+    value: any
+    scheduleType: 'once' | 'daily' | 'weekly'
+    executeTime: string
+    executeDate: string | null
+    weekdays: number[] | null
+    enabled: number
+    success: boolean
+    message?: string
+  }>
   reply: string
   sessionId?: string
 }>> => {
   return request<any>('/api/voice/command', 'POST', data, false)
+}
+
+// 获取所有定时任务
+export const getSchedules = async (): Promise<ApiResponse<any[]>> => {
+  return request<any[]>('/api/devices/schedules', 'GET', undefined, false, true)
+}
+
+// 删除定时任务
+export const deleteSchedule = async (id: number): Promise<ApiResponse<any>> => {
+  return request<any>(`/api/devices/schedules/${id}`, 'DELETE', undefined, false)
 }
